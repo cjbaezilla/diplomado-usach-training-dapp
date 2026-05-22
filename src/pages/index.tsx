@@ -2,6 +2,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
+import { Button } from '@/components/ui/button';
 
 const Home: NextPage = () => {
   return (
@@ -16,7 +17,12 @@ const Home: NextPage = () => {
       </Head>
 
       <main className={styles.main}>
-        <ConnectButton />
+        <div className="flex flex-col items-center gap-4">
+          <ConnectButton />
+          <Button variant="default" size="lg">
+            shadcn/ui Button Works!
+          </Button>
+        </div>
 
         <h1 className={styles.title}>
           Welcome to <a href="https://www.rainbowkit.com">RainbowKit</a> +{' '}
