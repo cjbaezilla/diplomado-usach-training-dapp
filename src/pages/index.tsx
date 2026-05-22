@@ -1,14 +1,17 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
-import { Compass, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Compass, Sparkles, CheckCircle2, Coins } from 'lucide-react';
 
 const Home: NextPage = () => {
   const [mounted, setMounted] = useState(false);
   const { isConnected, address } = useAccount();
+  const router = useRouter();
 
   // Asegura que el componente esté montado en el cliente para evitar fallos de hidratación
   useEffect(() => {
@@ -32,11 +35,24 @@ const Home: NextPage = () => {
           {/* Logo / Título */}
           <div className="flex items-center gap-2">
             <Compass className="h-6 w-6 text-primary animate-pulse" />
-            <span className="font-bold tracking-tight text-lg sm:text-xl">USACH dApp</span>
+            <Link href="/" className="font-bold tracking-tight text-lg sm:text-xl hover:text-primary transition-colors">
+              USACH dApp
+            </Link>
             <span className="hidden sm:inline-flex items-center rounded-full border border-transparent bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold">
               Entrenamiento
             </span>
           </div>
+
+          {/* Enlaces de Navegación */}
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <Link href="/" className="text-primary hover:text-primary/80 transition-colors">
+              Inicio
+            </Link>
+            <Link href="/erc20" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+              <Coins className="h-4 w-4" />
+              Tokens ERC20
+            </Link>
+          </nav>
 
           {/* Botón de Conectar */}
           <div className="flex items-center gap-4">
@@ -79,8 +95,8 @@ const Home: NextPage = () => {
                   </p>
                 </div>
                 <div className="pt-2">
-                  <Button variant="default" className="w-full sm:w-auto">
-                    Iniciar Simulación
+                  <Button variant="default" className="w-full sm:w-auto" onClick={() => router.push('/erc20')}>
+                    Ir a Simulador ERC20
                   </Button>
                 </div>
               </div>
