@@ -1,29 +1,130 @@
-This is a [RainbowKit](https://rainbowkit.com) + [wagmi](https://wagmi.sh) + [Next.js](https://nextjs.org/) project bootstrapped with [`create-rainbowkit`](/packages/create-rainbowkit).
+# USACH - dApp de Entrenamiento Web3
 
-## Getting Started
+Este repositorio contiene la **Aplicación Descentralizada (dApp) de Entrenamiento** oficial para el **Diplomado en Tecnologías Blockchain** de la **Universidad de Santiago de Chile (USACH)**. 
 
-First, run the development server:
+La plataforma proporciona una base interactiva para que estudiantes y desarrolladores exploren el desarrollo de interfaces Web3, integren billeteras EVM compatibles, interactúen con redes de prueba y simulen la creación y transferencia de tokens estándar ERC-20.
+
+---
+
+## 🚀 Características Clave
+
+*   **Conexión de Billeteras Multired**: Integración fluida con [RainbowKit v2](https://rainbowkit.com) y [Wagmi v2](https://wagmi.sh) para conectar billeteras como MetaMask, Coinbase Wallet, Rainbow, y WalletConnect en múltiples redes (incluyendo soporte condicional para Sepolia Testnet).
+*   **Simulador de Portal ERC-20**:
+    *   **Despliegue Ficticio**: Define el nombre, símbolo y suministro de tu propio token y despliégalo localmente.
+    *   **Transferencias de Saldo**: Realiza transferencias simuladas e instantáneas de tokens a cualquier dirección hexadecimal sin costos de gas.
+    *   **Historial de Transacciones**: Consulta los logs y hashes de transacciones simuladas en tiempo real.
+*   **Diseño Moderno y Responsivo**: Desarrollado bajo un enfoque *mobile-first* con una estética oscura premium, utilizando **Tailwind CSS v4** y componentes altamente customizables de **shadcn/ui**.
+*   **Localización**: Completamente configurado para soportar el idioma español en la interfaz y en RainbowKit.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+El proyecto está construido sobre un stack de última generación optimizado para dApps:
+
+| Tecnología / Librería | Versión | Rol / Descripción |
+| :--- | :--- | :--- |
+| **Next.js** | `^16.2.4` | Framework web React principal (utilizando Pages Router) |
+| **React** & **React DOM** | `^19.2.5` | Biblioteca principal de interfaz de usuario |
+| **TypeScript** | `5.9.3` | Lenguaje de tipado estático y robusto |
+| **Tailwind CSS** | `^4.3.0` | Framework de diseño basado en CSS y variables nativas |
+| **shadcn/ui** | `^4.8.0` | Primitivas de componentes accesibles y elegantes |
+| **Wagmi** | `^2.19.3` | Hooks de React optimizados para Ethereum / EVM |
+| **RainbowKit** | `^2.2.11` | Interfaz y modal premium para la conexión de billeteras |
+| **Viem** | `2.38.0` | Cliente ligero de comunicación y tipados para Ethereum |
+| **TanStack React Query** | `^5.55.3` | Motor de consultas y gestión de estados asíncronos de Wagmi |
+
+---
+
+## 📂 Estructura de Directorios
+
+La organización del proyecto se detalla a continuación:
+
+```
+├── .eslintrc.json            # Reglas de ESLint
+├── .gitignore                # Exclusiones de control de versiones
+├── AGENTS.md                 # Guía y reglas del sistema para agentes de desarrollo IA
+├── README.md                 # Documentación principal del repositorio (este archivo)
+├── components.json           # Configuración del CLI de shadcn/ui
+├── next-env.d.ts             # Tipos de Next.js
+├── next.config.js            # Configuración general de Next.js
+├── postcss.config.js         # Configuración de PostCSS para Tailwind CSS v4
+├── package.json              # Scripts y dependencias del proyecto
+├── tsconfig.json             # Configuración de alias de rutas de TypeScript (@/*)
+└── src/
+    ├── components/           # Componentes comunes e interfaces
+    │   ├── Navbar.tsx        # Barra de navegación responsiva con logo de la USACH
+    │   └── ui/               # Componentes atómicos de shadcn/ui (Button, Card, Input, Label)
+    ├── lib/
+    │   └── utils.ts          # Utilidad para combinar clases de Tailwind (cn)
+    ├── pages/                # Enrutador basado en páginas (Pages Router)
+    │   ├── _app.tsx          # Punto de entrada de la aplicación y Providers (Wagmi, RainbowKit)
+    │   ├── index.tsx         # Página de inicio del portal de entrenamiento
+    │   └── erc20.tsx         # Simulador interactivo de despliegue y transferencia de tokens ERC20
+    ├── styles/               # Archivos CSS y variables globales del tema
+    │   ├── globals.css       # Configuración del tema Tailwind v4 y variables OKLCH
+    │   └── Home.module.css   # Estilos CSS específicos de la página de inicio
+    └── wagmi.ts              # Configuración y definición de cadenas para Wagmi y RainbowKit
+```
+
+---
+
+## 💻 Desarrollo Local
+
+Sigue los siguientes pasos para configurar y ejecutar el proyecto localmente:
+
+### 1. Requisitos Previos
+
+Asegúrate de tener instalado [Node.js](https://nodejs.org/) (versión 18 o superior recomendada) y un gestor de paquetes como npm.
+
+### 2. Clonar e Instalar Dependencias
+
+```bash
+# Instalar los paquetes definidos
+npm install
+```
+
+### 3. Iniciar el Servidor de Desarrollo
+
+Para iniciar el servidor de desarrollo, ejecuta:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El servidor se iniciará en `http://localhost:3000`. Ábrelo en tu navegador para ver la dApp de entrenamiento en funcionamiento.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+> [!IMPORTANT]
+> **Bandera `--webpack`**: Observarás que el comando `dev` ejecuta `next dev --webpack`. Esto es obligatorio e intencional para asegurar la correcta compatibilidad de módulos internos utilizados por las dependencias de Web3 (como Wagmi y Viem) y evitar problemas de resolución durante la compilación.
 
-## Learn More
+### 4. Compilar para Producción
 
-To learn more about this stack, take a look at the following resources:
+Para compilar el proyecto y prepararlo para producción:
 
-- [RainbowKit Documentation](https://rainbowkit.com) - Learn how to customize your wallet connection flow.
-- [wagmi Documentation](https://wagmi.sh) - Learn how to interact with Ethereum.
-- [Next.js Documentation](https://nextjs.org/docs) - Learn how to build a Next.js application.
+```bash
+npm run build
+```
 
-You can check out [the RainbowKit GitHub repository](https://github.com/rainbow-me/rainbowkit) - your feedback and contributions are welcome!
+Este comando compila el código TypeScript, valida la sintaxis y ejecuta el linting antes de exportar el bundle final. Una vez compilado, puedes iniciarlo con:
 
-## Deploy on Vercel
+```bash
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## 💡 Buenas Prácticas del Repositorio
+
+Si deseas colaborar o expandir este proyecto, por favor ten en cuenta las siguientes directrices:
+
+1.  **Evitar Fallos de Hidratación (Hydration Mismatch)**:
+    Dado que Next.js utiliza Server-Side Rendering (SSR) y Wagmi interactúa con el estado de la billetera del cliente, las diferencias en el HTML generado pueden causar fallos en la hidratación de React. Siempre utiliza una protección de montaje de componente (`useEffect`) antes de renderizar elementos que dependan del estado de la billetera o variables del cliente:
+    ```typescript
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+    if (!mounted) return null; // o un esqueleto/carga
+    ```
+2.  **Uso de Variables de Tema (Tailwind CSS v4)**:
+    No utilices archivos `tailwind.config.js`. Todo el tema y las propiedades personalizadas de CSS (como el color primario de la USACH, etc.) están configuradas bajo el bloque `@theme inline` en `src/styles/globals.css` utilizando espacios de color `oklch`.
+3.  **Desarrollo Asistido por Inteligencia Artificial**:
+    Si utilizas agentes de IA de codificación para programar, consulta las pautas obligatorias establecidas en [AGENTS.md](file:///home/carlos/DEV/diplomado-usach-training-dapp/AGENTS.md).
