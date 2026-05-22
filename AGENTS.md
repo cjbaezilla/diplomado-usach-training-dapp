@@ -1,0 +1,150 @@
+# Guía para Agentes de Desarrollo de IA (`AGENTS.md`)
+
+¡Bienvenido, Agente de IA! Este documento sirve como una guía completa del sistema, descripción general de la arquitectura y reglas de participación para el desarrollo dentro de este repositorio. Lee este archivo detenidamente antes de proponer cualquier cambio o ejecutar comandos.
+
+---
+
+## REGLA FUNDAMENTAL MANDATORIA
+- **Idioma Oficial del Agente**: Toda comunicación con el usuario y escritura/modificación de archivos (código, comentarios, documentación, etc.) debe realizarse estrictamente en **español**. Esta es una regla fundamental y mandatoria.
+
+---
+
+## 1. Descripción General del Proyecto y Contexto
+
+- **Nombre del Repositorio**: `diplomado-usach-training-dapp`
+- **Propósito**: Una Aplicación Descentralizada (dApp) de entrenamiento desarrollada como parte del programa de Postgrado/Diplomado de la USACH (Universidad de Santiago de Chile). Proporciona una base para que los estudiantes y desarrolladores construyan aplicaciones Web3, interactúen con blockchains compatibles con EVM y construyan interfaces usando herramientas de frontend modernas.
+- **Arquitecturas Clave**:
+  - Integraciones Web3 mediante **Wagmi** y **RainbowKit**.
+  - Frontend estilizado con **Tailwind CSS v4** y **shadcn/ui**.
+  - El framework principal es **Next.js** utilizando el **Pages Router**.
+
+---
+
+## 2. Stack Tecnológico y Dependencias Clave
+
+Por favor, respeta estas versiones específicas de librerías e integraciones. No actualices ni rebajes estas versiones principales a menos que el usuario lo solicite explícitamente.
+
+| Tecnología / Librería | Versión | Rol / Descripción |
+| :--- | :--- | :--- |
+| **Next.js** | `^16.2.4` | Framework principal de React (usando Pages Router) |
+| **React** & **React DOM** | `^19.2.5` | Entorno de ejecución de UI (Nota: se aplican reglas de compatibilidad de React 19) |
+| **TypeScript** | `5.9.3` | Lenguaje de programación / tipado estático |
+| **Tailwind CSS** | `^4.3.0` | Framework de CSS enfocado en utilidades (configurado con PostCSS) |
+| **shadcn/ui** | `^4.8.0` | Primitivas de componentes accesibles y personalizables (Radix) |
+| **Wagmi** | `^2.19.3` | Hooks de React para interacciones con Ethereum / EVM |
+| **RainbowKit** | `^2.2.11` | Librería de UI para conexión de billeteras |
+| **Viem** | `2.38.0` | Interfaz ligera de TypeScript para Ethereum |
+| **TanStack React Query** | `^5.55.3` | Motor de consultas y gestión de estado asíncrono (usado por Wagmi) |
+
+---
+
+## 3. Mapa de Estructura de Directorios
+
+A continuación se muestra el mapa de directorios. Familiarízate con la distribución antes de crear nuevos archivos.
+
+```
+├── .eslintrc.json            # Reglas de ESLint (Next.js core-web-vitals)
+├── .gitignore                # Exclusiones de Git
+├── components.json           # Configuración del CLI de shadcn/ui
+├── next-env.d.ts             # Declaraciones de TypeScript para Next.js
+├── next.config.js            # Archivo de configuración de Next.js
+├── postcss.config.js         # Plugins de PostCSS (carga @tailwindcss/postcss)
+├── package.json              # Definiciones de scripts y lista de dependencias
+├── tsconfig.json             # Configuración del compilador de TypeScript (alias de rutas)
+└── src/
+    ├── components/
+    │   └── ui/               # Primitivas reutilizables de shadcn/ui (ej. button.tsx)
+    ├── lib/
+    │   └── utils.ts          # Ayudantes principales (utilidad cn para tailwind-merge)
+    ├── pages/
+    │   ├── _app.tsx          # Punto de entrada de la aplicación (envuelve los Providers e importa CSS global)
+    │   └── index.tsx         # Página de inicio/aterrizaje de la aplicación
+    ├── styles/
+    │   ├── globals.css       # Importación de Tailwind v4 y tokens de variables del sistema de diseño
+    │   └── Home.module.css   # Estilos de módulo específicos para la página de inicio
+    └── wagmi.ts              # Configuración de Wagmi, RainbowKit y cadenas (Chains)
+```
+
+---
+
+## 4. Convenciones de Estilo de Código y Arquitectura
+
+### A. Patrón de Enrutamiento de Next.js
+- **Solo Pages Router**: Este proyecto utiliza el Pages Router ubicado en `src/pages`. **No** crees una carpeta `app/` ni intentes usar características del App Router (como Server Components) a menos que se te indique explícitamente.
+- Todo el enrutamiento a nivel de página se maneja en `src/pages/`. Los elementos de diseño (layouts) reutilizables y los subcomponentes deben colocarse dentro de `src/components/`.
+
+### B. Reglas de Estilo de Tailwind CSS v4
+- **Sin `tailwind.config.js` para Clases de Utilidad**: Tailwind CSS v4 depende de PostCSS (`@tailwindcss/postcss`) y utiliza configuraciones basadas en CSS. Todos los temas personalizados, animaciones, utilidades y colores se definen directamente dentro de `src/styles/globals.css` usando el bloque `@theme inline`.
+- **Variables**: Las variables del tema personalizado se declaran como propiedades personalizadas de CSS en los bloques `:root` y `.dark` en `src/styles/globals.css` (usando espacios de color OKLCH).
+- **Fusión de Clases (Class Merging)**: Al escribir componentes, siempre usa el ayudante `cn` importado desde `@/lib/utils` para fusionar clases de Tailwind limpiamente:
+  ```typescript
+  import { cn } from "@/lib/utils";
+
+  export function CustomComponent({ className, ...props }) {
+    return <div className={cn("bg-background text-foreground px-4 py-2", className)} {...props} />;
+  }
+  ```
+
+### C. Pautas para Componentes de Interfaz de Usuario (UI)
+- **shadcn/ui**: Los componentes se gestionan usando shadcn. Residen en `src/components/ui/` (por ejemplo, `button.tsx`).
+- Antes de agregar nuevos componentes de shadcn/ui, verifica la configuración en `components.json`.
+- Prefiere usar primitivas estándar de shadcn/ui siempre que sea posible en lugar de escribir elementos personalizados desde cero.
+
+### D. Configuración de TypeScript y Alias de Rutas
+- Usa los alias de ruta configurados en `tsconfig.json`:
+  - `@/*` apunta a `./src/*`
+  - `@/components/*` apunta a `./src/components/*`
+  - `@/lib/*` apunta a `./src/lib/*`
+  - `@/styles/*` apunta a `./src/styles/*`
+- Evita estrictamente el uso de importaciones con rutas relativas como `../../components/ui/button` cuando los alias de ruta estén disponibles.
+
+### E. Interacciones con Web3 y Contratos Inteligentes
+- **Configuración**: La configuración de wagmi se encuentra en `src/wagmi.ts`.
+- **SSR (Server-Side Rendering)**: Wagmi está configurado con `ssr: true` dentro de `src/wagmi.ts`.
+  - > [!IMPORTANT]
+    > **Mitigación de Incompatibilidad de Hidratación (Hydration Mismatch)**: Dado que la aplicación utiliza SSR, llamar a los hooks de Wagmi directamente durante el renderizado de React puede provocar fallos de hidratación entre el HTML generado por el servidor y el estado de Web3 del cliente.
+  - **Mejor Práctica**: Utiliza una protección de hidratación (como un hook personalizado que compruebe si el componente está montado) o renderiza los componentes que requieran el estado de Web3 solo después de que se hayan montado:
+    ```typescript
+    import { useEffect, useState } from "react";
+    import { useAccount } from "wagmi";
+
+    export function WalletInfo() {
+      const [mounted, setMounted] = useState(false);
+      const { address } = useAccount();
+
+      useEffect(() => {
+        setMounted(true);
+      }, []);
+
+      if (!mounted) return null; // O un estado de carga fallback/skeleton
+
+      return <div>Connected to {address}</div>;
+    }
+    ```
+- **Cadenas Soportadas**: Mainnet, Polygon, Optimism, Arbitrum, Base y Sepolia (Sepolia se habilita condicionalmente si `process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'`).
+
+---
+
+## 5. Flujo de Trabajo de Desarrollo y Verificación
+
+Siempre verifica que tus cambios compilen y se construyan correctamente antes de finalizar las tareas.
+
+### Referencia de Comandos
+
+| Acción | Comando | Propósito |
+| :--- | :--- | :--- |
+| **Iniciar Servidor de Desarrollo** | `npm run dev` | Ejecuta Next.js en modo de desarrollo (adjunta la bandera `--webpack`) |
+| **Construir Proyecto** | `npm run build` | Compila y construye el paquete de producción |
+| **Iniciar Producción** | `npm run start` | Ejecuta el servidor de producción compilado |
+
+- **Bandera de Compilación Webpack**: Los comandos de desarrollo y construcción de Next.js en `package.json` llevan adjunta la bandera `--webpack`. Asegúrate de mantener esta bandera intacta al ejecutar scripts, ya que resuelve problemas específicos de resolución de módulos con wagmi y viem.
+
+---
+
+## 6. Reglas de Protección y Restricciones Críticas
+
+- > [!WARNING]
+  > **Compatibilidad con React 19**: Al agregar paquetes npm de terceros, asegúrate de que sean compatibles con React 19. Ten cuidado con los conflictos de dependencias de pares (peer dependencies) y resuélvelos de forma segura.
+- > [!IMPORTANT]
+  > **Variable de Entorno para el Project ID**: La configuración del proyecto en `src/wagmi.ts` contiene `projectId: 'YOUR_PROJECT_ID'`. No reemplaces esto con credenciales explícitas ni escribas claves API privadas directamente en esta configuración. Si se requiere un Project ID personalizado para pruebas, indica al usuario que lo configure mediante variables de entorno o proporcione una entrada segura.
+- **No omitas el compilador de TypeScript o ESLint**: Asegúrate siempre de que el código esté libre de errores de compilación y cumpla con las reglas de linting (`next lint` se ejecuta implícitamente durante `next build`).
