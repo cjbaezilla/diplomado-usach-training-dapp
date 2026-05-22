@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Navbar } from '@/components/Navbar';
 import {
   Card,
   CardContent,
@@ -16,7 +17,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Compass,
   Coins,
   Rocket,
   Send,
@@ -300,33 +300,7 @@ const ERC20Page: NextPage = () => {
       </Head>
 
       {/* Barra de navegación responsiva */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-2">
-            <Compass className="h-6 w-6 text-primary animate-pulse" />
-            <Link href="/" className="font-bold tracking-tight text-lg sm:text-xl hover:text-primary transition-colors">
-              USACH dApp
-            </Link>
-            <span className="hidden sm:inline-flex items-center rounded-full border border-transparent bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold">
-              Entrenamiento
-            </span>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">
-              Inicio
-            </Link>
-            <Link href="/erc20" className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5">
-              <Coins className="h-4 w-4" />
-              Tokens ERC20
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <ConnectButton />
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Notificaciones flotantes */}
       {notification && (
@@ -370,7 +344,7 @@ const ERC20Page: NextPage = () => {
         {/* Protección de Conexión de Billetera */}
         {!isConnected ? (
           <div className="flex flex-col items-center justify-center p-8 sm:p-16 border border-dashed border-border rounded-xl bg-card/50 text-center space-y-6 max-w-2xl mx-auto shadow-sm">
-            <div className="rounded-full bg-primary/10 p-4 text-primary animate-bounce">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
               <Wallet className="h-10 w-10" />
             </div>
             <div className="space-y-2">
