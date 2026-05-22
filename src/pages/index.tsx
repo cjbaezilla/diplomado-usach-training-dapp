@@ -35,7 +35,7 @@ const Home: NextPage = () => {
       <Navbar />
 
       {/* Contenido Principal */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto space-y-8 w-full">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-6xl mx-auto space-y-8 w-full">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
@@ -87,11 +87,14 @@ const Home: NextPage = () => {
           </div>
         )}
 
-        {/* Componente nuevo de información sobre Wallets */}
-        <WalletGuide />
+        {/* Secciones informativas lado a lado */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start pt-4">
+          {/* Componente nuevo de información sobre Wallets */}
+          <WalletGuide />
 
-        {/* Componente nuevo de información sobre Faucets */}
-        <FaucetInfo />
+          {/* Componente nuevo de información sobre Faucets */}
+          <FaucetInfo />
+        </div>
       </main>
 
       {/* Footer */}

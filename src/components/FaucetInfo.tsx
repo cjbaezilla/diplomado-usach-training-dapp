@@ -57,7 +57,7 @@ const SEPOLIA_FAUCETS: FaucetLink[] = [
 
 export function FaucetInfo() {
   return (
-    <div className="w-full max-w-3xl mx-auto mt-12 space-y-6 text-left animate-in fade-in-50 duration-500">
+    <div className="w-full space-y-6 text-left animate-in fade-in-50 duration-500">
       <div className="flex items-center gap-3 border-b border-border/40 pb-4">
         <Droplet className="h-6 w-6 text-primary animate-pulse" />
         <h2 className="text-2xl font-bold tracking-tight">Grifos de Prueba (Faucets)</h2>

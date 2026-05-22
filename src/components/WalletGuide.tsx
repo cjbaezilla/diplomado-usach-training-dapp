@@ -38,7 +38,7 @@ const WALLET_OPTIONS: WalletOption[] = [
 
 export function WalletGuide() {
   return (
-    <div className="w-full max-w-3xl mx-auto mt-12 space-y-6 text-left animate-in fade-in-50 duration-500">
+    <div className="w-full space-y-6 text-left animate-in fade-in-50 duration-500">
       {/* Encabezado */}
       <div className="flex items-center gap-3 border-b border-border/40 pb-4">
         <Wallet className="h-6 w-6 text-primary animate-pulse" />
