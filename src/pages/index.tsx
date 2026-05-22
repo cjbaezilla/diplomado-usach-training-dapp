@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Sparkles, CheckCircle2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { FaucetInfo } from '@/components/FaucetInfo';
 
 const Home: NextPage = () => {
   const [mounted, setMounted] = useState(false);
@@ -33,7 +34,7 @@ const Home: NextPage = () => {
       <Navbar />
 
       {/* Contenido Principal */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto space-y-8">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto space-y-8 w-full">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
@@ -84,6 +85,9 @@ const Home: NextPage = () => {
             )}
           </div>
         )}
+
+        {/* Componente nuevo de información sobre Faucets */}
+        <FaucetInfo />
       </main>
 
       {/* Footer */}
