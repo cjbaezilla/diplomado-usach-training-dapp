@@ -304,7 +304,7 @@ const ERC20Page: NextPage = () => {
 
       {/* Notificaciones flotantes */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-md p-4 rounded-lg border shadow-lg animate-in slide-in-from-bottom duration-300 bg-card text-card-foreground">
+        <div className="fixed bottom-5 right-5 z-50 p-4 rounded-lg border shadow-lg animate-in slide-in-from-bottom duration-300 bg-card text-card-foreground">
           <div className="flex items-start gap-3">
             {notification.type === 'success' ? (
               <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
@@ -324,7 +324,7 @@ const ERC20Page: NextPage = () => {
       )}
 
       {/* Contenido Principal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 space-y-8">
+      <main className="flex-1 w-full mx-auto p-4 sm:p-8 space-y-8">
         {/* Encabezado de la página */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
           <div>
@@ -343,13 +343,13 @@ const ERC20Page: NextPage = () => {
 
         {/* Protección de Conexión de Billetera */}
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center p-8 sm:p-16 border border-dashed border-border rounded-xl bg-card/50 text-center space-y-6 max-w-2xl mx-auto shadow-sm">
+          <div className="flex flex-col items-center justify-center p-8 sm:p-16 border border-dashed border-border rounded-xl bg-card/50 text-center space-y-6 mx-auto shadow-sm">
             <div className="rounded-full bg-primary/10 p-4 text-primary">
               <Wallet className="h-10 w-10" />
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-bold tracking-tight">Billetera Desconectada</h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <p className="text-sm text-muted-foreground mx-auto">
                 Para interactuar con el simulador de tokens ERC-20, crear tus propios activos blockchain y transferirlos, primero debes conectar tu billetera Web3.
               </p>
             </div>

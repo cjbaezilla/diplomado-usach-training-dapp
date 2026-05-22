@@ -123,6 +123,13 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
     ```
 - **Cadenas Soportadas**: Mainnet, Polygon, Optimism, Arbitrum, Base y Sepolia (Sepolia se habilita condicionalmente si `process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'`).
 
+### F. Restricción de Ancho Máximo (max-w) en Diseños (Layouts)
+- **Diseño Completamente Fluido**: Está estrictamente prohibido utilizar clases de limitación de ancho máximo (como `max-w-` de Tailwind CSS o la propiedad `max-width` de CSS) en los contenedores principales, secciones de contenido general o layouts de página.
+- **Propósito**: Asegurar que la interfaz fluya y ocupe de manera adaptativa todo el ancho de la pantalla disponible.
+- **Excepciones**:
+  - Las reglas responsivas basadas en media queries (`max-width` en reglas `@media`) están permitidas para definir puntos de quiebre y adaptabilidad responsiva.
+  - Componentes muy específicos como diálogos (modales) o tooltips que por su propia naturaleza requieran un tamaño máximo definido para legibilidad.
+
 ---
 
 ## 5. Flujo de Trabajo de Desarrollo y Verificación

@@ -12,7 +12,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary-foreground/10 bg-primary py-3 shadow-md">
-      <div className="flex h-12 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto w-full">
+      <div className="flex h-12 items-center justify-between px-4 sm:px-8 mx-auto w-full">
         {/* Logo / Título con imagen de la USACH */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">

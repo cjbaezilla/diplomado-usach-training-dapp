@@ -35,7 +35,7 @@ const Home: NextPage = () => {
       <Navbar />
 
       {/* Contenido Principal */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-6xl mx-auto space-y-8 w-full">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center mx-auto space-y-8 w-full">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
@@ -46,14 +46,14 @@ const Home: NextPage = () => {
             Plataforma de Entrenamiento Web3
           </h1>
           
-          <p className="max-w-[42rem] mx-auto leading-normal text-muted-foreground sm:text-lg sm:leading-8">
+          <p className="mx-auto leading-normal text-muted-foreground sm:text-lg sm:leading-8">
             Bienvenido a la dApp oficial de entrenamiento. Esta interfaz simplificada te permite conectar tu billetera y comenzar a interactuar con las redes Web3 compatibles.
           </p>
         </div>
 
         {/* Estado Interactivo (Protección de Hidratación) */}
         {mounted && (
-          <div className="w-full max-w-md p-6 rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-md">
+          <div className="w-full p-6 rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-md">
             {isConnected ? (
               <div className="space-y-4">
                 <div className="flex justify-center">
