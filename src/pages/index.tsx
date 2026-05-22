@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, CheckCircle2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { FaucetInfo } from '@/components/FaucetInfo';
+import { WalletGuide } from '@/components/WalletGuide';
 
 const Home: NextPage = () => {
   const [mounted, setMounted] = useState(false);
@@ -85,6 +86,9 @@ const Home: NextPage = () => {
             )}
           </div>
         )}
+
+        {/* Componente nuevo de información sobre Wallets */}
+        <WalletGuide />
 
         {/* Componente nuevo de información sobre Faucets */}
         <FaucetInfo />
