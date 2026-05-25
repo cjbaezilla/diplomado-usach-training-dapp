@@ -585,97 +585,107 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
         {/* Modal / Dialog de Detalles de la Reliquia */}
         <Dialog open={selectedRelic !== null} onOpenChange={(open) => !open && setSelectedRelic(null)}>
           {selectedRelic && (
-            <DialogContent className="max-w-2xl bg-card border border-border/80 shadow-2xl p-0 overflow-hidden text-left rounded-2xl w-[94%]">
-              <div className="relative w-full aspect-[21/9] sm:aspect-[21/9] md:aspect-[21/9] overflow-hidden bg-muted/40">
-                <img
-                  src={selectedRelic.localImage}
-                  alt={selectedRelic.name}
-                  className="w-full h-full object-cover"
-                />
+            <DialogContent className="max-w-md md:max-w-4xl bg-card border border-border/80 shadow-2xl p-0 overflow-hidden text-left rounded-2xl w-[94%] transition-all duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-12 w-full h-full items-stretch">
                 
-                {/* Rarity & XP */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                  <Badge className={`text-xs px-2 py-1 font-bold uppercase rounded-md border-none ${getRarityColor(getRarity(selectedRelic)).bg}`}>
-                    {getRarity(selectedRelic)}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs bg-background/90 font-bold border-border/40 px-2 py-1">
-                    +{getXP(selectedRelic)} XP
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <DialogHeader className="gap-1.5">
-                  <DialogTitle className="text-xl sm:text-2xl font-black text-foreground leading-tight">
-                    {selectedRelic.name}
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
-                    ID de Token: {selectedRelic.id}
-                  </DialogDescription>
-                </DialogHeader>
-
-                {/* Lore / Historia */}
-                <div className="space-y-2">
-                  <h5 className="font-bold text-sm text-foreground uppercase tracking-wider text-[10px] text-muted-foreground">
-                    Historia y Lore Universitario
-                  </h5>
-                  <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-muted/20 border border-border/20 p-4 rounded-xl max-h-[160px] overflow-y-auto pr-2">
-                    {selectedRelic.description.split('\n').map((para, i) => (
-                      <p key={i} className="mb-2 last:mb-0">
-                        {para}
-                      </p>
-                    ))}
+                {/* Lateral izquierdo: Imagen de la Reliquia */}
+                <div className="md:col-span-5 relative w-full min-h-[220px] md:min-h-[460px] overflow-hidden bg-muted/40 flex">
+                  <img
+                    src={selectedRelic.localImage}
+                    alt={selectedRelic.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Gradiente sutil para acoplar la imagen en móvil vs desktop */}
+                  <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
+                  
+                  {/* Rarity & XP overlay sobre la imagen */}
+                  <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                    <Badge className={`text-xs px-2 py-1 font-bold uppercase rounded-md border-none ${getRarityColor(getRarity(selectedRelic)).bg}`}>
+                      {getRarity(selectedRelic)}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs bg-background/95 font-bold border-border/40 px-2 py-1">
+                      +{getXP(selectedRelic)} XP
+                    </Badge>
                   </div>
                 </div>
 
-                {/* Atributos / Grid de Atributos */}
-                <div className="space-y-2">
-                  <h5 className="font-bold text-sm text-foreground uppercase tracking-wider text-[10px] text-muted-foreground">
-                    Atributos y Propiedades del Item
-                  </h5>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-left">
-                    {selectedRelic.attributes.map((attr, index) => {
-                      if (attr.trait_type === 'Clase de Item' || attr.trait_type === 'Experiencia') return null;
-                      const isBuff = attr.trait_type === 'Efecto Pasivo';
-                      return (
-                        <div
-                          key={index}
-                          className={`p-2 rounded-lg border border-border/30 bg-muted/10 flex flex-col gap-0.5 ${
-                            isBuff ? 'col-span-2 md:col-span-3 border-emerald-500/20 bg-emerald-500/5' : ''
-                          }`}
-                        >
-                          <span className="text-[10px] text-muted-foreground font-semibold uppercase">{attr.trait_type}</span>
-                          <span className={`text-xs font-bold ${
-                            isBuff ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground/90'
-                          }`}>
-                            {isBuff ? `✨ ${attr.value}` : attr.value}
-                          </span>
-                        </div>
-                      );
-                    })}
+                {/* Lateral derecho: Información detallada */}
+                <div className="md:col-span-7 p-6 flex flex-col justify-between space-y-4">
+                  <div className="space-y-4">
+                    <DialogHeader className="gap-1">
+                      <DialogTitle className="text-xl sm:text-2xl font-black text-foreground leading-tight">
+                        {selectedRelic.name}
+                      </DialogTitle>
+                      <DialogDescription className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
+                        ID de Token: {selectedRelic.id}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {/* Lore / Historia */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-foreground uppercase tracking-wider text-[10px] text-muted-foreground">
+                        Historia y Lore Universitario
+                      </h5>
+                      <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-muted/20 border border-border/20 p-4 rounded-xl max-h-[170px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted">
+                        {selectedRelic.description.split('\n').map((para, i) => (
+                          <p key={i} className="mb-2 last:mb-0">
+                            {para}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Atributos / Grid de Atributos */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-foreground uppercase tracking-wider text-[10px] text-muted-foreground">
+                        Atributos y Propiedades
+                      </h5>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
+                        {selectedRelic.attributes.map((attr, index) => {
+                          if (attr.trait_type === 'Clase de Item' || attr.trait_type === 'Experiencia') return null;
+                          const isBuff = attr.trait_type === 'Efecto Pasivo';
+                          return (
+                            <div
+                              key={index}
+                              className={`p-2 rounded-lg border border-border/30 bg-muted/10 flex flex-col gap-0.5 ${
+                                isBuff ? 'col-span-2 sm:col-span-3 border-emerald-500/20 bg-emerald-500/5' : ''
+                              }`}
+                            >
+                              <span className="text-[10px] text-muted-foreground font-semibold uppercase">{attr.trait_type}</span>
+                              <span className={`text-xs font-bold ${
+                                isBuff ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground/90'
+                              }`}>
+                                {isBuff ? `✨ ${attr.value}` : attr.value}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer del Modal */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-center border-t border-border/20 pt-4 mt-2">
+                    <a
+                      href={selectedRelic.external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline self-start sm:self-center"
+                    >
+                      <span>Ver en Archivo Patrimonial USACH</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto text-xs"
+                      onClick={() => setSelectedRelic(null)}
+                    >
+                      Cerrar Detalle
+                    </Button>
                   </div>
                 </div>
 
-                {/* Footer del Modal */}
-                <div className="flex flex-col sm:flex-row gap-2 justify-between items-center border-t border-border/20 pt-4 mt-2">
-                  <a
-                    href={selectedRelic.external_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline self-start sm:self-center"
-                  >
-                    <span>Ver en Archivo Patrimonial USACH</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto text-xs"
-                    onClick={() => setSelectedRelic(null)}
-                  >
-                    Cerrar Detalle
-                  </Button>
-                </div>
               </div>
             </DialogContent>
           )}
