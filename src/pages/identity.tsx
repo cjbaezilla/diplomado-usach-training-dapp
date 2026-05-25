@@ -893,65 +893,90 @@ const IdentityPage: NextPage = () => {
                   Concepto de la identidad digital descentralizada on-chain.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <CardContent className="space-y-5 text-sm text-muted-foreground">
                 <p>
-                  El contrato inteligente <strong className="text-foreground font-semibold">StudentIdentity</strong> permite gestionar información de perfil público y redes profesionales vinculadas a tu dirección de wallet de manera inmutable y transparente.
+                  El contrato inteligente <strong className="text-foreground font-semibold">StudentIdentity</strong> actúa como un registro público y descentralizado on-chain para almacenar la identidad digital de los estudiantes. Esto permite asociar directamente una dirección Ethereum con información de contacto y enlaces de redes profesionales.
                 </p>
 
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Campos del Perfil (Profile)</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Campos del Perfil (Profile Struct)</h4>
                   <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">name</span>
-                      Nombre completo del estudiante.
+                    <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
+                      <div>
+                        <span className="block font-bold text-foreground font-mono">name</span>
+                        <span className="text-[10px] leading-tight">Nombre completo del estudiante. Es de carácter obligatorio; si se intenta registrar vacío, la transacción se revertirá.</span>
+                      </div>
                     </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">email</span>
-                      Correo electrónico estudiantil.
+                    <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
+                      <div>
+                        <span className="block font-bold text-foreground font-mono">email</span>
+                        <span className="text-[10px] leading-tight">Correo electrónico de contacto estudiantil (por ejemplo, con dominio institucional <code>@usach.cl</code>).</span>
+                      </div>
                     </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">linkedin</span>
-                      Nombre de usuario de LinkedIn.
+                    <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
+                      <div>
+                        <span className="block font-bold text-foreground font-mono">linkedin</span>
+                        <span className="text-[10px] leading-tight">Nombre de usuario del perfil profesional de LinkedIn para facilitar el networking entre pares.</span>
+                      </div>
                     </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">twitter</span>
-                      Nombre de usuario de Twitter.
+                    <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
+                      <div>
+                        <span className="block font-bold text-foreground font-mono">twitter</span>
+                        <span className="text-[10px] leading-tight">Nombre de usuario de X/Twitter para seguir la presencia social del estudiante en la Web3.</span>
+                      </div>
                     </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">avatar</span>
-                      URL de la imagen de avatar.
+                    <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
+                      <div>
+                        <span className="block font-bold text-foreground font-mono">avatar</span>
+                        <span className="text-[10px] leading-tight">Enlace HTTP de la imagen o URI de almacenamiento descentralizado (como un CID de IPFS) para el avatar.</span>
+                      </div>
                     </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">updatedAt</span>
-                      Timestamp de última actualización.
+                    <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
+                      <div>
+                        <span className="block font-bold text-foreground font-mono">updatedAt</span>
+                        <span className="text-[10px] leading-tight">Marca de tiempo Unix provista por la red (<code>block.timestamp</code>) con el segundo exacto de la última edición.</span>
+                      </div>
                     </li>
                   </ul>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Funciones Clave</h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-start gap-1">
-                      <span className="font-mono text-pink-500 font-bold shrink-0">setProfile()</span>
-                      <span>Registra o actualiza el perfil del usuario actual.</span>
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Funciones del Contrato</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-pink-500 font-bold shrink-0 bg-pink-500/10 px-1 rounded">setProfile()</span>
+                      <span className="text-[11px]">Escribe o actualiza los datos del emisor de la transacción (<code>msg.sender</code>). Modifica el almacenamiento permanente del contrato y emite los eventos correspondientes.</span>
                     </div>
-                    <div className="flex items-start gap-1">
-                      <span className="font-mono text-pink-500 font-bold shrink-0">getProfile()</span>
-                      <span>Consulta los datos de perfil de una dirección.</span>
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-pink-500 font-bold shrink-0 bg-pink-500/10 px-1 rounded">getProfile()</span>
+                      <span className="text-[11px]">Función de tipo <code>view</code> que retorna todos los campos estructurados de un perfil para una dirección dada. Es gratuita y no consume gas.</span>
                     </div>
-                    <div className="flex items-start gap-1">
-                      <span className="font-mono text-pink-500 font-bold shrink-0">getAllRegisteredStudents()</span>
-                      <span>Retorna la lista de direcciones registradas.</span>
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-pink-500 font-bold shrink-0 bg-pink-500/10 px-1 rounded">getAllRegisteredStudents()</span>
+                      <span className="text-[11px]">Retorna un array completo con las direcciones Ethereum de todos los alumnos que han creado un perfil en la dApp.</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-pink-500 font-bold shrink-0 bg-pink-500/10 px-1 rounded">getStudentsCount()</span>
+                      <span className="text-[11px]">Retorna la longitud del array de estudiantes registrados, permitiendo conocer rápidamente la cantidad total de miembros en la comunidad.</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Eventos y Errores</h4>
-                  <div className="space-y-1 text-xs">
-                    <p><code className="text-emerald-500 font-mono font-bold">ProfileRegistered(studentAddress, name, email)</code></p>
-                    <p><code className="text-emerald-500 font-mono font-bold">ProfileUpdated(...)</code></p>
-                    <p><code className="text-red-400 font-mono font-bold">error NameRequired()</code></p>
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Eventos y Errores Personalizados</h4>
+                  <div className="space-y-2 text-[11px]">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-emerald-500 font-mono font-bold">ProfileRegistered(address indexed studentAddress, name, email)</span>
+                      <span className="text-muted-foreground pl-2 border-l border-border/30">Se emite cuando una dirección crea su perfil por primera vez. Facilita la indexación off-chain.</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-emerald-500 font-mono font-bold">ProfileUpdated(address indexed studentAddress, name, email, linkedin, twitter, avatar, updatedAt)</span>
+                      <span className="text-muted-foreground pl-2 border-l border-border/30">Se emite en cada modificación posterior para alertar a los clientes frontend de los cambios.</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-red-400 font-mono font-bold">error NameRequired()</span>
+                      <span className="text-muted-foreground pl-2 border-l border-border/30">Error personalizado para ahorrar gas. Revierte la transacción de manera eficiente si el campo <code>name</code> está vacío.</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -996,7 +1021,7 @@ const IdentityPage: NextPage = () => {
                       solc 0.8.35
                     </span>
                   </div>
-                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
+                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[580px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <code>
                       <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
                       <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.35</span>;{"\n\n"}
