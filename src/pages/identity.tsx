@@ -106,10 +106,27 @@ function StudentCard({ studentAddress, onSelect, isSelected }: StudentCardProps)
   );
 }
 
-const solidityCode = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+const solidityCode = `/*
+888     888  .d8888b.        d8888  .d8888b.  888    888 
+888     888 d88P  Y88b      d88888 d88P  Y88b 888    888 
+888     888 Y88b.          d88P888 888    888 888    888 
+888     888  "Y888b.      d88P 888 888        8888888888 
+888     888     "Y88b.   d88P  888 888        888    888 
+888     888       "888  d88P   888 888    888 888    888 
+Y88b. .d88P Y88b  d88P d8888888888 Y88b  d88P 888    888 
+ "Y88888P"   "Y8888P" d88P     888  "Y8888P"  888    888 
+*/
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.35;
 
+/**
+ * @title StudentIdentity
+ * @dev Contrato para almacenar la identidad on-chain de los estudiantes del Diplomado USACH.
+ * Permite a cualquier dirección registrar y actualizar sus datos de contacto y redes sociales.
+ */
 contract StudentIdentity {
+    
+    // Estructura que define el perfil de identidad de un estudiante
     struct Profile {
         string name;
         string email;
@@ -120,57 +137,133 @@ contract StudentIdentity {
         bool isRegistered;
     }
 
+    // Mapeo de dirección de wallet a perfil del estudiante
     mapping(address => Profile) private _profiles;
+
+    // Arreglo de todas las direcciones de estudiantes registrados
     address[] private _registeredStudents;
 
+    // Mapeo para verificar rápidamente la posición/existencia del estudiante en el array
+    mapping(address => uint256) private _studentIndex; // 1-based index (0 significa no registrado en el array general)
+
+    // Evento emitido cuando un perfil es registrado por primera vez
+    event ProfileRegistered(
+        address indexed studentAddress,
+        string name,
+        string email
+    );
+
+    // Evento emitido cuando un perfil existente es actualizado
     event ProfileUpdated(
-        address indexed student,
+        address indexed studentAddress,
         string name,
         string email,
+        string linkedin,
+        string twitter,
+        string avatar,
         uint256 updatedAt
     );
 
+    // Error personalizado para cuando se intenta registrar un nombre vacío
+    error NameRequired();
+
+    /**
+     * @dev Permite a un estudiante registrar o actualizar su identidad on-chain.
+     * @param name Nombre completo del estudiante. No puede estar vacío.
+     * @param email Correo electrónico de contacto.
+     * @param linkedin Enlace o nombre de usuario del perfil de LinkedIn.
+     * @param twitter Enlace o nombre de usuario del perfil de Twitter.
+     * @param avatar Enlace (URL) o hash IPFS de la imagen de avatar.
+     */
     function setProfile(
-        string memory name,
-        string memory email,
-        string memory linkedin,
-        string memory twitter,
-        string memory avatar
-    ) public {
-        if (!_profiles[msg.sender].isRegistered) {
-            _profiles[msg.sender].isRegistered = true;
-            _registeredStudents.push(msg.sender);
+        string calldata name,
+        string calldata email,
+        string calldata linkedin,
+        string calldata twitter,
+        string calldata avatar
+    ) external {
+        if (bytes(name).length == 0) {
+            revert NameRequired();
         }
-        
-        _profiles[msg.sender].name = name;
-        _profiles[msg.sender].email = email;
-        _profiles[msg.sender].linkedin = linkedin;
-        _profiles[msg.sender].twitter = twitter;
-        _profiles[msg.sender].avatar = avatar;
-        _profiles[msg.sender].updatedAt = block.timestamp;
 
-        emit ProfileUpdated(msg.sender, name, email, block.timestamp);
+        Profile storage profile = _profiles[msg.sender];
+        bool previouslyRegistered = profile.isRegistered;
+
+        profile.name = name;
+        profile.email = email;
+        profile.linkedin = linkedin;
+        profile.twitter = twitter;
+        profile.avatar = avatar;
+        profile.updatedAt = block.timestamp;
+
+        if (!previouslyRegistered) {
+            profile.isRegistered = true;
+            _registeredStudents.push(msg.sender);
+            _studentIndex[msg.sender] = _registeredStudents.length;
+            emit ProfileRegistered(msg.sender, name, email);
+        }
+
+        emit ProfileUpdated(
+            msg.sender,
+            name,
+            email,
+            linkedin,
+            twitter,
+            avatar,
+            block.timestamp
+        );
     }
 
-    function getProfile(address student) public view returns (
-        string memory name,
-        string memory email,
-        string memory linkedin,
-        string memory twitter,
-        string memory avatar,
-        uint256 updatedAt,
-        bool isRegistered
-    ) {
-        Profile memory p = _profiles[student];
-        return (p.name, p.email, p.linkedin, p.twitter, p.avatar, p.updatedAt, p.isRegistered);
+    /**
+     * @dev Obtiene el perfil completo de un estudiante a partir de su dirección.
+     * @param studentAddress Dirección Ethereum del estudiante.
+     * @return name Nombre completo del estudiante.
+     * @return email Correo electrónico.
+     * @return linkedin Enlace a LinkedIn.
+     * @return twitter Enlace a Twitter.
+     * @return avatar Enlace al avatar.
+     * @return updatedAt Timestamp de la última actualización.
+     * @return isRegistered Indica si el estudiante está registrado.
+     */
+    function getProfile(address studentAddress)
+        external
+        view
+        returns (
+            string memory name,
+            string memory email,
+            string memory linkedin,
+            string memory twitter,
+            string memory avatar,
+            uint256 updatedAt,
+            bool isRegistered
+        )
+    {
+        Profile memory profile = _profiles[studentAddress];
+        return (
+            profile.name,
+            profile.email,
+            profile.linkedin,
+            profile.twitter,
+            profile.avatar,
+            profile.updatedAt,
+            profile.isRegistered
+        );
     }
 
-    function getStudentsCount() public view returns (uint256) {
-        return _registeredStudents.length;
-    }
-
-    function getAllRegisteredStudents() public view returns (address[] memory) {
+    /**
+     * @dev Retorna todas las direcciones de los estudiantes registrados.
+     * @return Array de direcciones Ethereum.
+     */
+    function getAllRegisteredStudents() external view returns (address[] memory) {
         return _registeredStudents;
+    }
+
+    /**
+     * @dev Retorna la cantidad total de estudiantes registrados.
+     * @return Cantidad de registros.
+     */
+    function getStudentsCount() external view returns (uint256) {
+        return _registeredStudents.length;
     }
 }`;
 
@@ -616,14 +709,19 @@ const IdentityPage: NextPage = () => {
           <Card className="xl:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-500 to-pink-500"></div>
             <div>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
-                  <Search className="h-5 w-5 text-purple-500" />
-                  Buscador de Estudiantes
-                </CardTitle>
-                <CardDescription>
-                  Consulta perfiles de otros estudiantes ingresando su dirección Ethereum.
-                </CardDescription>
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
+                    <Search className="h-5 w-5 text-purple-500" />
+                    Buscador de Estudiantes
+                  </CardTitle>
+                  <CardDescription>
+                    Consulta perfiles de otros estudiantes ingresando su dirección Ethereum.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-1.5 bg-purple-500/10 px-2 py-1 rounded-full text-xs font-semibold text-purple-500 border border-purple-500/20 shrink-0">
+                  {studentCount} registrados
+                </div>
               </CardHeader>
               
               <CardContent className="space-y-4">
@@ -644,7 +742,17 @@ const IdentityPage: NextPage = () => {
                 </form>
 
                 {searchAddress && (
-                  <div className="border border-border/40 rounded-xl p-4 bg-muted/20 space-y-4">
+                  <div className="border border-border/40 rounded-xl p-4 bg-muted/20 space-y-4 relative">
+                    <button
+                      onClick={() => {
+                        setSearchInput('');
+                        setSearchAddress(undefined);
+                      }}
+                      className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground text-sm font-bold leading-none p-1 rounded-md hover:bg-muted/40 transition-colors"
+                      title="Limpiar búsqueda"
+                    >
+                      &times;
+                    </button>
                     {isLoadingSearch ? (
                       <div className="flex items-center justify-center py-6">
                         <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
@@ -728,11 +836,41 @@ const IdentityPage: NextPage = () => {
                     )}
                   </div>
                 )}
+
+                {/* Listado de Estudiantes integrado */}
+                <div className="space-y-2 pt-2 border-t border-border/20">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-purple-500" />
+                    Comunidad Estudiantil
+                  </h4>
+                  {isLoadingDirectory ? (
+                    <div className="flex flex-col gap-2 py-2">
+                      <div className="h-9 rounded-lg bg-muted animate-pulse" />
+                      <div className="h-9 rounded-lg bg-muted animate-pulse" />
+                    </div>
+                  ) : registeredAddresses.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-muted-foreground space-y-1 border border-dashed border-border/40 rounded-xl">
+                      <Info className="h-5 w-5 text-muted-foreground mx-auto" />
+                      <p>No se han registrado estudiantes aún.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border">
+                      {registeredAddresses.map((addr) => (
+                        <StudentCard
+                          key={addr}
+                          studentAddress={addr}
+                          onSelect={handleSelectStudent}
+                          isSelected={searchAddress === addr}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </div>
             <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
               <span className="text-[10.5px] text-muted-foreground">
-                * Las búsquedas en la blockchain son gratuitas y no requieren gas.
+                * Selecciona cualquier estudiante de la lista o busca para ver su perfil completo.
               </span>
             </CardFooter>
           </Card>
@@ -742,54 +880,85 @@ const IdentityPage: NextPage = () => {
         {/* Sección Inferior: Directorio Global y Código de Contrato */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           
-          {/* Directorio Global */}
+          {/* Estructura y Propiedades del Contrato */}
           <Card className="lg:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-pink-500 to-indigo-500"></div>
             <div>
-              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                <div>
-                  <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
-                    <Users className="h-5 w-5 text-pink-500 animate-pulse" />
-                    Directorio Estudiantil
-                  </CardTitle>
-                  <CardDescription>
-                    Lista de todos los perfiles Web3 creados por la comunidad USACH.
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-1.5 bg-indigo-500/10 px-2 py-1 rounded-full text-xs font-semibold text-indigo-500 border border-indigo-500/20">
-                  {studentCount} registrados
-                </div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
+                  <BookOpen className="h-5 w-5 text-pink-500" />
+                  1. Estructura y Propiedades
+                </CardTitle>
+                <CardDescription>
+                  Concepto de la identidad digital descentralizada on-chain.
+                </CardDescription>
               </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {isLoadingDirectory ? (
-                  <div className="flex flex-col gap-3 py-6">
-                    <div className="h-10 rounded-lg bg-muted animate-pulse" />
-                    <div className="h-10 rounded-lg bg-muted animate-pulse" />
-                    <div className="h-10 rounded-lg bg-muted animate-pulse" />
+              <CardContent className="space-y-4 text-sm text-muted-foreground">
+                <p>
+                  El contrato inteligente <strong className="text-foreground font-semibold">StudentIdentity</strong> permite gestionar información de perfil público y redes profesionales vinculadas a tu dirección de wallet de manera inmutable y transparente.
+                </p>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Campos del Perfil (Profile)</h4>
+                  <ul className="grid grid-cols-2 gap-2 text-[11px]">
+                    <li className="bg-muted/40 p-2 rounded border border-border/20">
+                      <span className="block font-bold text-foreground">name</span>
+                      Nombre completo del estudiante.
+                    </li>
+                    <li className="bg-muted/40 p-2 rounded border border-border/20">
+                      <span className="block font-bold text-foreground">email</span>
+                      Correo electrónico estudiantil.
+                    </li>
+                    <li className="bg-muted/40 p-2 rounded border border-border/20">
+                      <span className="block font-bold text-foreground">linkedin</span>
+                      Nombre de usuario de LinkedIn.
+                    </li>
+                    <li className="bg-muted/40 p-2 rounded border border-border/20">
+                      <span className="block font-bold text-foreground">twitter</span>
+                      Nombre de usuario de Twitter.
+                    </li>
+                    <li className="bg-muted/40 p-2 rounded border border-border/20">
+                      <span className="block font-bold text-foreground">avatar</span>
+                      URL de la imagen de avatar.
+                    </li>
+                    <li className="bg-muted/40 p-2 rounded border border-border/20">
+                      <span className="block font-bold text-foreground">updatedAt</span>
+                      Timestamp de última actualización.
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Funciones Clave</h4>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex items-start gap-1">
+                      <span className="font-mono text-pink-500 font-bold shrink-0">setProfile()</span>
+                      <span>Registra o actualiza el perfil del usuario actual.</span>
+                    </div>
+                    <div className="flex items-start gap-1">
+                      <span className="font-mono text-pink-500 font-bold shrink-0">getProfile()</span>
+                      <span>Consulta los datos de perfil de una dirección.</span>
+                    </div>
+                    <div className="flex items-start gap-1">
+                      <span className="font-mono text-pink-500 font-bold shrink-0">getAllRegisteredStudents()</span>
+                      <span>Retorna la lista de direcciones registradas.</span>
+                    </div>
                   </div>
-                ) : registeredAddresses.length === 0 ? (
-                  <div className="text-center py-10 text-xs text-muted-foreground space-y-2 border border-dashed border-border/40 rounded-xl">
-                    <Info className="h-6 w-6 text-muted-foreground mx-auto" />
-                    <p>No se han registrado estudiantes aún. ¡Sé el primero en la blockchain!</p>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Eventos y Errores</h4>
+                  <div className="space-y-1 text-xs">
+                    <p><code className="text-emerald-500 font-mono font-bold">ProfileRegistered(studentAddress, name, email)</code></p>
+                    <p><code className="text-emerald-500 font-mono font-bold">ProfileUpdated(...)</code></p>
+                    <p><code className="text-red-400 font-mono font-bold">error NameRequired()</code></p>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border">
-                    {registeredAddresses.map((addr) => (
-                      <StudentCard
-                        key={addr}
-                        studentAddress={addr}
-                        onSelect={handleSelectStudent}
-                        isSelected={searchAddress === addr}
-                      />
-                    ))}
-                  </div>
-                )}
+                </div>
               </CardContent>
             </div>
             <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
-              <span className="text-[10px] text-muted-foreground">
-                Selecciona cualquier estudiante para ver los detalles completos de su perfil Web3.
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <HelpCircle className="h-3.5 w-3.5 text-pink-500" /> Registro público y auditable para la comunidad USACH.
               </span>
             </CardFooter>
           </Card>
@@ -824,13 +993,13 @@ const IdentityPage: NextPage = () => {
                     <span>StudentIdentity.sol</span>
                     <span className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                      solc 0.8.20
+                      solc 0.8.35
                     </span>
                   </div>
                   <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <code>
                       <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
-                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.20</span>;{"\n\n"}
+                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.35</span>;{"\n\n"}
                       <span className="text-blue-500">contract</span> <span className="text-yellow-400 font-bold">StudentIdentity</span> {"{"}{"\n"}
                       {"    "}<span className="text-blue-500">struct</span> <span className="text-teal-400">Profile</span> {"{"}{"\n"}
                       {"        "}<span className="text-blue-400">string</span> name;{"\n"}
@@ -842,8 +1011,15 @@ const IdentityPage: NextPage = () => {
                       {"        "}<span className="text-blue-400">bool</span> isRegistered;{"\n"}
                       {"    "}{"}"}{"\n\n"}
                       {"    "}<span className="text-pink-500">mapping</span>(<span className="text-blue-400">address</span> =&gt; <span className="text-teal-400">Profile</span>) <span className="text-pink-500">private</span> _profiles;{"\n"}
-                      {"    "}<span className="text-blue-400">address</span>[] <span className="text-pink-500">private</span> _registeredStudents;{"\n\n"}
-                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">setProfile</span>(<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> name, ...) <span className="text-pink-500">public</span> ...{"\n"}
+                      {"    "}<span className="text-blue-400">address</span>[] <span className="text-pink-500">private</span> _registeredStudents;{"\n"}
+                      {"    "}<span className="text-pink-500">mapping</span>(<span className="text-blue-400">address</span> =&gt; <span className="text-blue-400">uint256</span>) <span className="text-pink-500">private</span> _studentIndex;{"\n\n"}
+                      {"    "}<span className="text-blue-500">event</span> <span className="text-yellow-400">ProfileRegistered</span>(<span className="text-blue-400">address</span> <span className="text-pink-500">indexed</span> studentAddress, ...);{"\n"}
+                      {"    "}<span className="text-blue-500">event</span> <span className="text-yellow-400">ProfileUpdated</span>(<span className="text-blue-400">address</span> <span className="text-pink-500">indexed</span> studentAddress, ...);{"\n"}
+                      {"    "}<span className="text-blue-500">error</span> <span className="text-red-400">NameRequired</span>();{"\n\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">setProfile</span>(<span className="text-blue-400">string</span> <span className="text-pink-500">calldata</span> name, ...) <span className="text-pink-500">external</span>;{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">getProfile</span>(<span className="text-blue-400">address</span> studentAddress) <span className="text-pink-500">external</span> <span className="text-pink-500">view</span> returns (...);{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">getAllRegisteredStudents</span>() <span className="text-pink-500">external</span> <span className="text-pink-500">view</span> returns (<span className="text-blue-400">address</span>[] <span className="text-pink-500">memory</span>);{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">getStudentsCount</span>() <span className="text-pink-500">external</span> <span className="text-pink-500">view</span> returns (<span className="text-blue-400">uint256</span>);{"\n"}
                       {"}"}
                     </code>
                   </pre>
