@@ -1,7 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Coins } from 'lucide-react';
+import { Coins, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -54,6 +54,18 @@ export function Navbar() {
           >
             <Coins className="h-4 w-4" />
             Tokens ERC20
+          </Link>
+          <Link
+            href="/identity"
+            className={cn(
+              "flex items-center gap-1.5 transition-colors",
+              isActive('/identity')
+                ? "text-primary-foreground underline decoration-2 underline-offset-4"
+                : "text-primary-foreground/85 hover:text-primary-foreground"
+            )}
+          >
+            <User className="h-4 w-4" />
+            Identidad
           </Link>
         </nav>
 
