@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useStudentProfile, useAllStudents, useStudentIdentityActions } from '@/hooks/useStudentIdentity';
 import { useHydrated } from '@/hooks/useHydrated';
+import { UserAvatar } from '@/components/UserAvatar';
 
 interface StudentCardProps {
   studentAddress: `0x${string}`;
@@ -63,17 +64,6 @@ function StudentCard({ studentAddress, onSelect, isSelected }: StudentCardProps)
 
   if (!profile || !profile.isRegistered) return null;
 
-  const initials = profile.name
-    ? profile.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .substring(0, 2)
-        .toUpperCase()
-    : 'ES';
-
-  const hasAvatar = profile.avatar && (profile.avatar.startsWith('http://') || profile.avatar.startsWith('https://'));
-
   return (
     <div
       onClick={() => onSelect(studentAddress)}
@@ -82,20 +72,7 @@ function StudentCard({ studentAddress, onSelect, isSelected }: StudentCardProps)
         isSelected && "border-primary/80 ring-1 ring-primary/40 bg-primary/5"
       )}
     >
-      {hasAvatar ? (
-        <img
-          src={profile.avatar}
-          alt={profile.name}
-          className="h-10 w-10 rounded-full object-cover border border-border/20 shrink-0"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name}`;
-          }}
-        />
-      ) : (
-        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-inner">
-          {initials}
-        </div>
-      )}
+      <UserAvatar address={studentAddress} className="h-10 w-10" />
       <div className="flex-1 min-w-0">
         <h4 className="font-semibold text-xs text-foreground truncate">{profile.name}</h4>
         <p className="text-[10px] text-muted-foreground truncate font-mono">
@@ -423,17 +400,7 @@ const IdentityPage: NextPage = () => {
     );
   }
 
-  // Iniciales y metadatos para vista de perfil del usuario conectado
-  const myInitials = myProfile?.name
-    ? myProfile.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .substring(0, 2)
-        .toUpperCase()
-    : 'ES';
-
-  const myHasAvatar = myProfile?.avatar && (myProfile.avatar.startsWith('http://') || myProfile.avatar.startsWith('https://'));
+  // Se eliminan las iniciales y la lógica de detección manual porque ahora usamos UserAvatar
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
@@ -527,22 +494,7 @@ const IdentityPage: NextPage = () => {
                   {/* Visualización del estado actual (Col 12 u 8) */}
                   <div className="lg:col-span-5 space-y-4 border-r border-border/20 pr-0 lg:pr-6">
                     <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/20 border border-border/30">
-                      {isLoadingMyProfile ? (
-                        <div className="h-20 w-20 rounded-full bg-muted animate-pulse mb-3" />
-                      ) : myHasAvatar ? (
-                        <img
-                          src={myProfile?.avatar}
-                          alt={myProfile?.name}
-                          className="h-20 w-20 rounded-full object-cover border border-border shadow-md mb-3"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${myProfile?.name}`;
-                          }}
-                        />
-                      ) : (
-                        <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center font-bold text-2xl shrink-0 shadow-md mb-3">
-                          {myInitials}
-                        </div>
-                      )}
+                      <UserAvatar address={address} className="h-20 w-20 mb-3 shadow-md border" />
                       
                       <div className="space-y-1 w-full">
                         <h4 className="font-bold text-base truncate text-foreground">
@@ -767,27 +719,7 @@ const IdentityPage: NextPage = () => {
                     ) : searchedProfile && searchedProfile.isRegistered ? (
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                          {searchedProfile.avatar && (searchedProfile.avatar.startsWith('http://') || searchedProfile.avatar.startsWith('https://')) ? (
-                            <img
-                              src={searchedProfile.avatar}
-                              alt={searchedProfile.name}
-                              className="h-12 w-12 rounded-full object-cover border border-border"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${searchedProfile.name}`;
-                              }}
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 text-white flex items-center justify-center font-bold text-base shadow-inner">
-                              {searchedProfile.name
-                                ? searchedProfile.name
-                                    .split(' ')
-                                    .map((n) => n[0])
-                                    .join('')
-                                    .substring(0, 2)
-                                    .toUpperCase()
-                                : 'ES'}
-                            </div>
-                          )}
+                          <UserAvatar address={searchAddress} className="h-12 w-12 border shadow-sm" />
                           <div className="min-w-0 flex-1">
                             <h4 className="font-bold text-sm text-foreground truncate">{searchedProfile.name}</h4>
                             <p className="text-[10px] text-muted-foreground truncate font-mono">{searchAddress}</p>
