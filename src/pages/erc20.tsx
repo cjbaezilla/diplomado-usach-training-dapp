@@ -649,7 +649,7 @@ const ERC20Page: NextPage = () => {
             <div>
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
-                  <Rocket className="h-5 w-5 text-primary animate-bounce duration-1000" />
+                  <Rocket className="h-5 w-5 text-primary" />
                   3. Desplegar Token ERC-20
                 </CardTitle>
                 <CardDescription>
