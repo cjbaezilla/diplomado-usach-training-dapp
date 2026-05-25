@@ -881,7 +881,7 @@ const IdentityPage: NextPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           
           {/* Estructura y Propiedades del Contrato */}
-          <Card className="lg:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          <Card className="lg:col-span-3 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-pink-500 to-indigo-500"></div>
             <div>
               <CardHeader className="pb-3">
@@ -900,7 +900,7 @@ const IdentityPage: NextPage = () => {
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Campos del Perfil (Profile)</h4>
-                  <ul className="grid grid-cols-2 gap-2 text-[11px]">
+                  <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
                     <li className="bg-muted/40 p-2 rounded border border-border/20">
                       <span className="block font-bold text-foreground">name</span>
                       Nombre completo del estudiante.
@@ -964,7 +964,7 @@ const IdentityPage: NextPage = () => {
           </Card>
 
           {/* Código del Smart Contract */}
-          <Card className="lg:col-span-3 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          <Card className="lg:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 to-pink-500"></div>
             <div>
               <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
@@ -996,7 +996,7 @@ const IdentityPage: NextPage = () => {
                       solc 0.8.35
                     </span>
                   </div>
-                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
+                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <code>
                       <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
                       <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.35</span>;{"\n\n"}
