@@ -9,6 +9,8 @@ import { Navbar } from '@/components/Navbar';
 import { FaucetInfo } from '@/components/FaucetInfo';
 import { WalletGuide } from '@/components/WalletGuide';
 import { useHydrated } from '@/hooks/useHydrated';
+import { StudentSearch } from '@/components/StudentSearch';
+import { CreatedTokens } from '@/components/CreatedTokens';
 
 const Home: NextPage = () => {
   const isHydrated = useHydrated();
@@ -144,6 +146,12 @@ const Home: NextPage = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Comunidad y Tokens Creados */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start pt-8 border-t border-border/30">
+          <StudentSearch />
+          <CreatedTokens />
         </div>
 
         {/* Secciones informativas lado a lado */}
