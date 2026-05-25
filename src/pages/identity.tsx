@@ -327,7 +327,14 @@ const IdentityPage: NextPage = () => {
       setTwitterInput(myProfile.twitter || '');
       setAvatarInput(myProfile.avatar || '');
     }
-  }, [myProfile]);
+  }, [
+    myProfile?.name,
+    myProfile?.email,
+    myProfile?.linkedin,
+    myProfile?.twitter,
+    myProfile?.avatar,
+    address
+  ]);
 
   // Autodescartar notificaciones
   useEffect(() => {

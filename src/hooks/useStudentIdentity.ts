@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { STUDENT_IDENTITY_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
@@ -18,15 +19,18 @@ export function useStudentProfile(studentAddress?: `0x${string}`) {
     },
   });
 
-  const profile = data ? {
-    name: data[0],
-    email: data[1],
-    linkedin: data[2],
-    twitter: data[3],
-    avatar: data[4],
-    updatedAt: Number(data[5]),
-    isRegistered: data[6],
-  } : null;
+  const profile = useMemo(() => {
+    if (!data) return null;
+    return {
+      name: data[0],
+      email: data[1],
+      linkedin: data[2],
+      twitter: data[3],
+      avatar: data[4],
+      updatedAt: Number(data[5]),
+      isRegistered: data[6],
+    };
+  }, [data]);
 
   return {
     profile,
