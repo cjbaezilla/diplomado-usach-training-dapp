@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #6: La Bodega del Laboratorio de Química (El Templo de la Alquimia EAO)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la Insignia #6: La Bodega del Laboratorio de Química, un fascinante rincón del conocimiento científico y experimental de la Escuela de Artes y Oficios (EAO).\n\rEsta cautivadora fotografía monocroma captura el interior de la bodega y dependencias del laboratorio de química de la EAO. En primer plano, destaca una robusta mesa de trabajo de madera, repleta de matraces, frascos de reactivos, embudos de decantación y soportes universales con pinzas listos para los experimentos. Debajo de la mesa y esparcidas por el suelo de baldosas, se aprecian numerosas damajuanas y botellas de vidrio soplado destinadas al almacenamiento de sustancias químicas. En el fondo, dos majestuosas estanterías altas de madera oscura con vitrinas resguardan de forma ordenada cientos de frascos etiquetados, mientras que a la derecha se observa un complejo equipamiento experimental con poleas, correas de transmisión y un gran recipiente cilíndrico de vidrio. La gran ventana arqueada al fondo inunda la estancia de luz natural, iluminando el espacio donde los futuros ingenieros y técnicos dominaban los secretos de la materia.\n\rLa fotografía original, resguardada con orgullo en el Archivo Patrimonial de la USACH bajo el código FC-000044, evoca los cimientos de la investigación científica aplicada y el rigor analítico que caracterizaron a la institución.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn los laboratorios más antiguos del Departamento de Tecnologías Químicas y en el pasillo del Pabellón de Química, se murmura entre los estudiantes que esta insignia digital otorga el buff pasivo de 'Alineación de Enlaces'. Al portar este amuleto tecnológico en tu billetera Web3, se activa un efecto que te concede +5 de Alquimia Mental y Claridad Analítica. Este legendario amuleto de la EAO te ayuda a balancear ecuaciones químicas complejas de forma intuitiva, previene que tus soluciones precipiten incorrectamente en el laboratorio y estabiliza tu concentración durante certámenes de Química General, Orgánica o de Procesos. ¡Llévala contigo como símbolo de la inquebrantable tradición de ciencia, experimentación y descubrimiento que ha definido a la EAO, la UTE y la USACH!",
+  "image": "https://cbaeza.com/nft/usach/badges/6.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000044/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Bodega del Laboratorio de Química"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Laboratorio de Química de la EAO"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "Siglo XX (Fecha Desconocida)"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Química Industrial, Metalurgia y Ensayes"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Alquimia Mental (+5 de Claridad Analítica)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Raro"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 70
+    }
+  ]
+}

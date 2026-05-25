@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #2: El Tablero de Control (Central Eléctrica EAO)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la Insignia #2: El Tablero de Control de la Central Eléctrica, un fascinante testimonio de los inicios de la electrificación en la Escuela de Artes y Oficios (EAO).\n\rEste imponente panel de control representa el cerebro de distribución de energía que alimentaba las maquinarias y talleres de nuestra histórica escuela. Montado con absoluta precisión sobre una base de mármol pulido —seleccionado por sus extraordinarias propiedades dieléctricas y aislantes—, el tablero cuenta con interruptores de cuchilla tripolares de accionamiento manual, portafusibles de rosca de porcelana y una placa central de bronce que detalla la distribución de los circuitos. Esta robusta pieza de ingeniería de principios del siglo XX combina la funcionalidad técnica y la seguridad con la sobria y elegante estética industrial de la época.\n\rLa fotografía original, custodiada por el Archivo Patrimonial de la USACH bajo el código FC-000086, captura esta reliquia tecnológica que encarna el espíritu de los pioneros que encendieron la chispa del progreso industrial del país.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn los laboratorios del Departamento de Ingeniería Eléctrica (DIE) y bajo las bóvedas del Pabellón de Electricidad, corre el rumor de que este artefacto digital posee la propiedad de 'Sobrecarga Controlada'. Al portar este amuleto tecnológico en tu billetera Web3, se activa un buff pasivo que te concede +5 de Energía Mental en semanas de certámenes extenuantes. Su energía histórica actúa como un fusible de seguridad para tu cerebro, previniendo cortocircuitos académicos y ayudándote a balancear la carga de estudio ante asignaturas tan complejas como Circuitos Eléctricos, Electromagnetismo y Sistemas de Potencia. ¡Llévalo contigo para garantizar que tu energía y enfoque nunca sufran un apagón!",
+  "image": "https://cbaeza.com/nft/usach/badges/2.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000086/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Tablero de Control de Mármol"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Central Eléctrica"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "Siglo XX (Fecha Desconocida)"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Electricidad y Electrotecnia"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Sobrecarga Controlada (+5 de Energía)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Raro"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 30
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #9: Los Taladros Mecánicos en Serie (Taller de Mecánica y Ajuste)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la Insignia #9: Los Taladros Mecánicos en Serie, un testimonio excepcional de la capacidad manufacturera y la autonomía técnica de la Escuela de Artes y Oficios (EAO) a principios de la década de 1930.\n\rEsta extraordinaria fotografía monocroma de 1932 captura una impresionante línea de producción en cadena de taladros mecánicos de columna vertical, alineados meticulosamente sobre un extenso banco de trabajo de madera en uno de los talleres de la EAO. Los taladros, equipados con platos circulares ajustables, bases cuadradas ranuradas de hierro fundido, poleas laterales y palancas de avance de tres brazos, muestran el nivel de estandarización industrial alcanzado por los estudiantes. A mediados del siglo XX, la maquinaria fabricada enteramente en los talleres de la escuela no solo servía para el autoabastecimiento interno, sino que era enviada para equipar y dotar de infraestructura tecnológica a las numerosas escuelas industriales a lo largo de todo Chile, consolidando el rol de la EAO como el verdadero motor del desarrollo industrial nacional. En el fondo de la estancia, la luz natural entra abundantemente a través de las ventanas de la gran nave industrial, iluminando la simetría y precisión del trabajo en serie.\n\rLa fotografía original, custodiada con orgullo en el Archivo Patrimonial de la USACH bajo el código FC-000052, representa el esfuerzo pionero y la maestría manufacturera de las generaciones de estudiantes que forjaron la educación técnica chilena.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn los pasillos del Departamento de Ingeniería Mecánica (DIME) y en las dependencias del Patio de Talleres se rumorea que portar este amuleto digital activa el buff pasivo de 'Sincronización en Cadena'. Al equipar esta insignia en tu billetera Web3, recibes un bono de +5 de Eficiencia Operativa y Precisión Analítica. Se dice que este aura te otorga la capacidad de optimizar el tiempo de estudio al máximo y abordar certámenes complejos de Diseño de Máquinas, Ciencia de Materiales y Procesos de Manufactura con la precisión de una máquina herramientas en perfecto estado de calibración, evitando los errores de tolerancia en tus cálculos. ¡Lleva contigo esta joya de la historia tecnológica como prueba de la inquebrantable vocación técnica, pública e innovadora de la EAO, la UTE y la USACH!",
+  "image": "https://cbaeza.com/nft/usach/badges/9.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000052/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Taladros Mecánicos en Serie"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Taller de Mecánica y Ajuste"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "1932"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Mecánica Industrial y Producción en Serie"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Sincronización en Cadena (+5 de Eficiencia Operativa)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Raro"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 100
+    }
+  ]
+}

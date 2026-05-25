@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #3: La Sala de Exhibición (Maestría Industrial de la EAO)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la Insignia #3: La Sala de Exhibición de Máquinas y Herramientas, un extraordinario testimonio del ingenio, la destreza y el orgullo técnico de los estudiantes de la histórica Escuela de Artes y Oficios (EAO).\n\rEsta sala albergaba una muestra permanente de maquinarias, herramientas, engranajes y piezas mecánicas de altísima complejidad, fabricadas íntegramente a mano por los alumnos en los diversos talleres de la escuela. La precisión de los tornos, la simetría de las piezas y el impecable acabado de cada mecanismo reflejaban un nivel de excelencia técnica tan sobresaliente que gran parte de esta colección fue seleccionada para integrar el stand oficial de la EAO en la prestigiosa Exposición Industrial de Valparaíso de 1934, donde asombró a todo el país y consolidó el prestigio de la institución en el desarrollo industrial de Chile.\n\rLa fotografía original, resguardada con honor por el Archivo Patrimonial de la USACH bajo el código FC-000062 y datada en 1940, inmortaliza este santuario del saber hacer, donde el metal y la inteligencia humana se unían para forjar el progreso nacional.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn las salas de estudio de la Facultad de Ingeniería (FING) y los históricos patios de la EAO, se cuenta la leyenda de que esta insignia digital posee la bendición de la 'Sinergia del Expositor'. Al llevar este amuleto tecnológico en tu billetera Web3, se activa un buff pasivo de 'Maestría de Exposición' que te otorga +5 de Destreza y Precisión Técnica en proyectos prácticos, laboratorios y diseños de ingeniería. Es el amuleto perfecto para evitar fallos de cálculo, asegurar que tus prototipos funcionen a la primera y convencer a los profesores más exigentes de que tu trabajo tiene calidad de exhibición industrial. ¡Llévala con orgullo como prueba de que la excelencia técnica y el trabajo bien hecho corren por tus venas de cachorro usachino!",
+  "image": "https://cbaeza.com/nft/usach/badges/3.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000062/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Sala de Exhibición de Máquinas y Herramientas"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Talleres Generales de la EAO"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "1940 (Elementos de 1934)"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Mecánica, Fundición y Modelos"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Maestría de Exposición (+5 de Destreza)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Poco Común"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 40
+    }
+  ]
+}

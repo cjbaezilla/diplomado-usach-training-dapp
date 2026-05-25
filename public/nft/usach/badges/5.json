@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #5: La Caldera Babcock & Wilcox (Corazón de Vapor de la EAO)",
+  "description": "¡Felicitaciones, Cachorro Web3! Has desbloqueado la Insignia #5: La Caldera Babcock & Wilcox, un coloso tecnológico y pilar fundamental del desarrollo industrial y la enseñanza práctica en la histórica Escuela de Artes y Oficios (EAO).\n\rEsta extraordinaria fotografía monocroma retrata el impresionante sistema de calderas Babcock & Wilcox que proveía de vapor a los talleres de la escuela. En el centro del encuadre destaca la imponente estructura de ladrillos refractarios que alberga el hogar de combustión y los haces de tubos de presión de la caldera. Una escalerilla metálica lateral permite a los operadores ascender a la pasarela superior de mantenimiento para inspeccionar los colectores y válvulas. A la izquierda se observa un gran tanque cilíndrico vertical de almacenamiento, mientras que a la derecha se aprecia la compleja maquinaria de alimentación de agua, cadenas y engranajes de transmisión de movimiento y un manómetro circular que indica la presión del vapor. En el suelo embaldosado, una carretilla metálica y cajas de herramientas evocan el arduo trabajo de los estudiantes que operaban estas imponentes instalaciones.\n\rLa fotografía original, catalogada bajo el código FC-000063 en el Archivo Patrimonial de la USACH, inmortaliza una era dorada de la termodinámica aplicada y la ingeniería de potencia que sentó las bases del progreso fabril de la nación.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn los rincones más profundos del Departamento de Ingeniería Mecánica (DIME) y cerca de las antiguas calderas del campus, se murmura entre los tesistas de termofluidos y transferencia de calor que esta insignia digital confiere el legendario buff de 'Eficiencia Térmica'. Al equipar este amuleto tecnológico en tu billetera Web3, se activa un efecto pasivo que te concede +5 de Foco y Concentración Absoluta. Este amuleto ayuda a disipar el 'calor' del pánico antes de entregar un certamen complejo y optimiza la termodinámica de tu cerebro, evitando que tu CPU mental entre en estado de sobrecalentamiento frente a integrales de volumen, balances de entropía o flujos turbulentos. ¡Lleva este corazón de vapor digital contigo como símbolo del motor inagotable que ha impulsado la innovación y la fuerza industrial de la EAO, la UTE y la USACH durante más de un siglo!",
+  "image": "https://cbaeza.com/nft/usach/badges/5.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000063/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Caldera Babcock & Wilcox"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Sala de Calderas / Laboratorio de Fuerza Motriz"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "Siglo XX (Fecha Desconocida)"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Mecánica, Termodinámica y Operación de Plantas"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Eficiencia Térmica (+5 de Foco)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Épico"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 60
+    }
+  ]
+}

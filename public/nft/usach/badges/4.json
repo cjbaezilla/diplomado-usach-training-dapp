@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #4: La Fragua y el Yunque (Taller de Forja de la EAO)",
+  "description": "¡Enhorabuena, Cachorro Web3! Has desbloqueado la Insignia #4: La Fragua y el Yunque del Taller de Forja, una representación fundamental del corazón y el alma de la Escuela de Artes y Oficios (EAO).\n\rEsta maravillosa fotografía monocroma captura la esencia viva del Taller de Forja de la EAO, el lugar donde el fuego, el hierro y el esfuerzo físico se encontraban para moldear no solo piezas mecánicas, sino también el carácter y la templanza de los antiguos alumnos. La imagen detalla un entorno industrial clásico del siglo XX: a la izquierda, un trinchante de herramientas metálico perfectamente organizado con martillos de forja de diversos pesos, tenazas y punzones listos para ser empuñados. Al centro, el hogar de forja (la fragua) con su chimenea cónica y una llama resplandeciente que se eleva hacia el techo, el crisol donde el carbón y el aire insuflado ponían al rojo vivo el metal. A la derecha, un yunque macizo montado sobre su base de madera, esperando el golpe rítmico y certero que daba forma al hierro. Al fondo, se aprecian los casilleros de madera numerados donde los estudiantes guardaban sus pertenencias, mudas de ropa y herramientas personales bajo llave.\n\rLa fotografía original, catalogada con esmero bajo el código FC-000057 en el Archivo Patrimonial de la USACH, inmortaliza una época donde el trabajo manual y la rigurosidad técnica eran la base del desarrollo industrial de Chile.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn los pasillos de ladrillo del campus y los laboratorios del Departamento de Ingeniería en Metalurgia (DIMET), corre la leyenda de que esta insignia digital imbuye a su portador con la 'Templanza del Forjador'. Se dice que al llevar este amuleto tecnológico en tu billetera Web3, se activa un buff pasivo de 'Resiliencia de Acero' que te concede +5 de Voluntad y Resistencia al estrés. Es la protección ideal frente a los certámenes más duros, los laboratorios interminables y las temidas entregas finales, recordándote que, al igual que el hierro se purifica en la fragua y se moldea en el yunque, tu mente y tus habilidades se fortalecen frente a la adversidad académica. ¡Llévala con orgullo como símbolo del temple inquebrantable de la comunidad usachina y del fuego eterno del conocimiento!",
+  "image": "https://cbaeza.com/nft/usach/badges/4.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000057/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Fragua, Yunque y Trinchante de Herramientas"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Taller de Forja (Herrería)"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "Siglo XX (Fecha Desconocida)"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Metalurgia, Herrería y Forja"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Resiliencia de Acero (+5 de Voluntad)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Común"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 50
+    }
+  ]
+}

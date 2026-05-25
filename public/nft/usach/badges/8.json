@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #8: La Urna Funeraria del General Las Heras (Maestría en Broncería y Fundición)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la Insignia #8: La Urna Funeraria del General Las Heras, una soberbia pieza de arte industrial que representa el pináculo de la fundición y la broncería de la Escuela de Artes y Oficios (EAO) a comienzos del siglo XX.\n\rEsta extraordinaria fotografía monocroma de 1901 captura la imponente y ricamente ornamentada urna metálica fabricada en bronce y fundición en los talleres de la EAO. La urna, sostenida sobre cuatro majestuosas patas en forma de garras de león, presenta decoraciones con relieves clásicos, pilastras ornamentadas en sus esquinas y asas de metal integradas con cabezas leoninas. Coronando la tapa, sobre un manto metálico simulado con pliegues sumamente realistas, se yergue una escultura detallada de un cóndor andino con sus alas desplegadas y el pico abierto, erigido sobre una corona floral. Al fondo, un cortinaje oscuro sirve de telón para resaltar el brillo metálico y los finos detalles escultóricos de la pieza. Esta obra fue concebida para honrar la memoria del prócer de la independencia chilena y argentina, el General Juan Gregorio de Las Heras, cuyos restos serían posteriormente repatriados a Buenos Aires, reflejando el altísimo nivel técnico y el reconocimiento social que poseían los talleres de la escuela en la época.\n\rLa fotografía original, resguardada con orgullo por el Archivo Patrimonial de la USACH bajo el código PLC-000006, es un negativo sobre soporte de vidrio de gelatina que atestigua la destreza artística y tecnológica de las generaciones que nos precedieron.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nSe cuenta en las antiguas salas de fundición de la EAO y en las oficinas del Departamento de Ingeniería en Metalurgia que esta insignia digital otorga el buff pasivo de 'Temple de Bronce'. Al equipar este amuleto en tu billetera Web3, se activa un efecto que te concede +5 de Voluntad Inquebrantable y Resiliencia en Exámenes. Su aura histórica actúa como un escudo contra el estrés académico y la fatiga mental, dándote la templanza del bronce para resistir y destacar en certámenes de Metalurgia Extractiva, Ciencia de Materiales o Procesos de Manufactura, sin importar qué tan complejas sean las preguntas. ¡Lleva esta obra maestra en tu billetera digital como testimonio de la maestría artística y tecnológica de la EAO, la UTE y la USACH!",
+  "image": "https://cbaeza.com/nft/usach/badges/8.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/plc-000006/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Urna Funeraria del General Gregorio de Las Heras"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Taller de Broncería y Fundición"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "1901"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Fundición, Broncería y Metalurgia"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Temple de Bronce (+5 de Voluntad Inquebrantable)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Épico"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 90
+    }
+  ]
+}

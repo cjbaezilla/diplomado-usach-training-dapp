@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #0: El Alambique y Recipiente (Taller de la EAO)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la insignia fundacional de la Universidad de Santiago de Chile. Esta obra rinde homenaje a un tesoro de nuestra memoria tecnológica e histórica: el Alambique y Recipiente fabricado en 1934.\n\rEsta magnífica pieza de metalistería fue elaborada a mano por los dedicados estudiantes del Taller de Instalaciones Sanitarias de la Escuela de Artes y Oficios (EAO). En aquellos años de la década de 1930, este taller no era solo un espacio de aprendizaje práctico, sino la puerta de entrada dorada para la superación académica: representaba el puente de continuidad que permitía a los estudiantes egresados de la especialidad de Herrería (Forja) avanzar hacia los exigentes estudios de segundo nivel o nivel técnico de la EAO, transformándose en los futuros ingenieros y técnicos del desarrollo industrial del país.\n\rLa fotografía original, resguardada con orgullo por el Archivo Patrimonial de la USACH bajo el código FC-000048, retrata la precisión y maestría de nuestros ancestros de los pasillos de ladrillo en el arte de moldear el metal y los fluidos.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nSe rumorea en los laboratorios más antiguos del Departamento de Ingeniería Química y en los círculos metalúrgicos que poseer este amuleto digital otorga un buff de 'Transmutación de Conocimiento'. Se dice que canaliza la sabiduría técnica de 1934, dándote +5 de Concentración en certámenes y destilando las fórmulas más complejas de Termodinámica, Química de Procesos y Mecánica de Fluidos para que no te 'eches' ningún ramo en el primer intento. ¡Lleva este alambique digital en tu billetera como prueba de la inquebrantable tradición técnica y de innovación de la EAO, la UTE y la USACH!",
+  "image": "https://cbaeza.com/nft/usach/badges/0.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000048/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Alambique y Recipiente"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Taller de Instalaciones Sanitarias"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "1934"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Herrería hacia Nivel Técnico"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Destilación de Conocimiento (+5 de Transmutación)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Legendario"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 10
+    }
+  ]
+}

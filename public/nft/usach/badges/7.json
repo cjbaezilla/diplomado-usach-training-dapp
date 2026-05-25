@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #7: La Máquina de Vapor Cavé à Paris (El Motor Fundacional EAO)",
+  "description": "¡Felicidades, Cachorro Web3! Has desbloqueado la Insignia #7: La Máquina de Vapor Cavé à Paris, una reliquia histórica invaluable que simboliza el origen tecnológico y el nacimiento de la histórica Escuela de Artes y Oficios (EAO) en el año de su fundación.\n\rEsta extraordinaria fotografía monocroma captura la emblemática máquina de vapor de columna vertical fabricada en París por el célebre constructor mecánico François Cavé en 1849. La pieza destaca por su elegante estructura de columnas clásicas de fundición que sostienen la viga superior, donde se puede leer en relieve la inscripción \"CAVÉ A PARIS\" y la fecha partida \"18\" y \"49\", coincidiendo exactamente con el decreto fundacional de la EAO promulgado por el presidente Manuel Bulnes. Al fondo, a la izquierda de la máquina, se vislumbra el imponente volante de inercia y los sistemas de correas y poleas de transmisión, mientras que la luz natural entra a través de los ventanales industriales de la sala de máquinas, iluminando el piso de baldosas y las texturas de ladrillo de las paredes. Esta máquina de vapor no solo era una fuente de fuerza motriz para los talleres, sino un aula viva de termodinámica y mecánica para las primeras promociones de estudiantes.\n\rLa fotografía original, catalogada bajo el código FC-000026 en el Archivo Patrimonial de la USACH, representa el testimonio material del inicio de la educación técnica e industrial del país en el siglo XIX.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nEn los pasillos del Departamento de Ingeniería Mecánica (DIME) y entre los veteranos del Patio de Talleres, se cuenta que esta insignia digital encierra el 'Torque de la Constancia'. Al equipar este amuleto tecnológico en tu billetera Web3, se activa un buff pasivo de 'Fuerza de Torque' que te concede +5 de Inercia de Estudio y Estabilidad Dinámica. Este legendario amuleto te ayuda a mantener un ritmo de estudio constante y sin oscilaciones frente a las asignaturas más complejas de dinámica de sistemas, termofluidos y diseño mecánico, evitando que pierdas el impulso en la recta final del semestre. ¡Llévala contigo como símbolo de la inquebrantable fuerza fundacional de la EAO, la UTE y la USACH, cuyo motor comenzó a latir con el vapor de 1849!",
+  "image": "https://cbaeza.com/nft/usach/badges/7.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000026/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Máquina de Vapor Cavé à Paris"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Taller de Mecánica / Sala de Máquinas"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "1849"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Fuerza Motriz, Termodinámica y Mecánica Aplicada"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Fuerza de Torque (+5 de Inercia de Estudio)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Legendario"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 80
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Insignia #1: La Turbina del Patio de Talleres (Legado Industrial)",
+  "description": "¡Enhorabuena, Cachorro Web3! Has obtenido la Insignia #1: La Turbina del Patio de Talleres, una reliquia emblemática de la Escuela de Artes y Oficios (EAO). Esta pieza representa el motor tecnológico y la fuerza motriz del desarrollo industrial chileno de principios del siglo XX.\n\rLa fotografía original, custodiada por el Archivo Patrimonial de la USACH bajo el código FC-000084, captura una imponente turbina y máquina de vapor de balancín situada en el legendario Patio de Talleres de la EAO. Este coloso de metal no solo era un objeto de estudio, sino el corazón palpitante donde generaciones de estudiantes forjaron su destreza en termodinámica, mecánica aplicada y mantenimiento de maquinaria pesada. Al interactuar con el vapor y el movimiento a gran escala, los alumnos adquirían la maestría técnica que definiría el progreso de la ingeniería en el país.\n\r📚 Lore Estudiantil y Leyenda de Pasillo:\nLas leyendas urbanas que recorren los pasillos del Departamento de Ingeniería Mecánica y las antiguas naves de la EAO susurran que este artefacto digital contiene el espíritu de la 'Fuerza de Vapor'. Poseer esta insignia en tu billetera Web3 te otorga un buff pasivo de 'Impulso Industrial', que te concede +5 de Resistencia en semanas de certámenes extenuantes y acelera tu capacidad de procesamiento mental bajo presión académica. ¡Llévala con orgullo como testimonio del motor eterno que impulsa a la USACH y su inquebrantable legado de ciencia, tecnología y trabajo!",
+  "image": "https://cbaeza.com/nft/usach/badges/1.png",
+  "external_url": "https://archivopatrimonial.usach.cl/material-fotografia/fc-000084/",
+  "attributes": [
+    {
+      "trait_type": "Edición",
+      "value": "Génesis"
+    },
+    {
+      "trait_type": "Elemento Histórico",
+      "value": "Turbina de Vapor (Patio de Talleres)"
+    },
+    {
+      "trait_type": "Taller de Origen",
+      "value": "Patio de Talleres"
+    },
+    {
+      "trait_type": "Año de Origen",
+      "value": "Siglo XX (Fecha Desconocida)"
+    },
+    {
+      "trait_type": "Cuna Histórica",
+      "value": "Escuela de Artes y Oficios (EAO)"
+    },
+    {
+      "trait_type": "Vínculo de Especialidades",
+      "value": "Mecánica y Termodinámica"
+    },
+    {
+      "trait_type": "Efecto Pasivo",
+      "value": "Impulso Industrial (+5 de Resistencia)"
+    },
+    {
+      "trait_type": "Clase de Item",
+      "value": "Épico"
+    },
+    {
+      "trait_type": "Experiencia",
+      "value": 20
+    }
+  ]
+}
