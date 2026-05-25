@@ -665,6 +665,27 @@ const IdentityPage: NextPage = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Variables de Estado (Almacenamiento)</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-indigo-400 font-bold shrink-0 bg-indigo-500/10 px-1 rounded">_profiles</span>
+                      <span className="text-[11px] font-mono text-muted-foreground shrink-0">mapping(address =&gt; Profile)</span>
+                      <span className="text-[11px]">Asocia directamente la dirección de wallet de cada estudiante con su estructura de datos <code>Profile</code>. Es privada para controlar el acceso a través del getter público.</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-indigo-400 font-bold shrink-0 bg-indigo-500/10 px-1 rounded">_registeredStudents</span>
+                      <span className="text-[11px] font-mono text-muted-foreground shrink-0">address[]</span>
+                      <span className="text-[11px]">Arreglo dinámico que almacena las direcciones de todos los estudiantes registrados. Permite iterar y listar la comunidad en la dApp.</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="font-mono text-indigo-400 font-bold shrink-0 bg-indigo-500/10 px-1 rounded">_studentIndex</span>
+                      <span className="text-[11px] font-mono text-muted-foreground shrink-0">mapping(address =&gt; uint256)</span>
+                      <span className="text-[11px]">Mapeo auxiliar que guarda el índice (basado en 1) de la dirección en <code>_registeredStudents</code> (0 indica no registrado). Evita búsquedas lineales costosas, optimizando el consumo de gas en O(1).</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Funciones del Contrato</h4>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-1.5">
