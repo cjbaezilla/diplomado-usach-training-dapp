@@ -8,7 +8,7 @@ import { useHydrated } from './useHydrated';
 export function useAllTokens() {
   const isHydrated = useHydrated();
 
-  const { data: count, isLoading: isLoadingCount } = useReadContract({
+  const { data: count, isLoading: isLoadingCount, refetch: refetchCount } = useReadContract({
     ...TOKEN_FACTORY_CONTRACT,
     functionName: 'getTokensCount',
     query: {
@@ -16,13 +16,17 @@ export function useAllTokens() {
     },
   });
 
-  const { data: tokens, isLoading: isLoadingTokens, refetch } = useReadContract({
+  const { data: tokens, isLoading: isLoadingTokens, refetch: refetchTokens } = useReadContract({
     ...TOKEN_FACTORY_CONTRACT,
     functionName: 'getAllTokens',
     query: {
       enabled: isHydrated,
     },
   });
+
+  const refetch = async () => {
+    await Promise.all([refetchCount(), refetchTokens()]);
+  };
 
   return {
     count: count ? Number(count) : 0,

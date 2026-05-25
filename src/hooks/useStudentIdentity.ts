@@ -46,7 +46,7 @@ export function useStudentProfile(studentAddress?: `0x${string}`) {
 export function useAllStudents() {
   const isHydrated = useHydrated();
 
-  const { data: count, isLoading: isLoadingCount } = useReadContract({
+  const { data: count, isLoading: isLoadingCount, refetch: refetchCount } = useReadContract({
     ...STUDENT_IDENTITY_CONTRACT,
     functionName: 'getStudentsCount',
     query: {
@@ -54,13 +54,17 @@ export function useAllStudents() {
     },
   });
 
-  const { data: addresses, isLoading: isLoadingAddresses, refetch } = useReadContract({
+  const { data: addresses, isLoading: isLoadingAddresses, refetch: refetchAddresses } = useReadContract({
     ...STUDENT_IDENTITY_CONTRACT,
     functionName: 'getAllRegisteredStudents',
     query: {
       enabled: isHydrated,
     },
   });
+
+  const refetch = async () => {
+    await Promise.all([refetchCount(), refetchAddresses()]);
+  };
 
   return {
     count: count ? Number(count) : 0,
