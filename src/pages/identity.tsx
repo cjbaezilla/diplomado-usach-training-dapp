@@ -597,7 +597,7 @@ const IdentityPage: NextPage = () => {
           </Card>
 
           {/* Columna 3 y 4: Buscador de Perfiles */}
-          <StudentSearch />
+          <StudentSearch className="xl:col-span-2" />
 
         </div>
 

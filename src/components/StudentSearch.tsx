@@ -64,7 +64,7 @@ function StudentCard({ studentAddress, onSelect, isSelected }: StudentCardProps)
   );
 }
 
-export function StudentSearch() {
+export function StudentSearch({ className }: { className?: string } = {}) {
   const {
     count: studentCount,
     addresses: registeredAddresses,
@@ -107,7 +107,7 @@ export function StudentSearch() {
   }, [searchInput]);
 
   return (
-    <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+    <Card className={cn("border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300", className)}>
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-500 to-pink-500"></div>
       <div>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
