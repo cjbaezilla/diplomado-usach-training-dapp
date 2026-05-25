@@ -65,7 +65,9 @@ La organización del proyecto se detalla a continuación:
     │   │   └── tokenFactory.ts
     │   └── index.ts          # Configuración y exportación unificada de contratos y direcciones
     ├── hooks/                # Hooks de React personalizados y utilidades de Web3
-    │   ├── useHydrated.ts    # Hook de utilidad para mitigar errores de hidratación en SSR
+    │   ├── useBaseERC20.ts       # Hooks unificados para tokens ERC20
+    │   ├── useBaseERC1155.ts     # Hooks unificados para tokens semi-fungibles ERC1155
+    │   ├── useHydrated.ts        # Hook de utilidad para mitigar errores de hidratación en SSR
     │   ├── useStudentIdentity.ts # Hooks unificados para el contrato StudentIdentity.sol
     │   └── useTokenFactory.ts    # Hooks unificados para el contrato TokenFactory.sol
     ├── lib/
@@ -149,7 +151,7 @@ Si deseas colaborar o expandir este proyecto, por favor ten en cuenta las siguie
       const isHydrated = useHydrated();
       if (!isHydrated) return <LoadingSkeleton />; // o null/Skeleton
       ```
-    - Utiliza los hooks reutilizables unificados (`useStudentIdentity` y `useTokenFactory` de `@/hooks/`) para interactuar con la blockchain de forma limpia y tipada, en lugar de invocar `useReadContract` o `useWriteContract` de manera directa.
+    - Utiliza los hooks reutilizables unificados (`useStudentIdentity`, `useTokenFactory`, `useBaseERC20` y `useBaseERC1155` de `@/hooks/`) para interactuar con la blockchain de forma limpia y tipada, en lugar de invocar `useReadContract` o `useWriteContract` de manera directa.
 2.  **Uso de Variables de Tema (Tailwind CSS v4)**:
     No utilices archivos `tailwind.config.js`. Todo el tema y las propiedades personalizadas de CSS (como el color primario de la USACH, etc.) están configuradas bajo el bloque `@theme inline` en `src/styles/globals.css` utilizando espacios de color `oklch`.
 3.  **Definiciones 'as const' para ABIs**:

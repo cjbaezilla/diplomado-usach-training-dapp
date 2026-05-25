@@ -64,7 +64,9 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
     │   │   └── tokenFactory.ts
     │   └── index.ts          # Configuración y exportación unificada de contratos con sus direcciones
     ├── hooks/
-    │   ├── useHydrated.ts    # Hook de utilidad para prevenir problemas de hidratación en SSR
+    │   ├── useBaseERC20.ts       # Hooks para interactuar con tokens ERC20
+    │   ├── useBaseERC1155.ts     # Hooks para interactuar con tokens ERC1155
+    │   ├── useHydrated.ts        # Hook de utilidad para prevenir problemas de hidratación en SSR
     │   ├── useStudentIdentity.ts # Hooks de lectura y escritura para StudentIdentity.sol
     │   └── useTokenFactory.ts    # Hooks de lectura y escritura para TokenFactory.sol
     ├── lib/
@@ -139,6 +141,8 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
   - Prefiere siempre utilizar los hooks de alto nivel predefinidos en la dApp para realizar consultas y mutaciones (escrituras) en lugar de instanciar `useReadContract` o `useWriteContract` directamente:
     - Para `StudentIdentity.sol`: Usa `useStudentProfile`, `useAllStudents` y `useStudentIdentityActions` desde `@/hooks/useStudentIdentity`.
     - Para `TokenFactory.sol`: Usa `useAllTokens`, `useTokensByOwner` y `useTokenFactoryActions` desde `@/hooks/useTokenFactory`.
+    - Para `BaseERC20.sol`: Usa `useBaseERC20` (metadatos y acciones de transferencia, aprobación, acuñación y quema) y `useERC20Balance` (lectura de balances) desde `@/hooks/useBaseERC20`.
+    - Para `BaseERC1155.sol`: Usa `useBaseERC1155` (acciones de transferencia, aprobación, acuñación y quema), `useERC1155Balance` (lectura de balances de tokens específicos) y `useERC1155Uri` (lectura de URIs de metadatos) desde `@/hooks/useBaseERC1155`.
 - **Cadenas Soportadas**: Mainnet, Polygon, Optimism, Arbitrum, Base y Sepolia (Sepolia se habilita condicionalmente si `process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'`).
 - **Red Local (Hardhat / Localhost)**: Integrado por defecto con el soporte a la red local para pruebas y despliegue rápido.
 
