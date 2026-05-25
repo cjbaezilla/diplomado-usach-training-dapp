@@ -41,6 +41,7 @@ import {
 import { useAllTokens, useTokenFactoryActions } from '@/hooks/useTokenFactory';
 import { useBaseERC20, useERC20Balance } from '@/hooks/useBaseERC20';
 import { useHydrated } from '@/hooks/useHydrated';
+import { TokenIcon } from '@/components/TokenIcon';
 
 interface Transaction {
   id: string;
@@ -108,9 +109,7 @@ function TokenRow({ tokenAddress, userAddress, onSelect, isSelected }: TokenRowP
       onClick={() => onSelect(tokenAddress)}
     >
       <td className="px-4 py-4 flex items-center gap-3 font-medium">
-        <span className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/20 text-primary font-bold text-xs shrink-0 border border-primary/30 shadow-inner">
-          {metadata.symbol.substring(0, 2).toUpperCase()}
-        </span>
+        <TokenIcon address={tokenAddress} className="h-8 w-8" />
         <div>
           <div className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
             {metadata.name}
@@ -779,7 +778,12 @@ const ERC20Page: NextPage = () => {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="select-token" className="text-xs font-semibold text-foreground">Seleccionar Token Activo</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="select-token" className="text-xs font-semibold text-foreground">Seleccionar Token Activo</Label>
+                    {selectedTokenAddr && (
+                      <TokenIcon address={selectedTokenAddr} className="h-6 w-6 border border-primary/20" />
+                    )}
+                  </div>
                   <select
                     id="select-token"
                     value={selectedTokenAddr || ''}
