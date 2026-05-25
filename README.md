@@ -41,6 +41,8 @@ El proyecto está construido sobre un stack de última generación optimizado pa
 La organización del proyecto se detalla a continuación:
 
 ```
+├── .env                      # Variables de entorno locales con direcciones de contratos
+├── .env.example              # Plantilla para la configuración de variables de entorno
 ├── .eslintrc.json            # Reglas de ESLint
 ├── .gitignore                # Exclusiones de control de versiones
 ├── AGENTS.md                 # Guía y reglas del sistema para agentes de desarrollo IA
@@ -55,6 +57,17 @@ La organización del proyecto se detalla a continuación:
     ├── components/           # Componentes comunes e interfaces
     │   ├── Navbar.tsx        # Barra de navegación responsiva con logo de la USACH
     │   └── ui/               # Componentes atómicos de shadcn/ui (Button, Card, Input, Label)
+    ├── contracts/            # Configuración e integración de contratos inteligentes
+    │   ├── abis/             # ABIs de contratos extraídos como constantes 'as const'
+    │   │   ├── baseERC20.ts
+    │   │   ├── baseERC1155.ts
+    │   │   ├── studentIdentity.ts
+    │   │   └── tokenFactory.ts
+    │   └── index.ts          # Configuración y exportación unificada de contratos y direcciones
+    ├── hooks/                # Hooks de React personalizados y utilidades de Web3
+    │   ├── useHydrated.ts    # Hook de utilidad para mitigar errores de hidratación en SSR
+    │   ├── useStudentIdentity.ts # Hooks unificados para el contrato StudentIdentity.sol
+    │   └── useTokenFactory.ts    # Hooks unificados para el contrato TokenFactory.sol
     ├── lib/
     │   └── utils.ts          # Utilidad para combinar clases de Tailwind (cn)
     ├── pages/                # Enrutador basado en páginas (Pages Router)
@@ -83,6 +96,16 @@ Asegúrate de tener instalado [Node.js](https://nodejs.org/) (versión 18 o supe
 # Instalar los paquetes definidos
 npm install
 ```
+
+### 3. Configurar Variables de Entorno
+
+Crea un archivo de configuración local `.env` a partir de la plantilla provista para configurar las direcciones de los contratos:
+
+```bash
+cp .env.example .env
+```
+
+Ajusta los valores del archivo `.env` según tu red de desarrollo o despliegue. Por defecto, incluye las direcciones pre-configuradas para la red local (localhost) de Hardhat.
 
 ### 3. Iniciar el Servidor de Desarrollo
 
@@ -118,13 +141,18 @@ npm run start
 Si deseas colaborar o expandir este proyecto, por favor ten en cuenta las siguientes directrices:
 
 1.  **Evitar Fallos de Hidratación (Hydration Mismatch)**:
-    Dado que Next.js utiliza Server-Side Rendering (SSR) y Wagmi interactúa con el estado de la billetera del cliente, las diferencias en el HTML generado pueden causar fallos en la hidratación de React. Siempre utiliza una protección de montaje de componente (`useEffect`) antes de renderizar elementos que dependan del estado de la billetera o variables del cliente:
-    ```typescript
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []);
-    if (!mounted) return null; // o un esqueleto/carga
-    ```
+    Dado que Next.js utiliza Server-Side Rendering (SSR) y Wagmi interactúa con el estado de la billetera del cliente, las diferencias en el HTML generado pueden causar fallos en la hidratación de React. 
+    - Utiliza siempre el hook `useHydrated()` de `@/hooks/useHydrated` antes de renderizar elementos que dependan del estado de la billetera o variables del cliente:
+      ```typescript
+      import { useHydrated } from '@/hooks/useHydrated';
+
+      const isHydrated = useHydrated();
+      if (!isHydrated) return <LoadingSkeleton />; // o null/Skeleton
+      ```
+    - Utiliza los hooks reutilizables unificados (`useStudentIdentity` y `useTokenFactory` de `@/hooks/`) para interactuar con la blockchain de forma limpia y tipada, en lugar de invocar `useReadContract` o `useWriteContract` de manera directa.
 2.  **Uso de Variables de Tema (Tailwind CSS v4)**:
     No utilices archivos `tailwind.config.js`. Todo el tema y las propiedades personalizadas de CSS (como el color primario de la USACH, etc.) están configuradas bajo el bloque `@theme inline` en `src/styles/globals.css` utilizando espacios de color `oklch`.
-3.  **Desarrollo Asistido por Inteligencia Artificial**:
-    Si utilizas agentes de IA de codificación para programar, consulta las pautas obligatorias establecidas en [AGENTS.md](file:///home/carlos/DEV/diplomado-usach-training-dapp/AGENTS.md).
+3.  **Definiciones 'as const' para ABIs**:
+    Todos los ABIs deben definirse en TypeScript con el modificador `as const` en la carpeta `src/contracts/abis/` para posibilitar el tipado estricto e inferencia de tipos automáticos de Wagmi y Viem.
+4.  **Desarrollo Asistido por Inteligencia Artificial**:
+    Si utilizas agentes de IA de codificación para programar, consulta las pautas obligatorias establecidas en [AGENTS.md](file:///home/carlos/DEV/diplomado-usach-training-dapp/AGENTS.md). En especial, se recuerda que toda comunicación, código y comentarios deben estar estrictamente en **español**.

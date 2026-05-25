@@ -43,6 +43,8 @@ Por favor, respeta estas versiones específicas de librerías e integraciones. N
 A continuación se muestra el mapa de directorios. Familiarízate con la distribución antes de crear nuevos archivos.
 
 ```
+├── .env                      # Variables de entorno locales (direcciones de contratos)
+├── .env.example              # Plantilla de configuración de variables de entorno
 ├── .eslintrc.json            # Reglas de ESLint (Next.js core-web-vitals)
 ├── .gitignore                # Exclusiones de Git
 ├── components.json           # Configuración del CLI de shadcn/ui
@@ -54,6 +56,17 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
 └── src/
     ├── components/
     │   └── ui/               # Primitivas reutilizables de shadcn/ui (ej. button.tsx)
+    ├── contracts/
+    │   ├── abis/             # ABIs de contratos inteligentes extraídos como constantes 'as const'
+    │   │   ├── baseERC20.ts
+    │   │   ├── baseERC1155.ts
+    │   │   ├── studentIdentity.ts
+    │   │   └── tokenFactory.ts
+    │   └── index.ts          # Configuración y exportación unificada de contratos con sus direcciones
+    ├── hooks/
+    │   ├── useHydrated.ts    # Hook de utilidad para prevenir problemas de hidratación en SSR
+    │   ├── useStudentIdentity.ts # Hooks de lectura y escritura para StudentIdentity.sol
+    │   └── useTokenFactory.ts    # Hooks de lectura y escritura para TokenFactory.sol
     ├── lib/
     │   └── utils.ts          # Ayudantes principales (utilidad cn para tailwind-merge)
     ├── pages/
@@ -103,25 +116,31 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
 - **SSR (Server-Side Rendering)**: Wagmi está configurado con `ssr: true` dentro de `src/wagmi.ts`.
   - > [!IMPORTANT]
     > **Mitigación de Incompatibilidad de Hidratación (Hydration Mismatch)**: Dado que la aplicación utiliza SSR, llamar a los hooks de Wagmi directamente durante el renderizado de React puede provocar fallos de hidratación entre el HTML generado por el servidor y el estado de Web3 del cliente.
-  - **Mejor Práctica**: Utiliza una protección de hidratación (como un hook personalizado que compruebe si el componente está montado) o renderiza los componentes que requieran el estado de Web3 solo después de que se hayan montado:
+  - **Mejor Práctica (Filtro de Hidratación)**: Utiliza siempre el hook `useHydrated()` importado desde `@/hooks/useHydrated` para prevenir fallos de hidratación. Este hook asegura que los componentes que interactúan con la blockchain o con el estado de la billetera sólo realicen consultas una vez que se hayan montado en el cliente:
     ```typescript
-    import { useEffect, useState } from "react";
     import { useAccount } from "wagmi";
+    import { useHydrated } from "@/hooks/useHydrated";
 
     export function WalletInfo() {
-      const [mounted, setMounted] = useState(false);
+      const isHydrated = useHydrated();
       const { address } = useAccount();
 
-      useEffect(() => {
-        setMounted(true);
-      }, []);
-
-      if (!mounted) return null; // O un estado de carga fallback/skeleton
+      if (!isHydrated) return <div>Cargando...</div>; // O esqueleto/skeleton fallback
 
       return <div>Connected to {address}</div>;
     }
     ```
+- **Integración y Configuración de Contratos**:
+  - Las direcciones de los contratos se configuran en el archivo `.env` mediante variables con el prefijo `NEXT_PUBLIC_` (ej. `NEXT_PUBLIC_STUDENT_IDENTITY_ADDRESS`).
+  - Todas las referencias a los contratos (dirección y ABI) están centralizadas en `@/contracts/index.ts`. No codifiques de manera rígida (hardcode) las direcciones ni los ABIs en los componentes.
+- **Definiciones 'as const' de ABIs**:
+  - Los ABIs se exportan en `@/contracts/abis/` usando el modificador de TypeScript `as const`. Esto permite que Wagmi y Viem infieran de manera exacta los tipos de los argumentos y retornos de las funciones, proporcionando autocompletado nativo y previniendo errores de desarrollo.
+- **Hooks Reutilizables**:
+  - Prefiere siempre utilizar los hooks de alto nivel predefinidos en la dApp para realizar consultas y mutaciones (escrituras) en lugar de instanciar `useReadContract` o `useWriteContract` directamente:
+    - Para `StudentIdentity.sol`: Usa `useStudentProfile`, `useAllStudents` y `useStudentIdentityActions` desde `@/hooks/useStudentIdentity`.
+    - Para `TokenFactory.sol`: Usa `useAllTokens`, `useTokensByOwner` y `useTokenFactoryActions` desde `@/hooks/useTokenFactory`.
 - **Cadenas Soportadas**: Mainnet, Polygon, Optimism, Arbitrum, Base y Sepolia (Sepolia se habilita condicionalmente si `process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'`).
+- **Red Local (Hardhat / Localhost)**: Integrado por defecto con el soporte a la red local para pruebas y despliegue rápido.
 
 ### F. Restricción de Ancho Máximo (max-w) en Diseños (Layouts)
 - **Diseño Completamente Fluido**: Está estrictamente prohibido utilizar clases de limitación de ancho máximo (como `max-w-` de Tailwind CSS o la propiedad `max-width` de CSS) en los contenedores principales, secciones de contenido general o layouts de página.
