@@ -478,8 +478,29 @@ const DEXPage: NextPage = () => {
   }, [tokenB, balanceB, ethBalance]);
 
   // Aprobaciones (allowance) para el Pool actual
-  const { allowance: allowanceA } = useERC20Allowance(resolvedTokenA, address, currentPoolAddress);
-  const { allowance: allowanceB } = useERC20Allowance(resolvedTokenB, address, currentPoolAddress);
+  const { allowance: allowanceA, refetch: refetchAllowanceA } = useERC20Allowance(resolvedTokenA, address, currentPoolAddress);
+  const { allowance: allowanceB, refetch: refetchAllowanceB } = useERC20Allowance(resolvedTokenB, address, currentPoolAddress);
+
+  // Efectos para detectar éxito en aprobaciones
+  useEffect(() => {
+    if (rawMetadataA.isSuccess && rawMetadataA.txHash) {
+      setNotification({
+        type: 'success',
+        message: `¡Aprobación de ${metadataA.symbol} completada con éxito!`
+      });
+      refetchAllowanceA();
+    }
+  }, [rawMetadataA.isSuccess, rawMetadataA.txHash]);
+
+  useEffect(() => {
+    if (rawMetadataB.isSuccess && rawMetadataB.txHash) {
+      setNotification({
+        type: 'success',
+        message: `¡Aprobación de ${metadataB.symbol} completada con éxito!`
+      });
+      refetchAllowanceB();
+    }
+  }, [rawMetadataB.isSuccess, rawMetadataB.txHash]);
 
 
   // LP balances del usuario
@@ -518,7 +539,91 @@ const DEXPage: NextPage = () => {
   const [swapAmountIn, setSwapAmountIn] = useState('');
   const [estimatedOut, setEstimatedOut] = useState('0.00');
 
+  // Estados para añadir/remover liquidez
+  const [addAmountA, setAddAmountA] = useState('');
+  const [addAmountB, setAddAmountB] = useState('');
+  const [removeLpAmount, setRemoveLpAmount] = useState('');
+  const [activeActionType, setActiveActionType] = useState<'swap' | 'add_liquidity' | 'remove_liquidity' | null>(null);
 
+  // Mapear el orden de los tokens y reservas de la piscina activa
+  const isTokenA0 = useMemo(() => {
+    if (!tokenA || !poolToken0) return true;
+    return tokenA.toLowerCase() === poolToken0.toLowerCase();
+  }, [tokenA, poolToken0]);
+
+  const reserveA = useMemo(() => {
+    return isTokenA0 ? poolReserve0 : poolReserve1;
+  }, [isTokenA0, poolReserve0, poolReserve1]);
+
+  const reserveB = useMemo(() => {
+    return isTokenA0 ? poolReserve1 : poolReserve0;
+  }, [isTokenA0, poolReserve0, poolReserve1]);
+
+  // Manejadores para auto-calcular montos de liquidez con proporción óptima
+  const handleAddAmountAChange = (val: string) => {
+    setAddAmountA(val);
+    if (!val || isNaN(Number(val)) || parseFloat(val) <= 0) {
+      setAddAmountB('');
+      return;
+    }
+    if (poolExists && reserveA > 0n && reserveB > 0n) {
+      try {
+        const amtA = parseUnits(val, metadataA.decimals);
+        const optB = calcularCantidad1Optima(amtA, reserveA, reserveB);
+        setAddAmountB(formatUnits(optB, metadataB.decimals));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleAddAmountBChange = (val: string) => {
+    setAddAmountB(val);
+    if (!val || isNaN(Number(val)) || parseFloat(val) <= 0) {
+      setAddAmountA('');
+      return;
+    }
+    if (poolExists && reserveA > 0n && reserveB > 0n) {
+      try {
+        const amtB = parseUnits(val, metadataB.decimals);
+        const optA = calcularCantidad1Optima(amtB, reserveB, reserveA);
+        setAddAmountA(formatUnits(optA, metadataA.decimals));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // Estimaciones al retirar liquidez
+  const estimatedReceiveA = useMemo(() => {
+    if (!removeLpAmount || !poolTotalSupply || poolTotalSupply === 0n) return '0.0';
+    try {
+      const amtLP = parseUnits(removeLpAmount, 18);
+      const amtA = (amtLP * reserveA) / poolTotalSupply;
+      return formatUnits(amtA, metadataA.decimals);
+    } catch {
+      return '0.0';
+    }
+  }, [removeLpAmount, poolTotalSupply, reserveA, metadataA]);
+
+  const estimatedReceiveB = useMemo(() => {
+    if (!removeLpAmount || !poolTotalSupply || poolTotalSupply === 0n) return '0.0';
+    try {
+      const amtLP = parseUnits(removeLpAmount, 18);
+      const amtB = (amtLP * reserveB) / poolTotalSupply;
+      return formatUnits(amtB, metadataB.decimals);
+    } catch {
+      return '0.0';
+    }
+  }, [removeLpAmount, poolTotalSupply, reserveB, metadataB]);
+
+  // Limpiar campos al cambiar tokens
+  useEffect(() => {
+    setAddAmountA('');
+    setAddAmountB('');
+    setRemoveLpAmount('');
+    setSwapAmountIn('');
+  }, [tokenA, tokenB]);
 
   // Estados de creación de Pool
   const [newPoolToken0, setNewPoolToken0] = useState<`0x${string}` | undefined>(undefined);
@@ -612,18 +717,33 @@ const DEXPage: NextPage = () => {
   // Transacción de pool completada con éxito
   useEffect(() => {
     if (isActionSuccess && actionTxHash) {
-      const desc = 'Intercambio de tokens';
-      setSwapAmountIn('');
+      let desc = 'Operación en Pool';
+      let type: 'swap' | 'add_liquidity' | 'remove_liquidity' | 'create_pool' | 'weth' = 'swap';
+
+      if (activeActionType === 'swap') {
+        desc = 'Intercambio de tokens';
+        type = 'swap';
+        setSwapAmountIn('');
+      } else if (activeActionType === 'add_liquidity') {
+        desc = `Añadir liquidez ${metadataA.symbol}/${metadataB.symbol}`;
+        type = 'add_liquidity';
+        setAddAmountA('');
+        setAddAmountB('');
+      } else if (activeActionType === 'remove_liquidity') {
+        desc = `Retirar liquidez ${metadataA.symbol}/${metadataB.symbol}`;
+        type = 'remove_liquidity';
+        setRemoveLpAmount('');
+      }
 
       setNotification({
         type: 'success',
-        message: `¡Transacción de intercambio de tokens completada con éxito!`
+        message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`
       });
 
       setTransactions((prev) => [
         {
           id: `tx-${Date.now()}`,
-          type: 'swap',
+          type: type,
           description: desc,
           hash: actionTxHash,
           timestamp: 'Justo ahora',
@@ -637,6 +757,11 @@ const DEXPage: NextPage = () => {
       refetchBalanceA();
       refetchBalanceB();
       refetchLpBalance();
+      refetchAllowanceA();
+      refetchAllowanceB();
+
+      // Resetear la acción activa
+      setActiveActionType(null);
 
       // Si la salida era ETH nativo virtual, ejecutamos automáticamente el Unwrap (withdraw)
       if (unwrapAmountOnSuccess) {
@@ -649,7 +774,7 @@ const DEXPage: NextPage = () => {
         setUnwrapAmountOnSuccess(null);
       }
     }
-  }, [isActionSuccess, actionTxHash]);
+  }, [isActionSuccess, actionTxHash, activeActionType, metadataA.symbol, metadataB.symbol, unwrapAmountOnSuccess, refetchPoolDetails, refetchBalanceA, refetchBalanceB, refetchLpBalance, refetchAllowanceA, refetchAllowanceB, wethWithdraw]);
 
   // Transacción de WETH completada con éxito
   useEffect(() => {
@@ -765,21 +890,61 @@ const DEXPage: NextPage = () => {
         }
         // Si hay suficiente WETH, procedemos con el swap estándar del pool usando WETH
         if (!currentPoolAddress) return;
+        setActiveActionType('swap');
         actionSwap(WETH_ADDRESS, amt);
       } else if (tokenB === ETH_ADDRESS) {
         // Token -> ETH: Swap estándar Token -> WETH y luego Unwrap
         if (!currentPoolAddress) return;
         const estOutBigInt = parseUnits(estimatedOut, 18);
         setUnwrapAmountOnSuccess(estOutBigInt);
+        setActiveActionType('swap');
         actionSwap(tokenA, amt);
       } else {
         // Swap estándar entre tokens ERC20 de fábrica
         if (!currentPoolAddress) return;
+        setActiveActionType('swap');
         actionSwap(tokenA, amt);
       }
     } catch {
       setNotification({ type: 'error', message: 'Monto de intercambio no válido.' });
     }
+  };
+
+  // Ejecutar Añadir Liquidez
+  const handleAddLiquidity = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tokenA || !tokenB || !addAmountA || !addAmountB || !currentPoolAddress) return;
+    try {
+      const amtA = parseUnits(addAmountA, metadataA.decimals);
+      const amtB = parseUnits(addAmountB, metadataB.decimals);
+      
+      const amt0 = isTokenA0 ? amtA : amtB;
+      const amt1 = isTokenA0 ? amtB : amtA;
+      
+      setActiveActionType('add_liquidity');
+      actionAgregarLiquidez(amt0, amt1);
+    } catch {
+      setNotification({ type: 'error', message: 'Montos de liquidez no válidos.' });
+    }
+  };
+
+  // Ejecutar Retirar Liquidez
+  const handleRemoveLiquidity = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!removeLpAmount || !currentPoolAddress) return;
+    try {
+      const amtLP = parseUnits(removeLpAmount, 18);
+      setActiveActionType('remove_liquidity');
+      actionRemoverLiquidez(amtLP);
+    } catch {
+      setNotification({ type: 'error', message: 'Monto de LP no válido.' });
+    }
+  };
+
+  const handleSelectLpPercentage = (percentage: number) => {
+    if (!lpTokenBalance) return;
+    const amt = (lpTokenBalance * BigInt(percentage)) / 100n;
+    setRemoveLpAmount(formatUnits(amt, 18));
   };
 
 
@@ -825,6 +990,19 @@ const DEXPage: NextPage = () => {
   const isInputEth = tokenA === ETH_ADDRESS;
   const needsSwapApproval = isInputEth ? false : swapAmountBigInt > currentSwapAllowance;
   const hasEnoughSwapBalance = currentSwapBalance >= swapAmountBigInt;
+
+  // Comprobaciones para Añadir Liquidez
+  const addAmountBigIntA = addAmountA ? parseUnits(addAmountA, metadataA.decimals) : 0n;
+  const addAmountBigIntB = addAmountB ? parseUnits(addAmountB, metadataB.decimals) : 0n;
+  const needsAddApproveA = tokenA !== ETH_ADDRESS && addAmountBigIntA > allowanceA;
+  const needsAddApproveB = tokenB !== ETH_ADDRESS && addAmountBigIntB > allowanceB;
+  const hasEnoughAddBalanceA = resolvedBalanceA >= addAmountBigIntA;
+  const hasEnoughAddBalanceB = resolvedBalanceB >= addAmountBigIntB;
+  const isEthSelectedForLiquidity = tokenA === ETH_ADDRESS || tokenB === ETH_ADDRESS;
+
+  // Comprobaciones para Retirar Liquidez
+  const removeLpBigInt = removeLpAmount ? parseUnits(removeLpAmount, 18) : 0n;
+  const hasEnoughLpBalance = lpTokenBalance >= removeLpBigInt;
 
 
 
@@ -1152,215 +1330,572 @@ const DEXPage: NextPage = () => {
             <div className="lg:col-span-2 space-y-8">
               
               <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-emerald-500"></div>
-                <CardHeader className="pb-3 flex flex-row items-center justify-between flex-wrap gap-2">
-                  <div>
-                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Intercambio de Tokens (Swap)
-                    </CardTitle>
-                    <CardDescription>
-                      Realiza intercambios de tokens de forma inmediata a través del Pool.
-                    </CardDescription>
-                  </div>
-                </CardHeader>
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-emerald-500 to-primary"></div>
+                <Tabs defaultValue="swap" className="w-full">
+                  <CardHeader className="pb-2">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                          <Layers className="h-5 w-5 text-primary" />
+                          Operaciones de Pool
+                        </CardTitle>
+                        <CardDescription>
+                          Intercambia tokens o gestiona tu liquidez.
+                        </CardDescription>
+                      </div>
+                      <TabsList className="grid grid-cols-3 bg-muted/50 p-1 rounded-lg border border-border/10">
+                        <TabsTrigger value="swap" className="text-xs font-semibold px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                          Swap
+                        </TabsTrigger>
+                        <TabsTrigger value="add" className="text-xs font-semibold px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                          + Liquidez
+                        </TabsTrigger>
+                        <TabsTrigger value="remove" className="text-xs font-semibold px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                          - Liquidez
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+                  </CardHeader>
 
-                <CardContent className="space-y-6">
-                  {!tokenA || !tokenB ? (
-                    <div className="text-center py-6 text-xs text-muted-foreground">
-                      Debes seleccionar ambos tokens para comenzar.
-                    </div>
-                  ) : isLoadingCurrentPool ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    /* Mostrar Swap */
-                    <form onSubmit={handleSwap} className="space-y-5">
-                          <div className="space-y-4">
-                            
-                            {/* Input Token Entrada */}
-                            <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                              <div className="flex justify-between items-center text-xs">
-                                <Label className="text-muted-foreground font-medium">Tú entregas:</Label>
-                                <span className="font-mono text-[10.5px] text-muted-foreground">
-                                  Saldo: {parseFloat(formatUnits(currentSwapBalance, currentSwapDecimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {currentSwapSymbol}
-                                </span>
+                  <CardContent className="space-y-4 pt-2">
+                    {!tokenA || !tokenB ? (
+                      <div className="text-center py-6 text-xs text-muted-foreground">
+                        Debes seleccionar ambos tokens para comenzar.
+                      </div>
+                    ) : isLoadingCurrentPool ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <>
+                        {/* TAB SWAP */}
+                        <TabsContent value="swap" className="mt-0">
+                          <form onSubmit={handleSwap} className="space-y-4">
+                            <div className="space-y-4">
+                              {/* Input Token Entrada */}
+                              <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                <div className="flex justify-between items-center text-xs">
+                                  <Label className="text-muted-foreground font-medium">Tú entregas:</Label>
+                                  <span className="font-mono text-[10.5px] text-muted-foreground">
+                                    Saldo: {parseFloat(formatUnits(currentSwapBalance, currentSwapDecimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {currentSwapSymbol}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="number"
+                                    placeholder="0.0"
+                                    value={swapAmountIn}
+                                    onChange={(e) => setSwapAmountIn(e.target.value)}
+                                    className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
+                                    required
+                                    min="0"
+                                    step="any"
+                                  />
+                                  <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                    <TokenIcon address={tokenA || ''} className="h-5 w-5" />
+                                    <select
+                                      value={tokenA || ''}
+                                      onChange={(e) => setTokenA(e.target.value as `0x${string}`)}
+                                      className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
+                                    >
+                                      {selectableTokens
+                                        .filter((addr) => addr !== tokenB)
+                                        .map((addr) => (
+                                          <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
+                                        ))}
+                                    </select>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <Input
-                                  type="number"
-                                  placeholder="0.0"
-                                  value={swapAmountIn}
-                                  onChange={(e) => setSwapAmountIn(e.target.value)}
-                                  className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                  required
-                                  min="0"
-                                  step="any"
-                                />
-                                <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                  <TokenIcon address={tokenA || ''} className="h-5 w-5" />
-                                  <select
-                                    value={tokenA || ''}
-                                    onChange={(e) => setTokenA(e.target.value as `0x${string}`)}
-                                    className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
-                                  >
-                                    {selectableTokens
-                                      .filter((addr) => addr !== tokenB)
-                                      .map((addr) => (
-                                        <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
-                                      ))}
-                                  </select>
+
+                              {/* Icono de Dirección de Swap */}
+                              <div className="flex justify-center -my-2.5">
+                                <div className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors p-2 rounded-full cursor-pointer shadow-inner"
+                                  onClick={() => {
+                                    const temp = tokenA;
+                                    setTokenA(tokenB);
+                                    setTokenB(temp);
+                                  }}
+                                >
+                                  <ArrowDownUp className="h-4 w-4" />
+                                </div>
+                              </div>
+
+                              {/* Output Estimado */}
+                              <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                <div className="flex justify-between items-center text-xs">
+                                  <Label className="text-muted-foreground font-medium">Tú recibes (estimado):</Label>
+                                  <span className="font-mono text-[10.5px] text-muted-foreground">
+                                    Saldo: {parseFloat(formatUnits(resolvedBalanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="text"
+                                    readOnly
+                                    value={parseFloat(estimatedOut) > 0 ? parseFloat(estimatedOut).toLocaleString(undefined, { maximumFractionDigits: 6 }) : '0.0'}
+                                    className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none cursor-default"
+                                  />
+                                  <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                    <TokenIcon address={tokenB || ''} className="h-5 w-5" />
+                                    <select
+                                      value={tokenB || ''}
+                                      onChange={(e) => setTokenB(e.target.value as `0x${string}`)}
+                                      className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
+                                    >
+                                      {selectableTokens
+                                        .filter((addr) => addr !== tokenA)
+                                        .map((addr) => (
+                                          <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
+                                        ))}
+                                    </select>
+                                  </div>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Icono de Dirección de Swap */}
-                            <div className="flex justify-center -my-2.5">
-                              <div className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors p-2 rounded-full cursor-pointer shadow-inner"
-                                onClick={() => {
-                                  const temp = tokenA;
-                                  setTokenA(tokenB);
-                                  setTokenB(temp);
-                                }}
-                              >
-                                <ArrowDownUp className="h-4 w-4" />
-                              </div>
-                            </div>
-
-                            {/* Output Estimado */}
-                            <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                              <div className="flex justify-between items-center text-xs">
-                                <Label className="text-muted-foreground font-medium">Tú recibes (estimado):</Label>
-                                <span className="font-mono text-[10.5px] text-muted-foreground">
-                                  Saldo: {parseFloat(formatUnits(resolvedBalanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <Input
-                                  type="text"
-                                  readOnly
-                                  value={parseFloat(estimatedOut) > 0 ? parseFloat(estimatedOut).toLocaleString(undefined, { maximumFractionDigits: 6 }) : '0.0'}
-                                  className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none cursor-default"
-                                />
-                                <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                  <TokenIcon address={tokenB || ''} className="h-5 w-5" />
-                                  <select
-                                    value={tokenB || ''}
-                                    onChange={(e) => setTokenB(e.target.value as `0x${string}`)}
-                                    className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
-                                  >
-                                    {selectableTokens
-                                      .filter((addr) => addr !== tokenA)
-                                      .map((addr) => (
-                                        <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
-                                      ))}
-                                  </select>
-                                </div>
-                              </div>
-                            </div>
-
-                          </div>
-
-                          {/* Mensajes de error de fondos */}
-                          {swapAmountIn && !hasEnoughSwapBalance && (
-                            <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
-                              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                              <span>Saldo insuficiente de {currentSwapSymbol} en tu billetera.</span>
-                            </div>
-                          )}
-
-                          {/* Mensaje de piscina inexistente */}
-                          {!poolExists && !isWethDirectSwap && (
-                            <div className="flex flex-col gap-2.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
-                              <div className="flex items-start gap-1.5">
+                            {/* Mensajes de error de fondos */}
+                            {swapAmountIn && !hasEnoughSwapBalance && (
+                              <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
                                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                <span>No existe una piscina de liquidez para el par {metadataA.symbol} / {metadataB.symbol}. Primero debes crear la piscina de liquidez para este par.</span>
+                                <span>Saldo insuficiente de {currentSwapSymbol} en tu billetera.</span>
                               </div>
+                            )}
+
+                            {/* Mensaje de piscina inexistente */}
+                            {!poolExists && !isWethDirectSwap && (
+                              <div className="flex flex-col gap-2.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+                                <div className="flex items-start gap-1.5">
+                                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                  <span>No existe una piscina de liquidez para el par {metadataA.symbol} / {metadataB.symbol}. Primero debes crear la piscina de liquidez para este par.</span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-[10px] h-7 px-3 self-start border-amber-500/30 hover:bg-amber-500/20 text-amber-500 hover:text-amber-400 font-bold font-sans"
+                                  onClick={() => {
+                                    setNewPoolToken0(tokenA);
+                                    setNewPoolToken1(tokenB);
+                                    document.getElementById('create-pool-card')?.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                >
+                                  Configurar Creación de Piscina
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Botón de Acción de Swap */}
+                            {!poolExists && !isWethDirectSwap ? (
                               <Button
                                 type="button"
-                                size="sm"
-                                variant="outline"
-                                className="text-[10px] h-7 px-3 self-start border-amber-500/30 hover:bg-amber-500/20 text-amber-500 hover:text-amber-400 font-bold font-sans"
-                                onClick={() => {
-                                  setNewPoolToken0(tokenA);
-                                  setNewPoolToken1(tokenB);
-                                  document.getElementById('create-pool-card')?.scrollIntoView({ behavior: 'smooth' });
-                                }}
+                                disabled
+                                className="w-full font-bold shadow-md opacity-60 cursor-not-allowed"
                               >
-                                Configurar Creación de Piscina
+                                Intercambio no disponible (Sin Piscina)
                               </Button>
-                            </div>
-                          )}
+                            ) : (tokenA === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
+                              <Button
+                                type="button"
+                                onClick={handleSwap}
+                                disabled={isWethPending}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-amber-600 hover:bg-amber-700 text-white"
+                              >
+                                {isWethPending ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Convirtiendo ETH a WETH...
+                                  </>
+                                ) : (
+                                  <>
+                                    1. Envolver {parseFloat(formatUnits(swapAmountBigInt - wethBalance, 18)).toFixed(4)} ETH a WETH
+                                  </>
+                                )}
+                              </Button>
+                            ) : needsSwapApproval && hasEnoughSwapBalance ? (
+                              <Button
+                                type="button"
+                                onClick={() => handleApprove(tokenA!, swapAmountIn, currentSwapDecimals)}
+                                disabled={isPendingApproveA}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
+                              >
+                                {isPendingApproveA ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Aprobando {currentSwapSymbol}...
+                                  </>
+                                ) : (
+                                  <>
+                                    Aprobar {currentSwapSymbol} para Swap
+                                  </>
+                                )}
+                              </Button>
+                            ) : (
+                              <Button
+                                type="submit"
+                                disabled={isActionPending || !swapAmountIn || !hasEnoughSwapBalance || parseFloat(swapAmountIn) <= 0}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
+                              >
+                                {isActionPending ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Procesando Intercambio...
+                                  </>
+                                ) : (
+                                  <>
+                                    {tokenA === ETH_ADDRESS && tokenB === WETH_ADDRESS ? "Envolver ETH (Wrap)" : 
+                                     tokenA === WETH_ADDRESS && tokenB === ETH_ADDRESS ? "Desenvolver WETH (Unwrap)" : 
+                                     "Intercambiar (Swap)"}
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </form>
+                        </TabsContent>
 
-                          {/* Botón de Acción de Swap */}
-                          {!poolExists && !isWethDirectSwap ? (
-                            <Button
-                              type="button"
-                              disabled
-                              className="w-full font-bold shadow-md opacity-60 cursor-not-allowed"
-                            >
-                              Intercambio no disponible (Sin Piscina)
-                            </Button>
-                          ) : (tokenA === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
-                            <Button
-                              type="button"
-                              onClick={handleSwap}
-                              disabled={isWethPending}
-                              className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-amber-600 hover:bg-amber-700 text-white"
-                            >
-                              {isWethPending ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                  Convirtiendo ETH a WETH...
-                                </>
-                              ) : (
-                                <>
-                                  1. Envolver {parseFloat(formatUnits(swapAmountBigInt - wethBalance, 18)).toFixed(4)} ETH a WETH
-                                </>
-                              )}
-                            </Button>
-                          ) : needsSwapApproval && hasEnoughSwapBalance ? (
-                            <Button
-                              type="button"
-                              onClick={() => handleApprove(tokenA!, swapAmountIn, currentSwapDecimals)}
-                              disabled={isPendingApproveA}
-                              className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
-                            >
-                              {isPendingApproveA ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                  Aprobando {currentSwapSymbol}...
-                                </>
-                              ) : (
-                                <>
-                                  Aprobar {currentSwapSymbol} para Swap
-                                </>
-                              )}
-                            </Button>
-                          ) : (
-                            <Button
-                              type="submit"
-                              disabled={isActionPending || !swapAmountIn || !hasEnoughSwapBalance || parseFloat(swapAmountIn) <= 0}
-                              className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
-                            >
-                              {isActionPending ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                  Procesando Intercambio...
-                                </>
-                              ) : (
-                                <>
-                                  {tokenA === ETH_ADDRESS && tokenB === WETH_ADDRESS ? "Envolver ETH (Wrap)" : 
-                                   tokenA === WETH_ADDRESS && tokenB === ETH_ADDRESS ? "Desenvolver WETH (Unwrap)" : 
-                                   "Intercambiar (Swap)"}
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </form>
-                  )}
-                </CardContent>
+                        {/* TAB ADD LIQUIDITY */}
+                        <TabsContent value="add" className="mt-0">
+                          <form onSubmit={handleAddLiquidity} className="space-y-4">
+                            {/* Información si no existe piscina */}
+                            {!poolExists && (
+                              <div className="flex flex-col gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 p-3 rounded-lg text-xs">
+                                <div className="flex items-start gap-1.5">
+                                  <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                                  <span>
+                                    <strong>¡Piscina no inicializada!</strong> Al ser el primer proveedor, definirás el precio inicial. Debes crear la piscina primero antes de agregar fondos, o configurar la creación abajo.
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-[10px] h-7 px-3 self-start border-blue-500/30 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 font-bold font-sans"
+                                  onClick={() => {
+                                    setNewPoolToken0(tokenA);
+                                    setNewPoolToken1(tokenB);
+                                    document.getElementById('create-pool-card')?.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                >
+                                  Configurar Creación de Piscina
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Advertencia de ETH nativo */}
+                            {isEthSelectedForLiquidity && (
+                              <div className="flex items-start gap-1.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>
+                                  Las piscinas de liquidez solo aceptan tokens ERC20. Por favor, selecciona <strong>WETH</strong> en lugar de ETH para añadir liquidez. Puedes envolver tu ETH a WETH en la pestaña de Swap.
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="space-y-4">
+                              {/* Token A Input */}
+                              <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                <div className="flex justify-between items-center text-xs">
+                                  <Label className="text-muted-foreground font-medium">Cantidad de {metadataA.symbol}:</Label>
+                                  <span className="font-mono text-[10.5px] text-muted-foreground">
+                                    Saldo: {parseFloat(formatUnits(resolvedBalanceA, metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataA.symbol}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="number"
+                                    placeholder="0.0"
+                                    value={addAmountA}
+                                    onChange={(e) => handleAddAmountAChange(e.target.value)}
+                                    className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
+                                    disabled={isEthSelectedForLiquidity || !poolExists}
+                                    required
+                                    min="0"
+                                    step="any"
+                                  />
+                                  <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                    <TokenIcon address={tokenA || ''} className="h-5 w-5" />
+                                    <select
+                                      value={tokenA || ''}
+                                      onChange={(e) => setTokenA(e.target.value as `0x${string}`)}
+                                      className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
+                                    >
+                                      {selectableTokens
+                                        .filter((addr) => addr !== tokenB)
+                                        .map((addr) => (
+                                          <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
+                                        ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Separador + */}
+                              <div className="flex justify-center -my-2.5">
+                                <div className="bg-primary/10 border border-primary/20 text-primary p-2 rounded-full shadow-inner">
+                                  <Plus className="h-4 w-4" />
+                                </div>
+                              </div>
+
+                              {/* Token B Input */}
+                              <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                <div className="flex justify-between items-center text-xs">
+                                  <Label className="text-muted-foreground font-medium">Cantidad de {metadataB.symbol}:</Label>
+                                  <span className="font-mono text-[10.5px] text-muted-foreground">
+                                    Saldo: {parseFloat(formatUnits(resolvedBalanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="number"
+                                    placeholder="0.0"
+                                    value={addAmountB}
+                                    onChange={(e) => handleAddAmountBChange(e.target.value)}
+                                    className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
+                                    disabled={isEthSelectedForLiquidity || !poolExists}
+                                    required
+                                    min="0"
+                                    step="any"
+                                  />
+                                  <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                    <TokenIcon address={tokenB || ''} className="h-5 w-5" />
+                                    <select
+                                      value={tokenB || ''}
+                                      onChange={(e) => setTokenB(e.target.value as `0x${string}`)}
+                                      className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
+                                    >
+                                      {selectableTokens
+                                        .filter((addr) => addr !== tokenA)
+                                        .map((addr) => (
+                                          <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
+                                        ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Mostrar proporción si hay reservas */}
+                            {poolExists && reserveA > 0n && reserveB > 0n && (
+                              <div className="bg-muted/15 p-3 rounded-xl border border-border/10 text-xs text-muted-foreground space-y-1">
+                                <span className="font-semibold text-foreground block">Proporción del Pool:</span>
+                                <div className="flex justify-between">
+                                  <span>1 {metadataA.symbol} =</span>
+                                  <span className="font-mono text-foreground font-semibold">
+                                    {(Number(reserveB) / 10**metadataB.decimals / (Number(reserveA) / 10**metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>1 {metadataB.symbol} =</span>
+                                  <span className="font-mono text-foreground font-semibold">
+                                    {(Number(reserveA) / 10**metadataA.decimals / (Number(reserveB) / 10**metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataA.symbol}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Errores de saldo */}
+                            {addAmountA && !hasEnoughAddBalanceA && (
+                              <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>Saldo insuficiente de {metadataA.symbol}.</span>
+                              </div>
+                            )}
+                            {addAmountB && !hasEnoughAddBalanceB && (
+                              <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>Saldo insuficiente de {metadataB.symbol}.</span>
+                              </div>
+                            )}
+
+                            {/* Botones de acción */}
+                            {isEthSelectedForLiquidity ? (
+                              <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
+                                Añadir Liquidez (Selecciona WETH)
+                              </Button>
+                            ) : !poolExists ? (
+                              <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
+                                Piscina No Creada
+                              </Button>
+                            ) : needsAddApproveA && hasEnoughAddBalanceA ? (
+                              <Button
+                                type="button"
+                                onClick={() => handleApprove(tokenA!, addAmountA, metadataA.decimals)}
+                                disabled={isPendingApproveA}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
+                              >
+                                {isPendingApproveA ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Aprobando {metadataA.symbol}...
+                                  </>
+                                ) : (
+                                  <>Aprobar {metadataA.symbol}</>
+                                )}
+                              </Button>
+                            ) : needsAddApproveB && hasEnoughAddBalanceB ? (
+                              <Button
+                                type="button"
+                                onClick={() => handleApprove(tokenB!, addAmountB, metadataB.decimals)}
+                                disabled={isPendingApproveB}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
+                              >
+                                {isPendingApproveB ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Aprobando {metadataB.symbol}...
+                                  </>
+                                ) : (
+                                  <>Aprobar {metadataB.symbol}</>
+                                )}
+                              </Button>
+                            ) : (
+                              <Button
+                                type="submit"
+                                disabled={isActionPending || !addAmountA || !addAmountB || !hasEnoughAddBalanceA || !hasEnoughAddBalanceB}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-emerald-600 hover:bg-emerald-700 text-white"
+                              >
+                                {isActionPending ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Añadiendo Liquidez...
+                                  </>
+                                ) : (
+                                  <>Añadir Liquidez</>
+                                )}
+                              </Button>
+                            )}
+                          </form>
+                        </TabsContent>
+
+                        {/* TAB REMOVE LIQUIDITY */}
+                        <TabsContent value="remove" className="mt-0">
+                          <form onSubmit={handleRemoveLiquidity} className="space-y-4">
+                            {!poolExists && (
+                              <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>No existe piscina de liquidez para este par.</span>
+                              </div>
+                            )}
+
+                            {isEthSelectedForLiquidity && (
+                              <div className="flex items-start gap-1.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>
+                                  Las piscinas de liquidez solo aceptan tokens ERC20. Por favor, selecciona <strong>WETH</strong> en lugar de ETH para gestionar tu liquidez.
+                                </span>
+                              </div>
+                            )}
+
+                            {poolExists && !isEthSelectedForLiquidity && (
+                              <div className="space-y-4">
+                                {/* Entrada de LP */}
+                                <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                  <div className="flex justify-between items-center text-xs">
+                                    <Label className="text-muted-foreground font-medium">Cantidad de Tokens LP a quemar:</Label>
+                                    <span className="font-mono text-[10.5px] text-muted-foreground">
+                                      Tu saldo LP: {parseFloat(formatUnits(lpTokenBalance || 0n, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <Input
+                                      type="number"
+                                      placeholder="0.0"
+                                      value={removeLpAmount}
+                                      onChange={(e) => setRemoveLpAmount(e.target.value)}
+                                      className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
+                                      required
+                                      min="0"
+                                      step="any"
+                                    />
+                                    <span className="text-xs font-bold text-muted-foreground bg-card/60 px-2.5 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                      LP Tokens
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Porcentajes rápidos */}
+                                <div className="grid grid-cols-4 gap-2">
+                                  {[25, 50, 75, 100].map((pct) => (
+                                    <Button
+                                      key={pct}
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      disabled={!lpTokenBalance || lpTokenBalance === 0n}
+                                      className="text-xs h-8 border-border/60 hover:bg-muted/80 font-semibold"
+                                      onClick={() => handleSelectLpPercentage(pct)}
+                                    >
+                                      {pct}%
+                                    </Button>
+                                  ))}
+                                </div>
+
+                                {/* Estimación de Retorno */}
+                                <div className="bg-muted/15 p-4 rounded-xl border border-border/10 space-y-3">
+                                  <span className="text-xs font-semibold text-foreground block">Recibirás (estimado):</span>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex items-center gap-2 bg-card/40 p-2.5 rounded-lg border border-border/20">
+                                      <TokenIcon address={tokenA || ''} className="h-5 w-5" />
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-mono font-bold text-foreground">
+                                          {parseFloat(estimatedReceiveA).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">{metadataA.symbol}</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-card/40 p-2.5 rounded-lg border border-border/20">
+                                      <TokenIcon address={tokenB || ''} className="h-5 w-5" />
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-mono font-bold text-foreground">
+                                          {parseFloat(estimatedReceiveB).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">{metadataB.symbol}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Errores de saldo LP */}
+                            {removeLpAmount && !hasEnoughLpBalance && (
+                              <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>Saldo insuficiente de Tokens LP.</span>
+                              </div>
+                            )}
+
+                            {/* Botón de acción */}
+                            {isEthSelectedForLiquidity ? (
+                              <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
+                                Retirar Liquidez (Selecciona WETH)
+                              </Button>
+                            ) : !poolExists ? (
+                              <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
+                                Piscina No Creada
+                              </Button>
+                            ) : (
+                              <Button
+                                type="submit"
+                                disabled={isActionPending || !removeLpAmount || !hasEnoughLpBalance || parseFloat(removeLpAmount) <= 0}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-destructive hover:bg-destructive/90 text-white"
+                              >
+                                {isActionPending ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Retirando Liquidez...
+                                  </>
+                                ) : (
+                                  <>Retirar Liquidez</>
+                                )}
+                              </Button>
+                            )}
+                          </form>
+                        </TabsContent>
+                      </>
+                    )}
+                  </CardContent>
+                </Tabs>
               </Card>
 
               {/* Registro de transacciones de la sesión */}
