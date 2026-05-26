@@ -153,6 +153,7 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
         <td className="py-4"><div className="h-4 w-20 bg-muted rounded" /></td>
         <td className="py-4"><div className="h-6 w-32 bg-muted rounded" /></td>
         <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
+        <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
         <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
         <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
       </tr>
@@ -173,13 +174,29 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
   const isToken1Weth = token1?.toLowerCase() === WETH_ADDRESS.toLowerCase();
   const currentEthPrice = ethPrice || 0;
 
-  const reserve0Usd = isToken0Weth && currentEthPrice > 0
-    ? Number(formattedReserve0) * currentEthPrice
+  // Precios unitarios en USD para cada token
+  let price0Usd = 0;
+  let price1Usd = 0;
+
+  if (currentEthPrice > 0) {
+    if (isToken0Weth) {
+      price0Usd = currentEthPrice;
+      price1Usd = ratio > 0 ? currentEthPrice / ratio : 0;
+    } else if (isToken1Weth) {
+      price1Usd = currentEthPrice;
+      price0Usd = ratio * currentEthPrice;
+    }
+  }
+
+  const reserve0Usd = price0Usd > 0
+    ? Number(formattedReserve0) * price0Usd
     : 0;
 
-  const reserve1Usd = isToken1Weth && currentEthPrice > 0
-    ? Number(formattedReserve1) * currentEthPrice
+  const reserve1Usd = price1Usd > 0
+    ? Number(formattedReserve1) * price1Usd
     : 0;
+
+  const totalLiquidityUsd = reserve0Usd + reserve1Usd;
 
   return (
     <tr className="hover:bg-muted/10 transition-colors border-b border-border/20 group/row text-xs">
@@ -237,15 +254,42 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
         </div>
       </td>
 
+      {/* Total Liquidez */}
+      <td className="py-4">
+        <div className="flex flex-col text-xs font-mono">
+          <span className="text-foreground font-semibold">
+            {totalLiquidityUsd > 0 ? (
+              `$${totalLiquidityUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+            ) : (
+              '-'
+            )}
+          </span>
+        </div>
+      </td>
+
       {/* Precio y Ratio */}
       <td className="py-4">
-        <div className="flex flex-col text-xs">
-          <span className="font-mono text-foreground font-medium">
-            1 {metadata0.symbol} = {ratio.toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadata1.symbol}
-          </span>
-          <span className="text-[10px] text-muted-foreground font-mono mt-0.5">
-            1 {metadata1.symbol} = {ratio > 0 ? (1 / ratio).toLocaleString(undefined, { maximumFractionDigits: 6 }) : 0} {metadata0.symbol}
-          </span>
+        <div className="flex flex-col text-xs font-mono">
+          <div className="flex flex-col">
+            <span className="text-foreground font-medium">
+              1 {metadata0.symbol} = {ratio.toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadata1.symbol}
+            </span>
+            {price0Usd > 0 && (
+              <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                (~${price0Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USD)
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col mt-2">
+            <span className="text-muted-foreground">
+              1 {metadata1.symbol} = {ratio > 0 ? (1 / ratio).toLocaleString(undefined, { maximumFractionDigits: 6 }) : 0} {metadata0.symbol}
+            </span>
+            {price1Usd > 0 && (
+              <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                (~${price1Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USD)
+              </span>
+            )}
+          </div>
         </div>
       </td>
 
@@ -2250,6 +2294,7 @@ const DEXPage: NextPage = () => {
                           <th className="pb-3 pl-4">Par / Contrato</th>
                           <th className="pb-3">Creador</th>
                           <th className="pb-3">Reservas</th>
+                          <th className="pb-3">Total Liquidez</th>
                           <th className="pb-3">Precio y Ratio</th>
                           <th className="pb-3">Total LP</th>
                           <th className="pb-3 pr-4 text-right">Tu Participación</th>
@@ -2261,6 +2306,7 @@ const DEXPage: NextPage = () => {
                           <td className="py-4"><div className="h-4 w-20 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-6 w-32 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
                           <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
                         </tr>
@@ -2268,6 +2314,7 @@ const DEXPage: NextPage = () => {
                           <td className="py-4 pl-4"><div className="h-4 w-28 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-20 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-6 w-32 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
                           <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
@@ -2285,12 +2332,13 @@ const DEXPage: NextPage = () => {
                   </div>
                 ) : (
                   <div className="w-full overflow-x-auto">
-                    <table className="w-full border-collapse text-left min-w-[800px]">
+                    <table className="w-full border-collapse text-left min-w-[900px]">
                       <thead>
                         <tr className="border-b border-border/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                           <th className="pb-3 pl-4">Par / Contrato</th>
                           <th className="pb-3">Creador</th>
                           <th className="pb-3">Reservas</th>
+                          <th className="pb-3">Total Liquidez</th>
                           <th className="pb-3">Precio y Ratio</th>
                           <th className="pb-3">Total LP</th>
                           <th className="pb-3 pr-4 text-right">Tu Participación</th>
