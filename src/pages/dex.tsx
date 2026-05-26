@@ -299,6 +299,15 @@ const DEXPage: NextPage = () => {
   }, [tokenB]);
 
   // Pool seleccionado para Swap y Liquidez
+  const isWethDirectSwap = useMemo(() => {
+    if (!tokenA || !tokenB) return false;
+    const a = tokenA.toLowerCase();
+    const b = tokenB.toLowerCase();
+    const eth = ETH_ADDRESS.toLowerCase();
+    const weth = WETH_ADDRESS.toLowerCase();
+    return (a === eth && b === weth) || (a === weth && b === eth);
+  }, [tokenA, tokenB]);
+
   const { poolAddress: currentPoolAddress, exists: poolExists, isLoading: isLoadingCurrentPool } = useGetPool(resolvedTokenA, resolvedTokenB);
   
   // Datos del pool actual
@@ -461,7 +470,17 @@ const DEXPage: NextPage = () => {
 
   // Manejar el cambio automático de inputs al calcular Swap
   useEffect(() => {
-    if (!tokenA || !tokenB || !swapTokenIn || !currentPoolAddress || currentPoolAddress === '0x0000000000000000000000000000000000000000') {
+    if (!tokenA || !tokenB || !swapTokenIn) {
+      setEstimatedOut('0.00');
+      return;
+    }
+
+    if (isWethDirectSwap) {
+      setEstimatedOut(swapAmountIn || '0.00');
+      return;
+    }
+
+    if (!currentPoolAddress || currentPoolAddress === '0x0000000000000000000000000000000000000000') {
       setEstimatedOut('0.00');
       return;
     }
@@ -487,7 +506,7 @@ const DEXPage: NextPage = () => {
     } catch {
       setEstimatedOut('0.00');
     }
-  }, [swapAmountIn, swapTokenIn, poolReserve0, poolReserve1, tokenA, tokenB, poolToken0, currentPoolAddress, metadataA, metadataB]);
+  }, [swapAmountIn, swapTokenIn, poolReserve0, poolReserve1, tokenA, tokenB, poolToken0, currentPoolAddress, metadataA, metadataB, isWethDirectSwap]);
 
   // Auto-cálculo óptimo de token1 cuando se cambia token0 en Liquidez
   const handleLiq0Change = (val: string) => {
@@ -1101,7 +1120,7 @@ const DEXPage: NextPage = () => {
                     <div className="flex items-center justify-center py-6">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-                  ) : !poolExists ? (
+                  ) : (!poolExists && !isWethDirectSwap) ? (
                     <div className="text-center py-8 border border-dashed border-border/40 rounded-xl space-y-3">
                       <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
                       <div className="space-y-1">
@@ -1263,235 +1282,253 @@ const DEXPage: NextPage = () => {
                         </form>
                       ) : (
                         /* PESTAÑA LIQUIDEZ (ADD/REMOVE) */
-                        <div className="space-y-6">
-                          <div className="flex border-b border-border/20 pb-3 flex-wrap gap-2">
-                            <button
-                              onClick={() => setActiveLiquidityTab('add')}
-                              className={cn(
-                                "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                                activeLiquidityTab === 'add' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
-                              )}
+                        isWethDirectSwap ? (
+                          <div className="text-center py-8 border border-dashed border-border/40 rounded-xl space-y-3">
+                            <Info className="h-5 w-5 text-primary mx-auto" />
+                            <div className="space-y-1">
+                              <h4 className="font-semibold text-sm">No se requiere aportar liquidez</h4>
+                              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                                La relación entre ETH Nativo y WETH es siempre 1:1 y directa. No necesitas proveer liquidez en una piscina para este par.
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => setActiveDexTab('swap')}
+                              className="text-xs font-semibold"
                             >
-                              Aportar Liquidez
-                            </button>
-                            <button
-                              onClick={() => setActiveLiquidityTab('remove')}
-                              className={cn(
-                                "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                                activeLiquidityTab === 'remove' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              Retirar Liquidez
-                            </button>
+                              Ir a Intercambiar (Swap)
+                            </Button>
                           </div>
+                        ) : (
+                          <div className="space-y-6">
+                            <div className="flex border-b border-border/20 pb-3 flex-wrap gap-2">
+                              <button
+                                onClick={() => setActiveLiquidityTab('add')}
+                                className={cn(
+                                  "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                                  activeLiquidityTab === 'add' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                Aportar Liquidez
+                              </button>
+                              <button
+                                onClick={() => setActiveLiquidityTab('remove')}
+                                className={cn(
+                                  "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                                  activeLiquidityTab === 'remove' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                Retirar Liquidez
+                              </button>
+                            </div>
 
-                          {activeLiquidityTab === 'add' ? (
-                            /* APORTAR LIQUIDEZ */
-                            <form onSubmit={handleAddLiquidity} className="space-y-5">
-                              <div className="space-y-4">
-                                
-                                {/* Input Token 0 */}
+                            {activeLiquidityTab === 'add' ? (
+                              /* APORTAR LIQUIDEZ */
+                              <form onSubmit={handleAddLiquidity} className="space-y-5">
+                                <div className="space-y-4">
+                                  
+                                  {/* Input Token 0 */}
+                                  <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                    <div className="flex justify-between items-center text-xs">
+                                      <Label className="text-muted-foreground font-medium">Depositar {metadataA.symbol}:</Label>
+                                      <span className="font-mono text-[10.5px] text-muted-foreground">
+                                        Saldo: {parseFloat(formatUnits(balanceA, metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Input
+                                        type="number"
+                                        placeholder="0.0"
+                                        value={liqAmount0}
+                                        onChange={(e) => handleLiq0Change(e.target.value)}
+                                        className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
+                                        required
+                                        min="0"
+                                        step="any"
+                                      />
+                                      <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                        <TokenIcon address={tokenA} className="h-5 w-5" />
+                                        <span className="text-xs font-bold">{metadataA.symbol}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Icono de Suma */}
+                                  <div className="flex justify-center -my-2.5">
+                                    <div className="bg-primary/10 border border-primary/20 text-primary p-1.5 rounded-full shadow-inner">
+                                      <Plus className="h-3.5 w-3.5" />
+                                    </div>
+                                  </div>
+
+                                  {/* Input Token 1 */}
+                                  <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
+                                    <div className="flex justify-between items-center text-xs">
+                                      <Label className="text-muted-foreground font-medium">Depositar {metadataB.symbol}:</Label>
+                                      <span className="font-mono text-[10.5px] text-muted-foreground">
+                                        Saldo: {parseFloat(formatUnits(balanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Input
+                                        type="number"
+                                        placeholder="0.0"
+                                        value={liqAmount1}
+                                        onChange={(e) => handleLiq1Change(e.target.value)}
+                                        className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
+                                        required
+                                        min="0"
+                                        step="any"
+                                      />
+                                      <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
+                                        <TokenIcon address={tokenB} className="h-5 w-5" />
+                                        <span className="text-xs font-bold">{metadataB.symbol}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                </div>
+
+                                {/* Validar fondos de liquidez */}
+                                {((liqAmount0 && !hasEnoughLiqBalanceA) || (liqAmount1 && !hasEnoughLiqBalanceB)) && (
+                                  <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
+                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <span>Fondos insuficientes para aportar en la proporción requerida.</span>
+                                  </div>
+                                )}
+
+                                {/* Aprobaciones individuales o Botón de Aportar */}
+                                {isWethWrapNeededForLiq && (hasEnoughLiqBalanceA && hasEnoughLiqBalanceB) ? (
+                                  <Button
+                                    type="button"
+                                    onClick={handleAddLiquidity}
+                                    disabled={isWethPending}
+                                    className="w-full font-bold shadow-md bg-amber-600 hover:bg-amber-700 text-white"
+                                  >
+                                    {isWethPending ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                        Convirtiendo ETH a WETH...
+                                      </>
+                                    ) : (
+                                      <>
+                                        1. Envolver {parseFloat(formatUnits(missingWethForLiq, 18)).toFixed(4)} ETH a WETH
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : needsLiqApproveA && hasEnoughLiqBalanceA ? (
+                                  <Button
+                                    type="button"
+                                    onClick={() => handleApprove(tokenA, liqAmount0, metadataA.decimals)}
+                                    disabled={isPendingApproveA}
+                                    className="w-full font-bold shadow-md"
+                                  >
+                                    {isPendingApproveA ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                        Aprobando {metadataA.symbol}...
+                                      </>
+                                    ) : (
+                                      <>
+                                        Aprobar {metadataA.symbol}
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : needsLiqApproveB && hasEnoughLiqBalanceB ? (
+                                  <Button
+                                    type="button"
+                                    onClick={() => handleApprove(tokenB, liqAmount1, metadataB.decimals)}
+                                    disabled={isPendingApproveB}
+                                    className="w-full font-bold shadow-md"
+                                  >
+                                    {isPendingApproveB ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                        Aprobando {metadataB.symbol}...
+                                      </>
+                                    ) : (
+                                      <>
+                                        Aprobar {metadataB.symbol}
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    type="submit"
+                                    disabled={isActionPending || !liqAmount0 || !liqAmount1 || !hasEnoughLiqBalanceA || !hasEnoughLiqBalanceB}
+                                    className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
+                                  >
+                                    {isActionPending ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                        Aportando Liquidez...
+                                      </>
+                                    ) : (
+                                      <>
+                                        Depositar Fondos (Aportar)
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </form>
+                            ) : (
+                              /* RETIRAR LIQUIDEZ */
+                              <form onSubmit={handleRemoveLiquidity} className="space-y-5">
                                 <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
                                   <div className="flex justify-between items-center text-xs">
-                                    <Label className="text-muted-foreground font-medium">Depositar {metadataA.symbol}:</Label>
+                                    <Label className="text-muted-foreground font-medium">Cantidad de LP Tokens a quemar:</Label>
                                     <span className="font-mono text-[10.5px] text-muted-foreground">
-                                      Saldo: {parseFloat(formatUnits(balanceA, metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                      Saldo LP: {parseFloat(formatUnits(lpTokenBalance, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <Input
                                       type="number"
                                       placeholder="0.0"
-                                      value={liqAmount0}
-                                      onChange={(e) => handleLiq0Change(e.target.value)}
+                                      value={removeLpAmount}
+                                      onChange={(e) => setRemoveLpAmount(e.target.value)}
                                       className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
                                       required
                                       min="0"
                                       step="any"
                                     />
-                                    <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                      <TokenIcon address={tokenA} className="h-5 w-5" />
-                                      <span className="text-xs font-bold">{metadataA.symbol}</span>
-                                    </div>
+                                    <Button 
+                                      type="button" 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="text-[10px] h-7 px-2 shrink-0 border-border/50"
+                                      onClick={() => setRemoveLpAmount(formatUnits(lpTokenBalance, 18))}
+                                    >
+                                      Máx
+                                    </Button>
                                   </div>
                                 </div>
 
-                                {/* Icono de Suma */}
-                                <div className="flex justify-center -my-2.5">
-                                  <div className="bg-primary/10 border border-primary/20 text-primary p-1.5 rounded-full shadow-inner">
-                                    <Plus className="h-3.5 w-3.5" />
+                                {removeLpAmount && parseUnits(removeLpAmount, 18) > lpTokenBalance && (
+                                  <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
+                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <span>Supera el saldo disponible de LP tokens en esta piscina.</span>
                                   </div>
-                                </div>
+                                )}
 
-                                {/* Input Token 1 */}
-                                <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                                  <div className="flex justify-between items-center text-xs">
-                                    <Label className="text-muted-foreground font-medium">Depositar {metadataB.symbol}:</Label>
-                                    <span className="font-mono text-[10.5px] text-muted-foreground">
-                                      Saldo: {parseFloat(formatUnits(balanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <Input
-                                      type="number"
-                                      placeholder="0.0"
-                                      value={liqAmount1}
-                                      onChange={(e) => handleLiq1Change(e.target.value)}
-                                      className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                      required
-                                      min="0"
-                                      step="any"
-                                    />
-                                    <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                      <TokenIcon address={tokenB} className="h-5 w-5" />
-                                      <span className="text-xs font-bold">{metadataB.symbol}</span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                              </div>
-
-                              {/* Validar fondos de liquidez */}
-                              {((liqAmount0 && !hasEnoughLiqBalanceA) || (liqAmount1 && !hasEnoughLiqBalanceB)) && (
-                                <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
-                                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                  <span>Fondos insuficientes para aportar en la proporción requerida.</span>
-                                </div>
-                              )}
-
-                              {/* Aprobaciones individuales o Botón de Aportar */}
-                              {isWethWrapNeededForLiq && (hasEnoughLiqBalanceA && hasEnoughLiqBalanceB) ? (
-                                <Button
-                                  type="button"
-                                  onClick={handleAddLiquidity}
-                                  disabled={isWethPending}
-                                  className="w-full font-bold shadow-md bg-amber-600 hover:bg-amber-700 text-white"
-                                >
-                                  {isWethPending ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                      Convirtiendo ETH a WETH...
-                                    </>
-                                  ) : (
-                                    <>
-                                      1. Envolver {parseFloat(formatUnits(missingWethForLiq, 18)).toFixed(4)} ETH a WETH
-                                    </>
-                                  )}
-                                </Button>
-                              ) : needsLiqApproveA && hasEnoughLiqBalanceA ? (
-                                <Button
-                                  type="button"
-                                  onClick={() => handleApprove(tokenA, liqAmount0, metadataA.decimals)}
-                                  disabled={isPendingApproveA}
-                                  className="w-full font-bold shadow-md"
-                                >
-                                  {isPendingApproveA ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                      Aprobando {metadataA.symbol}...
-                                    </>
-                                  ) : (
-                                    <>
-                                      Aprobar {metadataA.symbol}
-                                    </>
-                                  )}
-                                </Button>
-                              ) : needsLiqApproveB && hasEnoughLiqBalanceB ? (
-                                <Button
-                                  type="button"
-                                  onClick={() => handleApprove(tokenB, liqAmount1, metadataB.decimals)}
-                                  disabled={isPendingApproveB}
-                                  className="w-full font-bold shadow-md"
-                                >
-                                  {isPendingApproveB ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                      Aprobando {metadataB.symbol}...
-                                    </>
-                                  ) : (
-                                    <>
-                                      Aprobar {metadataB.symbol}
-                                    </>
-                                  )}
-                                </Button>
-                              ) : (
                                 <Button
                                   type="submit"
-                                  disabled={isActionPending || !liqAmount0 || !liqAmount1 || !hasEnoughLiqBalanceA || !hasEnoughLiqBalanceB}
+                                  disabled={isActionPending || !removeLpAmount || parseUnits(removeLpAmount, 18) > lpTokenBalance || parseFloat(removeLpAmount) <= 0}
                                   className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
                                 >
                                   {isActionPending ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                      Aportando Liquidez...
+                                      Retirando Liquidez...
                                     </>
                                   ) : (
                                     <>
-                                      Depositar Fondos (Aportar)
+                                      Retirar Fondos (Quemar LP)
                                     </>
                                   )}
                                 </Button>
-                              )}
-                            </form>
-                          ) : (
-                            /* RETIRAR LIQUIDEZ */
-                            <form onSubmit={handleRemoveLiquidity} className="space-y-5">
-                              <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                                <div className="flex justify-between items-center text-xs">
-                                  <Label className="text-muted-foreground font-medium">Cantidad de LP Tokens a quemar:</Label>
-                                  <span className="font-mono text-[10.5px] text-muted-foreground">
-                                    Saldo LP: {parseFloat(formatUnits(lpTokenBalance, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <Input
-                                    type="number"
-                                    placeholder="0.0"
-                                    value={removeLpAmount}
-                                    onChange={(e) => setRemoveLpAmount(e.target.value)}
-                                    className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                    required
-                                    min="0"
-                                    step="any"
-                                  />
-                                  <Button 
-                                    type="button" 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="text-[10px] h-7 px-2 shrink-0 border-border/50"
-                                    onClick={() => setRemoveLpAmount(formatUnits(lpTokenBalance, 18))}
-                                  >
-                                    Máx
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {removeLpAmount && parseUnits(removeLpAmount, 18) > lpTokenBalance && (
-                                <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
-                                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                  <span>Supera el saldo disponible de LP tokens en esta piscina.</span>
-                                </div>
-                              )}
-
-                              <Button
-                                type="submit"
-                                disabled={isActionPending || !removeLpAmount || parseUnits(removeLpAmount, 18) > lpTokenBalance || parseFloat(removeLpAmount) <= 0}
-                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
-                              >
-                                {isActionPending ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                    Retirando Liquidez...
-                                  </>
-                                ) : (
-                                  <>
-                                    Retirar Fondos (Quemar LP)
-                                  </>
-                                )}
-                              </Button>
-                            </form>
-                          )}
-                        </div>
+                              </form>
+                            )}
+                          </div>
+                        )
                       )}
                     </div>
                   )}
