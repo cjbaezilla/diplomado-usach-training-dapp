@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { cn } from '@/lib/utils';
+import { cn, formatSocialLink, getSocialDisplayLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -462,12 +462,12 @@ const IdentityPage: NextPage = () => {
                           <div className="flex items-center justify-between">
                             <span className="font-medium">LinkedIn:</span>
                             <a
-                              href={`https://linkedin.com/in/${myProfile.linkedin}`}
+                              href={formatSocialLink(myProfile.linkedin, 'linkedin')}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-indigo-500 hover:underline flex items-center gap-0.5"
+                              className="text-indigo-500 hover:underline flex items-center gap-0.5 truncate max-w-[200px]"
                             >
-                              {myProfile.linkedin} <ExternalLink className="h-3 w-3 shrink-0" />
+                              {getSocialDisplayLabel(myProfile.linkedin, 'linkedin')} <ExternalLink className="h-3 w-3 shrink-0" />
                             </a>
                           </div>
                         )}
@@ -475,12 +475,12 @@ const IdentityPage: NextPage = () => {
                           <div className="flex items-center justify-between">
                             <span className="font-medium">Twitter:</span>
                             <a
-                              href={`https://twitter.com/${myProfile.twitter}`}
+                              href={formatSocialLink(myProfile.twitter, 'twitter')}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-indigo-500 hover:underline flex items-center gap-0.5"
+                              className="text-indigo-500 hover:underline flex items-center gap-0.5 truncate max-w-[200px]"
                             >
-                              @{myProfile.twitter} <ExternalLink className="h-3 w-3 shrink-0" />
+                              {getSocialDisplayLabel(myProfile.twitter, 'twitter')} <ExternalLink className="h-3 w-3 shrink-0" />
                             </a>
                           </div>
                         )}
@@ -524,11 +524,11 @@ const IdentityPage: NextPage = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <Label htmlFor="std-linkedin" className="text-xs font-semibold text-foreground">LinkedIn (Usuario)</Label>
+                          <Label htmlFor="std-linkedin" className="text-xs font-semibold text-foreground">LinkedIn (URL)</Label>
                           <Input
                             id="std-linkedin"
-                            type="text"
-                            placeholder="Ej. juanperez"
+                            type="url"
+                            placeholder="Ej. https://linkedin.com/in/juanperez"
                             value={linkedinInput}
                             onChange={(e) => setLinkedinInput(e.target.value)}
                             disabled={isActionPending}
@@ -536,11 +536,11 @@ const IdentityPage: NextPage = () => {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="std-twitter" className="text-xs font-semibold text-foreground">Twitter (Usuario)</Label>
+                          <Label htmlFor="std-twitter" className="text-xs font-semibold text-foreground">Twitter/X (URL)</Label>
                           <Input
                             id="std-twitter"
-                            type="text"
-                            placeholder="Ej. juan_perez"
+                            type="url"
+                            placeholder="Ej. https://x.com/juan_perez"
                             value={twitterInput}
                             onChange={(e) => setTwitterInput(e.target.value)}
                             disabled={isActionPending}
@@ -640,13 +640,13 @@ const IdentityPage: NextPage = () => {
                     <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
                       <div>
                         <span className="block font-bold text-foreground font-mono">linkedin</span>
-                        <span className="text-[10px] leading-tight">Nombre de usuario del perfil profesional de LinkedIn para facilitar el networking entre pares.</span>
+                        <span className="text-[10px] leading-tight">Enlace (URL) completo del perfil profesional de LinkedIn para facilitar el networking entre pares.</span>
                       </div>
                     </li>
                     <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
                       <div>
                         <span className="block font-bold text-foreground font-mono">twitter</span>
-                        <span className="text-[10px] leading-tight">Nombre de usuario de X/Twitter para seguir la presencia social del estudiante en la Web3.</span>
+                        <span className="text-[10px] leading-tight">Enlace (URL) completo de X/Twitter para seguir la presencia social del estudiante en la Web3.</span>
                       </div>
                     </li>
                     <li className="bg-muted/40 p-2.5 rounded-lg border border-border/20 flex flex-col justify-between">
@@ -796,10 +796,18 @@ const IdentityPage: NextPage = () => {
                 </div>
               </CardContent>
             </div>
-            <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
+            <CardFooter className="bg-muted/10 border-t border-border/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
               <span className="text-[10.5px] text-muted-foreground flex items-center gap-1">
                 <HelpCircle className="h-3.5 w-3.5 text-indigo-500" /> El estándar asocia información pública transparente y auditable a una dirección.
               </span>
+              <a
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts/blob/main/contracts/StudentIdentity.sol"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10.5px] text-indigo-500 hover:text-indigo-600 hover:underline flex items-center gap-1 font-semibold shrink-0"
+              >
+                Ver en GitHub <ExternalLink className="h-3 w-3" />
+              </a>
             </CardFooter>
           </Card>
 

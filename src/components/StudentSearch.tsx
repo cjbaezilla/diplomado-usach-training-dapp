@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStudentProfile, useAllStudents } from '@/hooks/useStudentIdentity';
-import { cn } from '@/lib/utils';
+import { cn, formatSocialLink, getSocialDisplayLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -186,12 +186,12 @@ export function StudentSearch({ className }: { className?: string } = {}) {
                       <div className="flex justify-between items-center">
                         <span className="font-medium">LinkedIn:</span>
                         <a
-                          href={`https://linkedin.com/in/${searchedProfile.linkedin}`}
+                          href={formatSocialLink(searchedProfile.linkedin, 'linkedin')}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-indigo-500 hover:underline flex items-center gap-0.5"
+                          className="text-indigo-500 hover:underline flex items-center gap-0.5 truncate max-w-[200px]"
                         >
-                          {searchedProfile.linkedin} <ExternalLink className="h-3 w-3 shrink-0" />
+                          {getSocialDisplayLabel(searchedProfile.linkedin, 'linkedin')} <ExternalLink className="h-3 w-3 shrink-0" />
                         </a>
                       </div>
                     )}
@@ -199,12 +199,12 @@ export function StudentSearch({ className }: { className?: string } = {}) {
                       <div className="flex justify-between items-center">
                         <span className="font-medium">Twitter:</span>
                         <a
-                          href={`https://twitter.com/${searchedProfile.twitter}`}
+                          href={formatSocialLink(searchedProfile.twitter, 'twitter')}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-indigo-500 hover:underline flex items-center gap-0.5"
+                          className="text-indigo-500 hover:underline flex items-center gap-0.5 truncate max-w-[200px]"
                         >
-                          @{searchedProfile.twitter} <ExternalLink className="h-3 w-3 shrink-0" />
+                          {getSocialDisplayLabel(searchedProfile.twitter, 'twitter')} <ExternalLink className="h-3 w-3 shrink-0" />
                         </a>
                       </div>
                     )}
