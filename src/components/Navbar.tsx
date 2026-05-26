@@ -186,12 +186,10 @@ export function Navbar() {
           </div>
 
           {/* Widgets y Botón de Billetera */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <EthPriceTicker variant="dark" />
             <div className="h-6 w-[1px] bg-slate-800" />
-            <div className="scale-90 origin-right">
-              <CustomConnectButton />
-            </div>
+            <CustomConnectButton />
           </div>
         </div>
       </div>
