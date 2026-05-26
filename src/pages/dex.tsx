@@ -3,7 +3,7 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,8 @@ import { useHydrated } from '@/hooks/useHydrated';
 import { TokenIcon } from '@/components/TokenIcon';
 import { useEthPrice } from '@/hooks/useEthPrice';
 import { EthPriceTicker } from '@/components/EthPriceTicker';
+import { UserAvatar } from '@/components/UserAvatar';
+import { DEX_FACTORY_CONTRACT } from '@/contracts';
 
 // Representación de transacción local
 interface DEXTransaction {
@@ -91,6 +93,46 @@ function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
   const { balance: lpBalance, isLoading: isLoadingLpBalance } = useDEXPoolBalance(poolAddress, userAddress);
   const { data: ethPrice } = useEthPrice();
+
+  const publicClient = usePublicClient();
+  const [creatorAddress, setCreatorAddress] = useState<`0x${string}` | null>(null);
+
+  useEffect(() => {
+    async function getCreator() {
+      if (!publicClient || !poolAddress) return;
+      try {
+        const logs = await publicClient.getLogs({
+          address: DEX_FACTORY_CONTRACT.address,
+          event: {
+            type: 'event',
+            name: 'PoolCreado',
+            inputs: [
+              { type: 'address', name: 'token0', indexed: true },
+              { type: 'address', name: 'token1', indexed: true },
+              { type: 'address', name: 'pool', indexed: false },
+              { type: 'uint256', name: 'cantidadPools', indexed: false }
+            ]
+          },
+          fromBlock: 0n,
+        });
+
+        const matchingLog = logs.find(
+          (log) => (log.args as any).pool?.toLowerCase() === poolAddress.toLowerCase()
+        );
+
+        if (matchingLog && matchingLog.transactionHash) {
+          const tx = await publicClient.getTransaction({
+            hash: matchingLog.transactionHash,
+          });
+          setCreatorAddress(tx.from);
+        }
+      } catch (err) {
+        console.error('Error al obtener el creador de la piscina:', err);
+      }
+    }
+
+    getCreator();
+  }, [poolAddress, publicClient]);
 
   if (isLoadingPool || isLoadingMeta0 || isLoadingMeta1 || isLoadingLpBalance) {
     return (
@@ -136,9 +178,20 @@ function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
             {metadata0.symbol || '??'} / {metadata1.symbol || '??'}
           </span>
         </div>
-        <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-0.5 rounded">
-          {poolAddress.substring(0, 6)}...{poolAddress.substring(poolAddress.length - 4)}
-        </span>
+        
+        <div className="flex items-center gap-2">
+          {creatorAddress && (
+            <div className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-full border border-border/20" title={`Creador: ${creatorAddress}`}>
+              <UserAvatar address={creatorAddress} className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-[9px] text-muted-foreground font-mono">
+                {creatorAddress.substring(0, 6)}...{creatorAddress.substring(creatorAddress.length - 4)}
+              </span>
+            </div>
+          )}
+          <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-0.5 rounded">
+            {poolAddress.substring(0, 6)}...{poolAddress.substring(poolAddress.length - 4)}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-border/10 text-xs">
