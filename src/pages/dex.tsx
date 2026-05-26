@@ -440,38 +440,197 @@ function TokenOptionItem({ tokenAddress, userAddress }: { tokenAddress: `0x${str
 }
 
 const solidityCode = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.35;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+/**
+ * @title DEXPool
+ * @dev Contrato educativo que representa una piscina de liquidez (Pool) para un par específico de tokens ERC20.
+ * Implementa el modelo de Creador de Mercado Automatizado (AMM) con la fórmula de producto constante: x * y = k.
+ * El contrato en sí hereda de ERC20 para emitir "Acciones de Liquidez" (LP Tokens) a los proveedores de liquidez.
+ */
 contract DEXPool is ERC20, ReentrancyGuard {
-    IERC20 public immutable token0;
-    IERC20 public immutable token1;
+    // Direcciones de los dos tokens que forman el par de intercambio
+    address public immutable token0;
+    address public immutable token1;
+
+    // Reservas de cada token almacenadas en el contrato
     uint256 public reserve0;
     uint256 public reserve1;
 
-    // x * y = k (Fórmula de producto constante)
-    function swap(
-        address tokenEntrada, 
-        uint256 cantidadEntrada
-    ) external nonReentrant returns (uint256 cantidadSalida) {
-        bool esToken0 = tokenEntrada == address(token0);
-        (uint256 resIn, uint256 resOut) = esToken0 
-            ? (reserve0, reserve1) 
-            : (reserve1, reserve0);
-        
-        // 0.3% de comisión (997/1000)
-        uint256 entradaConTarifa = cantidadEntrada * 997;
-        uint256 numerador = entradaConTarifa * resOut;
-        uint256 denominador = (resIn * 1000) + entradaConTarifa;
+    // Eventos informativos para el seguimiento en el frontend o pruebas
+    event LiquidezAgregada(address indexed proveedor, uint256 cantidad0, uint256 cantidad1, uint256 tokensLP);
+    event LiquidezRemovida(address indexed proveedor, uint256 cantidad0, uint256 cantidad1, uint256 tokensLP);
+    event Swap(address indexed usuario, address indexed tokenEntrada, uint256 cantidadEntrada, uint256 cantidadSalida);
+
+    /**
+     * @dev Configura el par de tokens del pool. Se requiere que token0 < token1 alfanuméricamente
+     * para asegurar una identificación única y ordenada del par.
+     */
+    constructor(address _token0, address _token1) ERC20("USACH LP Token", "LP-USACH") {
+        require(_token0 != address(0) && _token1 != address(0), "Direcciones de token invalidas");
+        require(_token0 < _token1, "Los tokens deben estar ordenados");
+        token0 = _token0;
+        token1 = _token1;
+    }
+
+    /**
+     * @dev Devuelve las reservas actuales del pool.
+     */
+    function obtenerReservas() external view returns (uint256 _reserve0, uint256 _reserve1) {
+        return (reserve0, reserve1);
+    }
+
+    /**
+     * @dev Algoritmo de Babilonia para el cálculo de la raíz cuadrada entera.
+     * Es fundamental para calcular la emisión inicial de tokens LP en base al producto geométrico.
+     */
+    function sqrt(uint256 y) internal pure returns (uint256 z) {
+        if (y > 3) {
+            z = y;
+            uint256 x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
+        }
+        // Si y es 0, z implícitamente retorna 0
+    }
+
+    /**
+     * @dev Agrega liquidez al pool.
+     * - Si es el primer depósito, las acciones de LP emitidas serán iguales a sqrt(cantidad0 * cantidad1).
+     * - Si ya hay liquidez, el usuario debe depositar tokens manteniendo la proporción actual (reserva1 / reserva0).
+     *   El contrato calcula la cantidad óptima del segundo token a depositar y emite acciones LP proporcionales.
+     */
+    function agregarLiquidez(
+        uint256 cantidad0Deseada,
+        uint256 cantidad1Deseada
+    ) external nonReentrant returns (uint256 liquidez) {
+        uint256 _reserve0 = reserve0;
+        uint256 _reserve1 = reserve1;
+
+        uint256 cantidad0;
+        uint256 cantidad1;
+
+        // Caso 1: Primer depósito (Piscina vacía)
+        if (_reserve0 == 0 && _reserve1 == 0) {
+            cantidad0 = cantidad0Deseada;
+            cantidad1 = cantidad1Deseada;
+            liquidez = sqrt(cantidad0 * cantidad1);
+        } 
+        // Caso 2: Depósitos subsecuentes (Se debe mantener la proporción de precios actual)
+        else {
+            // cantidad1Optima = (cantidad0Deseada * reserve1) / reserve0
+            uint256 cantidad1Optima = (cantidad0Deseada * _reserve1) / _reserve0;
+            if (cantidad1Optima <= cantidad1Deseada) {
+                cantidad0 = cantidad0Deseada;
+                cantidad1 = cantidad1Optima;
+            } else {
+                // Si la cantidad1 optima supera la deseada, calculamos al revés
+                uint256 cantidad0Optima = (cantidad1Deseada * _reserve0) / _reserve1;
+                require(cantidad0Optima <= cantidad0Deseada, "Proporcion de liquidez no cumple los limites");
+                cantidad0 = cantidad0Optima;
+                cantidad1 = cantidad1Deseada;
+            }
+
+            // La cantidad de tokens LP a emitir es la menor proporción aportada de ambos tokens
+            uint256 liquidez0 = (cantidad0 * totalSupply()) / _reserve0;
+            uint256 liquidez1 = (cantidad1 * totalSupply()) / _reserve1;
+            liquidez = liquidez0 < liquidez1 ? liquidez0 : liquidez1;
+        }
+
+        require(liquidez > 0, "Liquidez emitida insuficiente");
+
+        // Transferir los tokens desde el proveedor al contrato
+        // Requiere aprobación previa (approve) de ambos tokens al contrato de este pool
+        IERC20(token0).transferFrom(msg.sender, address(this), cantidad0);
+        IERC20(token1).transferFrom(msg.sender, address(this), cantidad1);
+
+        // Acuñar (mint) las acciones de liquidez ERC20 al proveedor
+        _mint(msg.sender, liquidez);
+
+        // Actualizar las reservas internas basadas en el balance real del contrato
+        reserve0 = IERC20(token0).balanceOf(address(this));
+        reserve1 = IERC20(token1).balanceOf(address(this));
+
+        emit LiquidezAgregada(msg.sender, cantidad0, cantidad1, liquidez);
+    }
+
+    /**
+     * @dev Retira liquidez del pool quemando tokens LP y devolviendo los tokens subyacentes.
+     * La cantidad de tokens devuelta es proporcional a la participación (acciones LP) del usuario
+     * sobre las reservas totales.
+     */
+    function removerLiquidez(uint256 cantidadLP) external nonReentrant returns (uint256 cantidad0, uint256 cantidad1) {
+        require(cantidadLP > 0, "Cantidad de LP debe ser mayor a cero");
+        uint256 _totalSupply = totalSupply();
+        require(_totalSupply > 0, "No hay liquidez en el pool");
+
+        // Calcular la parte proporcional de reservas correspondientes a la liquidez a remover
+        cantidad0 = (cantidadLP * reserve0) / _totalSupply;
+        cantidad1 = (cantidadLP * reserve1) / _totalSupply;
+
+        require(cantidad0 > 0 && cantidad1 > 0, "Cantidad de salida insuficiente");
+
+        // Quemar los tokens LP del proveedor
+        _burn(msg.sender, cantidadLP);
+
+        // Transferir los tokens subyacentes de regreso al proveedor
+        IERC20(token0).transfer(msg.sender, cantidad0);
+        IERC20(token1).transfer(msg.sender, cantidad1);
+
+        // Actualizar las reservas internas basadas en el balance real del contrato
+        reserve0 = IERC20(token0).balanceOf(address(this));
+        reserve1 = IERC20(token1).balanceOf(address(this));
+
+        emit LiquidezRemovida(msg.sender, cantidad0, cantidad1, cantidadLP);
+    }
+
+    /**
+     * @dev Realiza un swap (intercambio) entre los dos tokens del pool.
+     * Implementa la comisión del 0.3% para incentivar a los proveedores de liquidez.
+     * Fórmula: (x + delta_x * 0.997) * (y - delta_y) = x * y
+     * Despejando delta_y (cantidad de salida):
+     * delta_y = (y * delta_x * 997) / (x * 1000 + delta_x * 997)
+     */
+    function swap(address tokenEntrada, uint256 cantidadEntrada) external nonReentrant returns (uint256 cantidadSalida) {
+        require(tokenEntrada == token0 || tokenEntrada == token1, "Token de entrada no pertenece al par");
+        require(cantidadEntrada > 0, "Cantidad de entrada debe ser mayor a cero");
+
+        bool esToken0 = tokenEntrada == token0;
+        address tokenSalida = esToken0 ? token1 : token0;
+        uint256 resEntrada = esToken0 ? reserve0 : reserve1;
+        uint256 resSalida = esToken0 ? reserve1 : reserve0;
+
+        require(resEntrada > 0 && resSalida > 0, "Reservas insuficientes en el pool");
+
+        // Aplicamos la comisión del 0.3% multiplicando por 997 y dividiendo por 1000
+        uint256 cantidadEntradaConComision = cantidadEntrada * 997;
+        uint256 numerador = cantidadEntradaConComision * resSalida;
+        uint256 denominador = (resEntrada * 1000) + cantidadEntradaConComision;
         cantidadSalida = numerador / denominador;
 
-        IERC20(tokenEntrada).transferFrom(msg.sender, address(this), cantidadEntrada);
-        IERC20(esToken0 ? token1 : token0).transfer(msg.sender, cantidadSalida);
+        require(cantidadSalida > 0, "Cantidad de salida insuficiente");
+        require(cantidadSalida < resSalida, "Liquidez de salida insuficiente en el pool");
 
-        reserve0 = token0.balanceOf(address(this));
-        reserve1 = token1.balanceOf(address(this));
+        // Transferir el token de entrada desde el usuario al pool
+        // Requiere aprobación previa (approve) del token de entrada al contrato de este pool
+        IERC20(tokenEntrada).transferFrom(msg.sender, address(this), cantidadEntrada);
+
+        // Transferir el token de salida desde el pool al usuario
+        IERC20(tokenSalida).transfer(msg.sender, cantidadSalida);
+
+        // Actualizar las reservas internas basadas en el balance real del contrato
+        reserve0 = IERC20(token0).balanceOf(address(this));
+        reserve1 = IERC20(token1).balanceOf(address(this));
+
+        emit Swap(msg.sender, tokenEntrada, cantidadEntrada, cantidadSalida);
     }
 }`;
 
@@ -1340,23 +1499,26 @@ const DEXPage: NextPage = () => {
                         x &middot; y = k
                       </p>
                       <p className="text-[11px] text-muted-foreground max-w-md mx-auto leading-relaxed">
-                        Donde <code className="text-foreground font-semibold">x</code> es la reserva del Token 0, <code className="text-foreground font-semibold">y</code> es la reserva del Token 1, y <code className="text-foreground font-semibold">k</code> es el producto constante que debe mantenerse invariante tras cada intercambio.
+                        Donde <code className="text-foreground font-semibold">x</code> es la reserva del Token 0, <code className="text-foreground font-semibold">y</code> es la reserva del Token 1, y <code className="text-foreground font-semibold">k</code> es el producto constante invariante que debe preservarse tras cada intercambio.
                       </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <h5 className="font-bold text-xs text-foreground uppercase tracking-wider">Mecánica del Intercambio (Swap)</h5>
                         <p className="text-[11px] leading-relaxed text-muted-foreground">
-                          Si un usuario deposita una cantidad &Delta;x de Token 0, la nueva reserva de Token 0 aumenta a x + &Delta;x. Para mantener k constante, la reserva de Token 1 debe reducirse a y - &Delta;y. Por ende, la cantidad de salida devuelta al usuario es:
+                          Al intercambiar, el usuario aporta una cantidad &Delta;x del token de entrada y retira una cantidad &Delta;y del token de salida. Para incentivar la provisión de liquidez, se descuenta una comisión del <strong className="text-foreground">0.3%</strong> sobre la entrada. Despejando la ecuación del producto constante con la comisión aplicada, la cantidad exacta de salida se calcula mediante:
                         </p>
                         <p className="text-xs font-mono font-bold bg-muted/30 p-2 rounded text-center border border-border/10 text-foreground">
-                          &Delta;y = (y &middot; &Delta;x) / (x + &Delta;x)
+                          &Delta;y = (y &middot; &Delta;x &middot; 997) / (x &middot; 1000 + &Delta;x &middot; 997)
                         </p>
+                        <span className="text-[9.5px] text-muted-foreground block mt-1">
+                          * Nota: Multiplicar por 997 y dividir por 1000 representa la deducción exacta del 0.3% de comisión (99.7% restante) optimizada para aritmética entera en Solidity sin punto flotante.
+                        </span>
                       </div>
                       <div className="space-y-1">
                         <h5 className="font-bold text-xs text-foreground uppercase tracking-wider">Deslizamiento (Slippage)</h5>
                         <p className="text-[11px] leading-relaxed text-muted-foreground">
-                          El precio de un activo se define marginalmente como P = y / x. Si la cantidad de intercambio &Delta;x es muy grande en comparación con la reserva x, el precio de ejecución final se desviará significativamente del precio marginal, resultando en un precio menos favorable (deslizamiento).
+                          El precio de ejecución no es constante. Si la cantidad solicitada &Delta;x representa una proporción significativa de la reserva x, el precio final de ejecución se alejará del precio marginal de mercado (P = y / x). Este impacto en el precio se conoce como deslizamiento y penaliza los intercambios de gran volumen en piscinas con baja liquidez.
                         </p>
                       </div>
                     </div>
@@ -1369,33 +1531,33 @@ const DEXPage: NextPage = () => {
                     </p>
                     <div className="space-y-2">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
-                        <span className="font-mono text-emerald-400 font-bold shrink-0">address public token0</span>
+                        <span className="font-mono text-emerald-400 font-bold shrink-0">address public immutable token0</span>
                         <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
-                          Dirección del contrato inteligente del primer token ERC20 de la piscina (ordenado alfabéticamente para evitar duplicados del par).
+                          Dirección del contrato inteligente del primer token ERC20 de la piscina (ordenado alfabéticamente al crearse para asegurar unicidad del par). Al ser <code>immutable</code>, se establece en la construcción y no puede cambiarse.
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
-                        <span className="font-mono text-emerald-400 font-bold shrink-0">address public token1</span>
+                        <span className="font-mono text-emerald-400 font-bold shrink-0">address public immutable token1</span>
                         <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
-                          Dirección del contrato inteligente del segundo token ERC20 de la piscina.
+                          Dirección del contrato inteligente del segundo token ERC20 de la piscina. También declarada como <code>immutable</code>.
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
                         <span className="font-mono text-primary font-bold shrink-0">uint256 public reserve0</span>
                         <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
-                          Cantidad de reserva acumulada del <code className="text-foreground">token0</code>. Se actualiza al final de cada operación de swap o liquidez.
+                          Cantidad de reserva acumulada del <code className="text-foreground">token0</code>. Se actualiza al final de cada operación de swap o provisión de liquidez basándose en el balance real del contrato.
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
                         <span className="font-mono text-primary font-bold shrink-0">uint256 public reserve1</span>
                         <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
-                          Cantidad de reserva acumulada del <code className="text-foreground">token1</code>. Se sincroniza consultando el balance del contrato inteligente.
+                          Cantidad de reserva acumulada del <code className="text-foreground">token1</code>. Se actualiza y sincroniza en las mismas operaciones que <code>reserve0</code>.
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
                         <span className="font-mono text-purple-400 font-bold shrink-0">totalSupply / balanceOf</span>
                         <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
-                          Heredadas de <code className="text-foreground font-mono">ERC20</code>. Registran la emisión total de tokens LP de la piscina y cuántos posee cada proveedor de liquidez.
+                          Heredadas de <code className="text-foreground font-mono">ERC20</code>. Registran la emisión total de tokens LP emitidos por este pool y la participación correspondiente de cada dirección proveedora.
                         </span>
                       </div>
                     </div>
@@ -1466,38 +1628,45 @@ const DEXPage: NextPage = () => {
                     <span>DEXPool.sol</span>
                     <span className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      solc 0.8.20
+                      solc 0.8.35
                     </span>
                   </div>
                   <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <code>
                       <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
-                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.20</span>;{"\n\n"}
+                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">0.8.35</span>;{"\n\n"}
                       <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/ERC20.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/IERC20.sol"</span>;{"\n"}
                       <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/utils/ReentrancyGuard.sol"</span>;{"\n\n"}
                       <span className="text-blue-500">contract</span> <span className="text-yellow-400 font-bold">DEXPool</span> <span className="text-pink-500">is</span> <span className="text-yellow-400">ERC20</span>, <span className="text-yellow-400">ReentrancyGuard</span> {"{"}{"\n"}
-                      {"    "}<span className="text-yellow-400">IERC20</span> <span className="text-pink-500">public</span> <span className="text-pink-500">immutable</span> token0;{"\n"}
-                      {"    "}<span className="text-yellow-400">IERC20</span> <span className="text-pink-500">public</span> <span className="text-pink-500">immutable</span> token1;{"\n"}
+                      {"    "}<span className="text-blue-400">address</span> <span className="text-pink-500">public</span> <span className="text-pink-500">immutable</span> token0;{"\n"}
+                      {"    "}<span className="text-blue-400">address</span> <span className="text-pink-500">public</span> <span className="text-pink-500">immutable</span> token1;{"\n"}
                       {"    "}<span className="text-blue-400">uint256</span> <span className="text-pink-500">public</span> reserve0;{"\n"}
                       {"    "}<span className="text-blue-400">uint256</span> <span className="text-pink-500">public</span> reserve1;{"\n\n"}
-                      {"    "}<span className="text-zinc-500">// x * y = k (Fórmula de producto constante)</span>{"\n"}
+                      {"    "}<span className="text-blue-500">constructor</span>(<span className="text-blue-400">address</span> _token0, <span className="text-blue-400">address</span> _token1) <span className="text-yellow-400">ERC20</span>(<span className="text-emerald-400">"USACH LP Token"</span>, <span className="text-emerald-400">"LP-USACH"</span>) {"{"} ... {"}"}{"\n\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">obtenerReservas</span>() <span className="text-pink-500">external</span> <span className="text-pink-500">view</span> <span className="text-pink-500">returns</span> (<span className="text-blue-400">uint256</span>, <span className="text-blue-400">uint256</span>);{"\n\n"}
+                      {"    "}<span className="text-zinc-500">// Agrega liquidez manteniendo la proporción y emite tokens LP</span>{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">agregarLiquidez</span>({"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> cantidad0Deseada,{"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> cantidad1Deseada{"\n"}
+                      {"    "}) <span className="text-pink-500">external</span> <span className="text-amber-500">nonReentrant</span> <span className="text-pink-500">returns</span> (<span className="text-blue-400">uint256</span> liquidez) {"{"} ... {"}"}{"\n\n"}
+                      {"    "}<span className="text-zinc-500">// Quema tokens LP y devuelve los tokens subyacentes</span>{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">removerLiquidez</span>(<span className="text-blue-400">uint256</span> cantidadLP) <span className="text-pink-500">external</span> <span className="text-amber-500">nonReentrant</span> <span className="text-pink-500">returns</span> (<span className="text-blue-400">uint256</span>, <span className="text-blue-400">uint256</span>) {"{"} ... {"}"}{"\n\n"}
+                      {"    "}<span className="text-zinc-500">// x * y = k (Fórmula de producto constante con 0.3% de comisión)</span>{"\n"}
                       {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">swap</span>({"\n"}
                       {"        "}<span className="text-blue-400">address</span> tokenEntrada,{"\n"}
                       {"        "}<span className="text-blue-400">uint256</span> cantidadEntrada{"\n"}
                       {"    "}) <span className="text-pink-500">external</span> <span className="text-amber-500">nonReentrant</span> <span className="text-pink-500">returns</span> (<span className="text-blue-400">uint256</span> cantidadSalida) {"{"}{"\n"}
-                      {"        "}<span className="text-blue-400">bool</span> esToken0 = tokenEntrada == <span className="text-blue-400">address</span>(token0);{"\n"}
-                      {"        "}(<span className="text-blue-400">uint256</span> resIn, <span className="text-blue-400">uint256</span> resOut) = esToken0{"\n"}
-                      {"            "}? (reserve0, reserve1){"\n"}
-                      {"            "}: (reserve1, reserve0);{"\n\n"}
-                      {"        "}<span className="text-zinc-500">// 0.3% de comisión (997/1000)</span>{"\n"}
-                      {"        "}<span className="text-blue-400">uint256</span> entradaConTarifa = cantidadEntrada * <span className="text-blue-400">997</span>;{"\n"}
-                      {"        "}<span className="text-blue-400">uint256</span> numerador = entradaConTarifa * resOut;{"\n"}
-                      {"        "}<span className="text-blue-400">uint256</span> denominador = (resIn * <span className="text-blue-400">1000</span>) + entradaConTarifa;{"\n"}
-                      {"        "}cantidadSalida = numerador / denominador;{"\n\n"}
+                      {"        "}<span className="text-blue-400">bool</span> esToken0 = tokenEntrada == token0;{"\n"}
+                      {"        "}<span className="text-blue-400">address</span> tokenSalida = esToken0 ? token1 : token0;{"\n"}
+                      {"        "}(<span className="text-blue-400">uint256</span> resEntrada, <span className="text-blue-400">uint256</span> resSalida) = esToken0 ? (reserve0, reserve1) : (reserve1, reserve0);{"\n\n"}
+                      {"        "}<span className="text-zinc-500">// Comisión del 0.3% (multiplicar por 997 y dividir por 1000)</span>{"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> cantidadEntradaConComision = cantidadEntrada * <span className="text-blue-400">997</span>;{"\n"}
+                      {"        "}cantidadSalida = (cantidadEntradaConComision * resSalida) / ((resEntrada * <span className="text-blue-400">1000</span>) + cantidadEntradaConComision);{"\n\n"}
                       {"        "}<span className="text-yellow-400">IERC20</span>(tokenEntrada).<span className="text-purple-400">transferFrom</span>(<span className="text-violet-400">msg.sender</span>, <span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>), cantidadEntrada);{"\n"}
-                      {"        "}<span className="text-yellow-400">IERC20</span>(esToken0 ? token1 : token0).<span className="text-purple-400">transfer</span>(<span className="text-violet-400">msg.sender</span>, cantidadSalida);{"\n\n"}
-                      {"        "}reserve0 = token0.<span className="text-purple-400">balanceOf</span>(<span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>));{"\n"}
-                      {"        "}reserve1 = token1.<span className="text-purple-400">balanceOf</span>(<span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>));{"\n"}
+                      {"        "}<span className="text-yellow-400">IERC20</span>(tokenSalida).<span className="text-purple-400">transfer</span>(<span className="text-violet-400">msg.sender</span>, cantidadSalida);{"\n\n"}
+                      {"        "}reserve0 = <span className="text-yellow-400">IERC20</span>(token0).<span className="text-purple-400">balanceOf</span>(<span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>));{"\n"}
+                      {"        "}reserve1 = <span className="text-yellow-400">IERC20</span>(token1).<span className="text-purple-400">balanceOf</span>(<span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>));{"\n"}
                       {"    "}{"}"}{"\n"}
                       {"}"}
                     </code>
