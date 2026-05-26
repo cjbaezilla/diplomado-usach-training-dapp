@@ -387,10 +387,10 @@ const IdentityPage: NextPage = () => {
               variant="outline"
               size="sm"
               className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
-              onClick={() => router.push('/ayuda')}
+              onClick={() => router.push('/aprender')}
             >
               <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
-              Ver Ayuda
+              Aprender
             </Button>
           }
         />

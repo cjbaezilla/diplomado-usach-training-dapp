@@ -499,14 +499,14 @@ const ERC20Page: NextPage = () => {
             { label: 'Tokens ERC-20' }
           ]}
           actions={
-            <Link href="/ayuda">
+            <Link href="/aprender">
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
               >
                 <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                Ver Ayuda
+                Aprender
               </Button>
             </Link>
           }

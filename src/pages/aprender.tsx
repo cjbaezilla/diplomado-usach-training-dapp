@@ -25,7 +25,7 @@ import {
   Info
 } from 'lucide-react';
 
-const AyudaWiki: NextPage = () => {
+const Aprender: NextPage = () => {
   const [activeSection, setActiveSection] = useState('introduccion');
 
   const sections = [
@@ -40,7 +40,7 @@ const AyudaWiki: NextPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
       <Head>
-        <title>Centro de Ayuda y Wiki Web3 - USACH</title>
+        <title>Aprender y Wiki Web3 - USACH</title>
         <meta
           content="Documentación, guías de usuario y explicaciones técnicas de los módulos DeFi del Laboratorio de Aprendizaje Web3 de la USACH."
           name="description"
@@ -53,11 +53,11 @@ const AyudaWiki: NextPage = () => {
       <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 space-y-6 w-full">
         {/* Encabezado Principal Homologado */}
         <PageHeader
-          title="Centro de Ayuda y Wiki DApp"
+          title="Aprender y Wiki DApp"
           description="Aprende cómo interactuar con los contratos inteligentes, emitir tus propios tokens ERC-20, proveer liquidez en el DEX, gestionar tu identidad digital estudiantil y desbloquear reliquias históricas de la Escuela de Artes y Oficios (EAO) en la red blockchain."
           icon={Compass}
           breadcrumbItems={[
-            { label: 'Wiki / Ayuda' }
+            { label: 'Wiki / Aprender' }
           ]}
         />
 
@@ -522,4 +522,4 @@ const AyudaWiki: NextPage = () => {
   );
 };
 
-export default AyudaWiki;
+export default Aprender;

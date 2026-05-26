@@ -253,12 +253,12 @@ export function Navbar() {
             </a>
             <div className="h-5 w-[1px] bg-slate-800 self-center" />
             <Link
-              href="/ayuda"
-              className={getNavLinkClass('/ayuda')}
-              title="Centro de ayuda y Wiki de la DApp"
+              href="/aprender"
+              className={getNavLinkClass('/aprender')}
+              title="Aprender y Wiki de la DApp"
             >
               <HelpCircle className="h-3.5 w-3.5" />
-              Ayuda
+              Aprender
             </Link>
           </div>
         </div>
@@ -356,12 +356,12 @@ export function Navbar() {
                 Reliquias
               </Link>
               <Link
-                href="/ayuda"
-                className={getMobileNavLinkClass('/ayuda')}
+                href="/aprender"
+                className={getMobileNavLinkClass('/aprender')}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <HelpCircle className="h-4 w-4" />
-                Ayuda / Wiki
+                Aprender / Wiki
               </Link>
               <a
                 href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts"
