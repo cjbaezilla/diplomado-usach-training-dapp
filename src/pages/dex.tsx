@@ -368,6 +368,11 @@ const DEXPage: NextPage = () => {
     return list;
   }, [tokenFactoryAddresses]);
 
+  // Lista de tokens seleccionables para creación de piscinas (excluye ETH nativo ya que las piscinas usan WETH)
+  const createPoolSelectableTokens = useMemo(() => {
+    return selectableTokens.filter(addr => addr.toLowerCase() !== ETH_ADDRESS.toLowerCase());
+  }, [selectableTokens]);
+
   // Estados de los formularios de DEX
   const [tokenA, setTokenA] = useState<`0x${string}` | undefined>(undefined);
   const [tokenB, setTokenB] = useState<`0x${string}` | undefined>(undefined);
@@ -544,6 +549,14 @@ const DEXPage: NextPage = () => {
   const [addAmountB, setAddAmountB] = useState('');
   const [removeLpAmount, setRemoveLpAmount] = useState('');
   const [activeActionType, setActiveActionType] = useState<'swap' | 'add_liquidity' | 'remove_liquidity' | null>(null);
+  const [activeTab, setActiveTab] = useState<'swap' | 'add' | 'remove'>('swap');
+
+  // Redirigir a swap si el par es conversión directa ETH-WETH
+  useEffect(() => {
+    if (isWethDirectSwap) {
+      setActiveTab('swap');
+    }
+  }, [isWethDirectSwap]);
 
   // Mapear el orden de los tokens y reservas de la piscina activa
   const isTokenA0 = useMemo(() => {
@@ -1331,19 +1344,21 @@ const DEXPage: NextPage = () => {
               
               <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-emerald-500 to-primary"></div>
-                <Tabs defaultValue="swap" className="w-full">
+                <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'swap' | 'add' | 'remove')} className="w-full">
                   <CardHeader className="pb-2">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
                         <CardTitle className="text-xl font-bold flex items-center gap-2">
                           <Layers className="h-5 w-5 text-primary" />
-                          Operaciones de Pool
+                          {isWethDirectSwap ? "Conversión de WETH" : "Operaciones de Pool"}
                         </CardTitle>
                         <CardDescription>
-                          Intercambia tokens o gestiona tu liquidez.
+                          {isWethDirectSwap 
+                            ? "Envuelve o desenvuelve ETH directamente sin usar una piscina."
+                            : "Intercambia tokens o gestiona tu liquidez."}
                         </CardDescription>
                       </div>
-                      <TabsList className="grid grid-cols-3 bg-muted/50 p-1 rounded-lg border border-border/10">
+                      <TabsList className={`${isWethDirectSwap ? 'hidden' : 'grid grid-cols-3'} bg-muted/50 p-1 rounded-lg border border-border/10`}>
                         <TabsTrigger value="swap" className="text-xs font-semibold px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                           Swap
                         </TabsTrigger>
@@ -1962,7 +1977,7 @@ const DEXPage: NextPage = () => {
                       label="Seleccionar Token 0"
                       selectedToken={newPoolToken0}
                       onSelect={(addr) => setNewPoolToken0(addr)}
-                      tokenList={selectableTokens}
+                      tokenList={createPoolSelectableTokens}
                       userAddress={address}
                       excludeToken={newPoolToken1}
                     />
@@ -1970,7 +1985,7 @@ const DEXPage: NextPage = () => {
                       label="Seleccionar Token 1"
                       selectedToken={newPoolToken1}
                       onSelect={(addr) => setNewPoolToken1(addr)}
-                      tokenList={selectableTokens}
+                      tokenList={createPoolSelectableTokens}
                       userAddress={address}
                       excludeToken={newPoolToken0}
                     />
