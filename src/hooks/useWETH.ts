@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi';
 import { WETH_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
@@ -131,9 +132,9 @@ export function useWETH(userAddress?: `0x${string}`) {
     });
   };
 
-  const refetchBalances = async () => {
+  const refetchBalances = useCallback(async () => {
     await Promise.all([refetchEthBalance(), refetchWethBalance()]);
-  };
+  }, [refetchEthBalance, refetchWethBalance]);
 
   return {
     metadata: {

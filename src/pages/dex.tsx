@@ -87,13 +87,14 @@ const calcularCantidad1Optima = (cantidad0Deseada: bigint, reserva0: bigint, res
 interface PoolRowProps {
   poolAddress: `0x${string}`;
   userAddress?: `0x${string}`;
+  refreshTrigger?: number;
 }
 
-function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
-  const { token0, token1, reserve0, reserve1, totalSupply, isLoading: isLoadingPool } = useDEXPool(poolAddress);
+function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
+  const { token0, token1, reserve0, reserve1, totalSupply, isLoading: isLoadingPool, refetch: refetchPool } = useDEXPool(poolAddress);
   const { metadata: metadata0, isLoadingMetadata: isLoadingMeta0 } = useBaseERC20(token0);
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
-  const { balance: lpBalance, isLoading: isLoadingLpBalance } = useDEXPoolBalance(poolAddress, userAddress);
+  const { balance: lpBalance, isLoading: isLoadingLpBalance, refetch: refetchLpBalance } = useDEXPoolBalance(poolAddress, userAddress);
   const { data: ethPrice } = useEthPrice();
 
   const publicClient = usePublicClient();
@@ -135,6 +136,15 @@ function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
 
     getCreator();
   }, [poolAddress, publicClient]);
+
+  // Escuchar el trigger de refresco para actualizar las reservas y balance LP
+  useEffect(() => {
+    if (refreshTrigger) {
+      console.log(`[PoolRow] Refrescando pool ${poolAddress} con trigger ${refreshTrigger}`);
+      refetchPool();
+      refetchLpBalance();
+    }
+  }, [refreshTrigger, refetchPool, refetchLpBalance, poolAddress]);
 
   if (isLoadingPool || isLoadingMeta0 || isLoadingMeta1 || isLoadingLpBalance) {
     return (
@@ -358,6 +368,14 @@ const DEXPage: NextPage = () => {
   // Tokens creados de fábrica y tokens locales del DEX
   const { tokens: tokenFactoryAddresses, isLoading: isLoadingTokens } = useAllTokens();
   const { pools: allPoolAddresses, isLoading: isLoadingPools, refetch: refetchPools } = useAllDEXPools();
+
+  // Trigger de refresco para actualizar componentes hijo (PoolRow)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Registro de hashes ya procesados para evitar re-ejecuciones en bucle de los efectos de éxito
+  const [lastProcessedActionHash, setLastProcessedActionHash] = useState<string | null>(null);
+  const [lastProcessedFactoryHash, setLastProcessedFactoryHash] = useState<string | null>(null);
+  const [lastProcessedWethHash, setLastProcessedWethHash] = useState<string | null>(null);
 
   // Lista unificada de todos los tokens seleccionables (ETH nativo + WETH + tokens de fábrica)
   const selectableTokens = useMemo(() => {
@@ -708,7 +726,8 @@ const DEXPage: NextPage = () => {
 
   // Transacción de fábrica completada con éxito
   useEffect(() => {
-    if (isFactorySuccess && factoryTxHash) {
+    if (isFactorySuccess && factoryTxHash && factoryTxHash !== lastProcessedFactoryHash) {
+      setLastProcessedFactoryHash(factoryTxHash);
       setNotification({
         type: 'success',
         message: '¡Piscina de liquidez creada con éxito!'
@@ -725,12 +744,14 @@ const DEXPage: NextPage = () => {
         ...prev,
       ]);
       refetchPools();
+      setRefreshTrigger((prev) => prev + 1);
     }
-  }, [isFactorySuccess, factoryTxHash]);
+  }, [isFactorySuccess, factoryTxHash, lastProcessedFactoryHash, refetchPools]);
 
   // Transacción de pool completada con éxito
   useEffect(() => {
-    if (isActionSuccess && actionTxHash) {
+    if (isActionSuccess && actionTxHash && actionTxHash !== lastProcessedActionHash) {
+      setLastProcessedActionHash(actionTxHash);
       let desc = 'Operación en Pool';
       let type: 'swap' | 'add_liquidity' | 'remove_liquidity' | 'create_pool' | 'weth' = 'swap';
 
@@ -773,6 +794,10 @@ const DEXPage: NextPage = () => {
       refetchLpBalance();
       refetchAllowanceA();
       refetchAllowanceB();
+      refetchWethBalances();
+
+      // Incrementar el trigger de refresco para actualizar todas las filas de piscina
+      setRefreshTrigger((prev) => prev + 1);
 
       // Resetear la acción activa
       setActiveActionType(null);
@@ -788,11 +813,28 @@ const DEXPage: NextPage = () => {
         setUnwrapAmountOnSuccess(null);
       }
     }
-  }, [isActionSuccess, actionTxHash, activeActionType, metadataA.symbol, metadataB.symbol, unwrapAmountOnSuccess, refetchPoolDetails, refetchBalanceA, refetchBalanceB, refetchLpBalance, refetchAllowanceA, refetchAllowanceB, wethWithdraw]);
+  }, [
+    isActionSuccess,
+    actionTxHash,
+    lastProcessedActionHash,
+    activeActionType,
+    metadataA.symbol,
+    metadataB.symbol,
+    unwrapAmountOnSuccess,
+    refetchPoolDetails,
+    refetchBalanceA,
+    refetchBalanceB,
+    refetchLpBalance,
+    refetchAllowanceA,
+    refetchAllowanceB,
+    refetchWethBalances,
+    wethWithdraw
+  ]);
 
   // Transacción de WETH completada con éxito
   useEffect(() => {
-    if (isWethSuccess && wethTxHash) {
+    if (isWethSuccess && wethTxHash && wethTxHash !== lastProcessedWethHash) {
+      setLastProcessedWethHash(wethTxHash);
       const desc = lastWethAction === 'wrap' ? 'Envolver ETH' : 'Desenvolver WETH';
       setNotification({
         type: 'success',
@@ -813,8 +855,9 @@ const DEXPage: NextPage = () => {
       refetchWethBalances();
       refetchBalanceA();
       refetchBalanceB();
+      setRefreshTrigger((prev) => prev + 1);
     }
-  }, [isWethSuccess, wethTxHash]);
+  }, [isWethSuccess, wethTxHash, lastProcessedWethHash, lastWethAction, refetchWethBalances, refetchBalanceA, refetchBalanceB]);
 
   // Escuchar errores de transacciones
   useEffect(() => {
@@ -1900,6 +1943,31 @@ const DEXPage: NextPage = () => {
                                     </div>
                                   </div>
                                 </div>
+
+                                {/* Sección 4: Wrapped Ether (WETH) */}
+                                <div className="space-y-1.5">
+                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold font-sans">4</span>
+                                    Wrapped Ether (WETH): El Estándar y Paridad 1:1
+                                  </h5>
+                                  <p className="pl-6 text-[11px]">
+                                    En este DEX, al igual que en la mayoría de los protocolos DeFi modernos, verás que se utiliza <strong className="text-foreground">WETH</strong> en lugar de ETH nativo para la provisión de liquidez y los intercambios en pools.
+                                  </p>
+                                  <div className="pl-6 space-y-2">
+                                    <div className="bg-blue-500/5 border border-blue-500/20 p-2.5 rounded-lg">
+                                      <strong className="text-blue-400 block font-semibold mb-0.5 text-[11px] font-sans">¿Qué es WETH y la paridad 1:1?</strong>
+                                      <p className="text-muted-foreground text-[11px]">
+                                        WETH (Wrapped Ether) es la versión tokenizada de Ether (ETH). A diferencia del ETH nativo, WETH se comporta estrictamente como un token <strong className="text-foreground">ERC-20</strong>. Se mantiene una relación inquebrantable de <strong className="text-foreground">1:1 con ETH</strong>: puedes depositar (envolver) 1 ETH en el contrato de WETH para recibir exactamente 1 WETH, o quemar (desenvolver) 1 WETH para recuperar 1 ETH nativo en cualquier momento.
+                                      </p>
+                                    </div>
+                                    <div className="bg-indigo-500/5 border border-indigo-500/20 p-2.5 rounded-lg">
+                                      <strong className="text-indigo-400 block font-semibold mb-0.5 text-[11px] font-sans">¿Por qué es indispensable utilizarlo?</strong>
+                                      <p className="text-muted-foreground text-[11px]">
+                                        El Ether (ETH) es el activo nativo de la red y fue creado antes de que se diseñara el estándar de tokens ERC-20. Como consecuencia, carece de funciones estándar como <code className="text-foreground font-mono">approve()</code>, <code className="text-foreground font-mono">transferFrom()</code> o <code className="text-foreground font-mono">allowance()</code>. Los contratos inteligentes de piscinas de liquidez requieren que todos sus activos participantes utilicen interfaces homogéneas para ejecutar transferencias automáticas y seguras. Al "envolver" tu ETH en WETH, permites que el DEX gestione el Ether con la misma lógica uniforme que cualquier otro token ERC-20 de la red.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -2167,7 +2235,12 @@ const DEXPage: NextPage = () => {
                     </div>
                   ) : (
                     allPoolAddresses.map((poolAddr) => (
-                      <PoolRow key={poolAddr} poolAddress={poolAddr} userAddress={address} />
+                      <PoolRow
+                        key={poolAddr}
+                        poolAddress={poolAddr}
+                        userAddress={address}
+                        refreshTrigger={refreshTrigger}
+                      />
                     ))
                   )}
                 </CardContent>

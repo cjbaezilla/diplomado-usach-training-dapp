@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getBaseERC20Contract, WETH_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
@@ -96,14 +97,16 @@ export function useBaseERC20(tokenAddress?: `0x${string}`) {
     });
   };
 
+  const metadata = useMemo(() => ({
+    name: (name as string) || '',
+    symbol: (symbol as string) || '',
+    decimals: decimals ? Number(decimals) : 18,
+    totalSupply: totalSupply ? (totalSupply as bigint) : 0n,
+    owner: (owner as `0x${string}`) || '0x0000000000000000000000000000000000000000',
+  }), [name, symbol, decimals, totalSupply, owner]);
+
   return {
-    metadata: {
-      name: (name as string) || '',
-      symbol: (symbol as string) || '',
-      decimals: decimals ? Number(decimals) : 18,
-      totalSupply: totalSupply ? (totalSupply as bigint) : 0n,
-      owner: (owner as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-    },
+    metadata,
     isLoadingMetadata:
       !isHydrated ||
       isLoadingName ||

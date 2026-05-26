@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { TOKEN_FACTORY_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
@@ -24,9 +25,9 @@ export function useAllTokens() {
     },
   });
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await Promise.all([refetchCount(), refetchTokens()]);
-  };
+  }, [refetchCount, refetchTokens]);
 
   return {
     count: count ? Number(count) : 0,

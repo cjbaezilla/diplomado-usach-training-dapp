@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts } from 'wagmi';
 import { DEX_FACTORY_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
@@ -37,9 +38,9 @@ export function useAllDEXPools() {
     ? (poolsData.map((res) => res.result).filter(Boolean) as `0x${string}`[])
     : [];
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await Promise.all([refetchCount(), refetchPools()]);
-  };
+  }, [refetchCount, refetchPools]);
 
   return {
     poolsCount,

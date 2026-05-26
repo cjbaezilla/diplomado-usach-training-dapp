@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getDEXPoolContract } from '@/contracts';
 import { useHydrated } from './useHydrated';
@@ -48,9 +49,9 @@ export function useDEXPool(poolAddress?: `0x${string}`) {
     },
   });
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await Promise.all([refetchReservas(), refetchSupply()]);
-  };
+  }, [refetchReservas, refetchSupply]);
 
   const [reserve0, reserve1] = (reservas as [bigint, bigint]) || [0n, 0n];
 
