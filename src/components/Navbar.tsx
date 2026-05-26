@@ -255,7 +255,7 @@ export function Navbar() {
             <Link
               href="/aprender"
               className={getNavLinkClass('/aprender')}
-              title="Aprender y Wiki de la DApp"
+              title="Centro de Aprendizaje de la DApp"
             >
               <HelpCircle className="h-3.5 w-3.5" />
               Aprender
@@ -361,7 +361,7 @@ export function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <HelpCircle className="h-4 w-4" />
-                Aprender / Wiki
+                Aprender
               </Link>
               <a
                 href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts"
