@@ -898,8 +898,38 @@ const DEXPage: NextPage = () => {
                       solc 0.8.20
                     </span>
                   </div>
-                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
-                    <code>{solidityCode}</code>
+                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
+                    <code>
+                      <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
+                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.20</span>;{"\n\n"}
+                      <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/ERC20.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/utils/ReentrancyGuard.sol"</span>;{"\n\n"}
+                      <span className="text-blue-500">contract</span> <span className="text-yellow-400 font-bold">DEXPool</span> <span className="text-pink-500">is</span> <span className="text-yellow-400">ERC20</span>, <span className="text-yellow-400">ReentrancyGuard</span> {"{"}{"\n"}
+                      {"    "}<span className="text-yellow-400">IERC20</span> <span className="text-pink-500">public</span> <span className="text-pink-500">immutable</span> token0;{"\n"}
+                      {"    "}<span className="text-yellow-400">IERC20</span> <span className="text-pink-500">public</span> <span className="text-pink-500">immutable</span> token1;{"\n"}
+                      {"    "}<span className="text-blue-400">uint256</span> <span className="text-pink-500">public</span> reserve0;{"\n"}
+                      {"    "}<span className="text-blue-400">uint256</span> <span className="text-pink-500">public</span> reserve1;{"\n\n"}
+                      {"    "}<span className="text-zinc-500">// x * y = k (Fórmula de producto constante)</span>{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">swap</span>({"\n"}
+                      {"        "}<span className="text-blue-400">address</span> tokenEntrada,{"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> cantidadEntrada{"\n"}
+                      {"    "}) <span className="text-pink-500">external</span> <span className="text-amber-500">nonReentrant</span> <span className="text-pink-500">returns</span> (<span className="text-blue-400">uint256</span> cantidadSalida) {"{"}{"\n"}
+                      {"        "}<span className="text-blue-400">bool</span> esToken0 = tokenEntrada == <span className="text-blue-400">address</span>(token0);{"\n"}
+                      {"        "}(<span className="text-blue-400">uint256</span> resIn, <span className="text-blue-400">uint256</span> resOut) = esToken0{"\n"}
+                      {"            "}? (reserve0, reserve1){"\n"}
+                      {"            "}: (reserve1, reserve0);{"\n\n"}
+                      {"        "}<span className="text-zinc-500">// 0.3% de comisión (997/1000)</span>{"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> entradaConTarifa = cantidadEntrada * <span className="text-blue-400">997</span>;{"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> numerador = entradaConTarifa * resOut;{"\n"}
+                      {"        "}<span className="text-blue-400">uint256</span> denominador = (resIn * <span className="text-blue-400">1000</span>) + entradaConTarifa;{"\n"}
+                      {"        "}cantidadSalida = numerador / denominador;{"\n\n"}
+                      {"        "}<span className="text-yellow-400">IERC20</span>(tokenEntrada).<span className="text-purple-400">transferFrom</span>(<span className="text-violet-400">msg.sender</span>, <span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>), cantidadEntrada);{"\n"}
+                      {"        "}<span className="text-yellow-400">IERC20</span>(esToken0 ? token1 : token0).<span className="text-purple-400">transfer</span>(<span className="text-violet-400">msg.sender</span>, cantidadSalida);{"\n\n"}
+                      {"        "}reserve0 = token0.<span className="text-purple-400">balanceOf</span>(<span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>));{"\n"}
+                      {"        "}reserve1 = token1.<span className="text-purple-400">balanceOf</span>(<span className="text-blue-400">address</span>(<span className="text-pink-500">this</span>));{"\n"}
+                      {"    "}{"}"}{"\n"}
+                      {"}"}
+                    </code>
                   </pre>
                 </div>
               </CardContent>
