@@ -1171,7 +1171,7 @@ const DEXPage: NextPage = () => {
                               <div className="flex justify-between items-center text-xs">
                                 <Label className="text-muted-foreground font-medium">Tú recibes (estimado):</Label>
                                 <span className="font-mono text-[10.5px] text-muted-foreground">
-                                  Saldo: {parseFloat(formatUnits(balanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
+                                  Saldo: {parseFloat(formatUnits(resolvedBalanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3">
