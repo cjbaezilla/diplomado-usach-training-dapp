@@ -20,7 +20,10 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
-  Info
+  Info,
+  Lock,
+  Cpu,
+  Layers
 } from 'lucide-react';
 
 interface SubCategory {
@@ -46,6 +49,22 @@ const Aprender: NextPage = () => {
         { id: 'intro-billetera', label: 'Conectar Billetera' },
         { id: 'intro-registro', label: 'Registrar Identidad' },
         { id: 'intro-fondos', label: 'Obtener Fondos' }
+      ]
+    },
+    {
+      id: 'solidity',
+      label: 'Estructura de Contrato',
+      icon: FileCode,
+      subcategories: [
+        { id: 'solidity-estructura', label: 'Estructura del Archivo' },
+        { id: 'solidity-licencia', label: 'Licencia SPDX y CBOR' },
+        { id: 'solidity-pragma', label: 'Directivas Pragma' },
+        { id: 'solidity-experimental', label: 'Modo Experimental y SMT' },
+        { id: 'solidity-import', label: 'Importaciones y VFS' },
+        { id: 'solidity-using', label: 'Directiva Using For' },
+        { id: 'solidity-natspec', label: 'Documentación NatSpec' },
+        { id: 'solidity-unicode', label: 'Comentarios y Unicode' },
+        { id: 'solidity-storage', label: 'Layout de Almacenamiento' }
       ]
     },
     {
@@ -441,6 +460,726 @@ const Aprender: NextPage = () => {
                       </p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: ESTRUCTURA DEL ARCHIVO (SOLIDITY) */}
+            {activeSubSection === 'solidity-estructura' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <FileCode className="h-5 w-5 text-primary" />
+                    Estructura del Archivo y Fábrica de Nodos (`SourceUnit`)
+                  </CardTitle>
+                  <CardDescription>
+                    Arquitectura de la unidad de fuente, el compilador solc y el Árbol de Sintaxis Abstracta (AST).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    La arquitectura de un archivo fuente de Solidity (denominado técnicamente como <code>SourceUnit</code> en la gramática oficial del lenguaje) se rige por una jerarquía estricta que facilita tanto la legibilidad humana como el análisis sintáctico. En términos de ingeniería de software, la unidad de fuente representa el nodo raíz del árbol de sintaxis abstracta (AST) que el parser genera durante la fase de análisis léxico y sintáctico. Esta topología jerárquica permite al compilador realizar comprobaciones de ámbito de variables y validaciones de tipos de forma estructurada, garantizando que cada elemento sintáctico posea una geolocalización exacta de origen dentro de la corriente física de caracteres.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/source_unit_to_ast_hierarchy.png"
+                      alt="Jerarquía SourceUnit a AST"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Jerarquía de compilación desde la SourceUnit como nodo raíz del Árbol de Sintaxis Abstracta (AST).
+                    </p>
+                  </div>
+
+                  <p>
+                    El proceso de orquestación comienza en el método <code>Parser::parse</code> dentro de <code>libsolidity/parsing/Parser.cpp</code>, donde se establece una relación de consumo directo con el scanner de <code>liblangutil</code>. Al inicio de la ejecución, el sistema reinicia sistemáticamente el contador de profundidad de recursión (<code>m_recursionDepth = 0</code>) para garantizar la estabilidad ante archivos de complejidad extrema. Este último transforma el flujo de caracteres UTF-8 en una secuencia de tokens, definiendo el alcance de visibilidad de cada símbolo.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/ast_generation_lexical_syntactic.png"
+                      alt="Generación léxica y sintáctica del AST"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Pipeline de generación del AST mediante análisis léxico (Scanner) y sintáctico (Parser) recursivo.
+                    </p>
+                  </div>
+
+                  <p>
+                    La inicialización del Sistema de Archivos Virtual (VFS) puede realizarse mediante archivos físicos o a través de la entrada estándar (<code>stdin</code>), en cuyo caso el compilador asigna el nombre especial <code>&lt;stdin&gt;</code> a la unidad de fuente. La orquestación de alto nivel de estos componentes reside en <code>libsolidity/interface/CompilerStack.cpp</code>, que coordina el flujo desde el parsing inicial hasta la generación de artefactos. Los nombres de las unidades de fuente se tratan como identificadores opacos y no estructurados dentro de la base de datos interna del compilador cuando se utiliza la interfaz de programación de aplicaciones (API) Standard JSON.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                      <img
+                        src="/docs/constructos/vfs_input_sources_mapping.png"
+                        alt="Mapeo de Entradas VFS"
+                        className="w-full h-auto rounded-lg filter drop-shadow-md"
+                      />
+                      <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                        Diagrama: Mapeo de archivos físicos y entrada estándar en la abstracción del VFS.
+                      </p>
+                    </div>
+                    <div className="border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                      <img
+                        src="/docs/constructos/standard_json_vfs_opaque_database.png"
+                        alt="Base de Datos Opaque VFS"
+                        className="w-full h-auto rounded-lg filter drop-shadow-md"
+                      />
+                      <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                        Diagrama: Aislamiento determinista en Standard JSON con identificadores opacos en memoria.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/compiler_stack_orchestration.png"
+                      alt="Orquestación del CompilerStack"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Fases secuenciales de ejecución coordinadas por la clase CompilerStack.
+                    </p>
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Fábrica de Nodos y RecursionGuard</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El compilador utiliza el patrón de fábrica <code>ASTNodeFactory</code> para instanciar nodos del AST inyectando referencias físicas de <code>SourceLocation</code>. Para proteger el pipeline contra el desbordamiento de pila física (stack overflow) ante archivos con un anidamiento sintáctico desmesurado, la clase implementa un centinela automático <code>RecursionGuard</code> que interrumpe la compilación de manera segura si se supera el umbral límite del sistema.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Disposición y Ordenamiento Canónico</h3>
+                  <p>
+                    Para garantizar la consistencia en el desarrollo y auditoría del código, la guía de estilo oficial de Solidity (inspirada en la PEP 8 de Python) prescribe una secuencia ordenada de 10 elementos fundamentales dentro de una unidad de fuente: (1) Identificador SPDX, (2) Directivas pragma, (3) Importaciones ordenadas alfabéticamente, (4) Directivas <code>using for</code> globales, (5) Estructuras, (6) Enumeraciones, (7) Funciones libres, (8) Constantes globales, (9) Eventos/Errores globales, y (10) Contratos, interfaces y bibliotecas.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/ordenamiento_canonico_archivo.png"
+                      alt="Disposición de Elementos"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Secuencia canónica recomendada y reglas de espaciado físico de elementos globales.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: LICENCIA SPDX (SOLIDITY) */}
+            {activeSubSection === 'solidity-licencia' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary" />
+                    Identificador de Licencia SPDX y Metadatos CBOR
+                  </CardTitle>
+                  <CardDescription>
+                    Extracción de la licencia en brechas del AST, codificación CBOR de metadatos e inyección del hash IPFS en el bytecode.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Introducido formalmente en la versión 0.6.8 para solventar complejidades de propiedad intelectual, el identificador de licencia SPDX representa el primer elemento obligatorio en la corriente física de caracteres de Solidity. El analizador sintáctico localiza la directiva mediante el método <code>Parser::findLicenseString</code> en <code>libsolidity/parsing/Parser.cpp</code>. Esta búsqueda es proactiva y se realiza inspeccionando las denominadas <strong>brechas del AST (AST Gaps)</strong>: los segmentos de texto (comentarios o espacios en blanco) no capturados por ningún nodo sintáctico estructurado.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/spdx_cbor_ipfs_link.png"
+                      alt="SPDX a Bytecode y Metadatos"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Flujo de procesamiento de la licencia SPDX hacia el mapa CBOR de metadatos.
+                    </p>
+                  </div>
+
+                  <p>
+                    Cuando el compilador localiza la cadena exacta <code>SPDX-License-Identifier:</code>, extrae el identificador y lo valida mediante expresiones regulares básicas para asegurar caracteres válidos. Es importante destacar que el compilador exige unicidad absoluta: la presencia de múltiples licencias incompatibles en una misma unidad de fuente interrumpe el pipeline emitiendo el error <code>3716</code>, obligando a resolver la multiplicidad mediante operadores booleanos válidos (e.g. <code>MIT OR Apache-2.0</code>).
+                  </p>
+
+                  <div className="my-4 overflow-x-auto border border-border rounded-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40">
+                          <th className="p-3 font-semibold text-foreground">Identificador</th>
+                          <th className="p-3 font-semibold text-foreground">Significado</th>
+                          <th className="p-3 font-semibold text-foreground">Implicación de Seguridad / Legal</th>
+                          <th className="p-3 font-semibold text-foreground">Estándar</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`MIT`</td>
+                          <td className="p-3">Licencia MIT</td>
+                          <td className="p-3">Permisiva, requiere mención de derechos de autor original.</td>
+                          <td className="p-3">Lista SPDX Oficial</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`GPL-3.0`</td>
+                          <td className="p-3">GNU GPL v3.0</td>
+                          <td className="p-3">Copyleft fuerte. Todo código derivado debe publicarse en abierto.</td>
+                          <td className="p-3">Lista SPDX Oficial</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`UNLICENSED`</td>
+                          <td className="p-3">Código Propietario</td>
+                          <td className="p-3">No otorga derechos de copia o uso. Protegido comercialmente.</td>
+                          <td className="p-3">Recomendación npm</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`UNLICENSE`</td>
+                          <td className="p-3">Dominio Público</td>
+                          <td className="p-3">Renuncia a todos los derechos intelectuales a nivel mundial.</td>
+                          <td className="p-3">Lista SPDX Oficial</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Arquitectura del Bloque de Metadatos CBOR</h3>
+                  <p>
+                    Una vez extraída la licencia y finalizado el análisis del código, el compilador serializa toda la información técnica (configuración, optimizaciones, código hash de archivos y licencias) en un archivo JSON de metadatos. El hash criptográfico de este JSON (generalmente en formato IPFS CID v0, que comienza por <code>0x1220</code> y utiliza Base58 con prefijo <code>Qm</code>) se codifica binariamente en formato <strong>CBOR (RFC 7049)</strong> y se concatena físicamente al final del bytecode ejecutable del contrato.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/spdx_cbor_ipfs_link-2.png"
+                      alt="Serialización CBOR en Bytecode"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Geometría binaria del bloque CBOR anexado en el final del bytecode físico desplegado.
+                    </p>
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Verificación Inmutable de Metadatos</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      La inyección física del mapa CBOR permite una reproducibilidad absoluta. Los exploradores de bloques e indexadores de contratos leen los 2 bytes finales del bytecode en la red, interpretan este valor de 16 bits en formato big endian como la longitud del bloque CBOR precedente, y retroceden dicha cantidad de bytes para decodificar el mapa y obtener el hash de IPFS. Esto permite que herramientas descentralizadas como Sourcify recuperen la configuración fidedigna y verifiquen el contrato de manera autónoma e inmutable.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: DIRECTIVAS PRAGMA (SOLIDITY) */}
+            {activeSubSection === 'solidity-pragma' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Terminal className="h-5 w-5 text-primary" />
+                    Directivas Pragma y Compatibilidad de Versión (SemVer)
+                  </CardTitle>
+                  <CardDescription>
+                    Lógica de control del SemVerMatchExpressionParser, codificación ABI v1/v2 y optimización intermedia.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Las directivas <code>pragma</code> actúan como instrucciones locales para el compilador y no se propagan de forma transitiva a los archivos importados. Su propósito es asegurar que la versión de <code>solc</code> en uso sea compatible con las reglas del código de origen. La directiva de versión utiliza la sintaxis de SemVer (Semantic Versioning 2.0.0), la cual se procesa mediante el componente <code>SemVerMatchExpressionParser</code> de la biblioteca del compilador en <code>liblangutil/SemVerHandler.cpp</code>.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/semver_version_compatibility_engine.png"
+                      alt="Motor de Versión SemVer"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Evaluación lógica de límites de versión aplicados por el SemVerMatchExpressionParser.
+                    </p>
+                  </div>
+
+                  <p>
+                    Cuando se utiliza el símbolo caret (<code>^</code>), el rango se define como el conjunto matemático de versiones mayor o igual al valor especificado pero estrictamente menor a la siguiente versión que introduzca cambios disruptivos (breaking changes). Por ejemplo, <code>^0.8.0</code> permite compilaciones desde la 0.8.0 hasta (pero excluyendo) la 0.9.0. El motor excluye sistemáticamente las compilaciones nocturnas (nightly builds) para proteger los despliegues productivos de vulnerabilidades experimentales.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Selección del Codificador ABI: v1 vs v2</h3>
+                  <p>
+                    Una de las decisiones más críticas dictadas por pragma es la selección del codificador ABI. Con la introducción de Solidity 0.8.0, el codificador <code>v2</code> se estableció como predeterminado (anteriormente se invocaba mediante <code>pragma experimental ABIEncoderV2</code>). La diferencia estructural entre ambos codificadores radica en el direccionamiento de memoria de los datos complejos.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/abi_coder_v1_v2_stack_layout.png"
+                      alt="Disposición de Memoria ABI v1 vs v2"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Comparación de la estructura del calldata y pila entre el codificador ABI v1 y v2.
+                    </p>
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Diferencias de Arquitectura ABI</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El codificador <code>v1</code> almacena los datos de forma contigua y plana, limitándose a tipos planos y arreglos de dimensión única. El codificador <code>v2</code> introduce direccionamiento indirecto a través de punteros de desplazamiento (offsets) de 32 bytes en la cabecera (Head Section) que apuntan a datos dinámicos en la cola (Tail Section). Esta abstracción permite estructurar arreglos dinámicos y structs aninados de profundidad arbitraria, además de habilitar el optimizador global via-IR basado en Yul.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: MODO EXPERIMENTAL Y SMT (SOLIDITY) */}
+            {activeSubSection === 'solidity-experimental' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Cpu className="h-5 w-5 text-primary" />
+                    Modo Experimental y Verificación Matemática (SMT)
+                  </CardTitle>
+                  <CardDescription>
+                    Model Checker (BMC/CHC), resolvedores SMT-LIB2, formato de objetos EVM (EOF) y Generic Solidity.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    A partir de la versión v0.8.35+, el compilador sistematiza el "Modo Experimental" para regular características en desarrollo como el Formato de Objetos EVM (EOF) o el polimorfismo avanzado (Generic Solidity), los cuales requieren la habilitación del flag <code>--experimental</code>. Paralelamente, Solidity provee un motor de verificación formal integrado: el **SMTChecker**.
+                  </p>
+
+                  <p>
+                    El SMTChecker traduce el código fuente a fórmulas lógicas compatibles con la especificación SMT-LIB2 y las somete a resolutores matemáticos (como Z3 o Eldarica) para demostrar formalmente que los <code>assert</code> declarados nunca fallarán bajo ninguna circunstancia. El motor opera bajo dos sub-métodos diferenciados:
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/smt_checker_logic_pipeline.png"
+                      alt="Pipeline del SMTChecker"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Flujo de análisis lógico y traducción a Horn Clauses en el SMTChecker.
+                    </p>
+                  </div>
+
+                  <p>
+                    1. <strong>Bounded Model Checker (BMC)</strong>: Analiza funciones de forma local y lineal, desenrollando bucles hasta un límite específico para encontrar contraejemplos rápidos de violación de aserciones.
+                  </p>
+                  <p>
+                    2. <strong>Constrained Horn Clauses (CHC)</strong>: Representa el contrato como un sistema inductivo infinito de transacciones EVM. Modela el estado mediante una relación $S(v)$ sobre las variables y busca invariantes inductivos que demuestren que el estado de error de la EVM es inaccesible.
+                  </p>
+
+                  <div className="my-4 overflow-x-auto border border-border rounded-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40">
+                          <th className="p-3 font-semibold text-foreground">Dimensión Analítica</th>
+                          <th className="p-3 font-semibold text-foreground">Bounded Model Checking (BMC)</th>
+                          <th className="p-3 font-semibold text-foreground">Constrained Horn Clauses (CHC)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">Representación Lógica</td>
+                          <td className="p-3">Aserciones desenrolladas en flujo plano</td>
+                          <td className="p-3">Implicaciones lógicas inductivas de primer orden</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">Modelado de Estado</td>
+                          <td className="p-3">Finito, acotado por número de iteraciones</td>
+                          <td className="p-3">Infinito, inductivo a lo largo de transacciones</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">Ámbito de Análisis</td>
+                          <td className="p-3">Función local aislada en el AST</td>
+                          <td className="p-3">Grafo de llamadas y mutaciones de estado globales</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">EOF (EVM Object Format) y Generic Solidity</h3>
+                  <p>
+                    El modo experimental introduce soporte para el **EVM Object Format (EIP-3540)**, el cual estructura el bytecode ejecutable en secciones independientes con cabecera prefixada <code>0xEF00</code>. Esto elimina los saltos dinámicos (<code>JUMP</code>/<code>JUMPI</code>) sustituyéndolos por saltos estáticos relativos (<code>RJUMP</code>/<code>RJUMPI</code>), logrando una validación estática de la pila previa a la ejecución.
+                  </p>
+                  <p>
+                    Por su parte, la directiva <code>pragma experimental solidity;</code> activa un sistema de tipos polimórficos de inferencia Hindley-Milner coordinado por <code>TypeInference.cpp</code> y <code>TypeSystem.cpp</code>, permitiendo programar con plantillas de tipos de datos unificadas antes de su traducción a Yul IR.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/modo_experimental_compilador.png"
+                      alt="Compilador Modo Experimental"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Generación de secciones estructuradas EOF y resolución Hindley-Milner.
+                    </p>
+                  </div>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/yul_ir_optimizer_assembly_ast.png"
+                      alt="Yul IR y Assembly Inline"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Pipeline de traducción de Inline Assembly (Yul AST) a representación optimizada.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: IMPORTACIONES Y VFS (SOLIDITY) */}
+            {activeSubSection === 'solidity-import' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-primary" />
+                    Importaciones y Sistema de Archivos Virtual (VFS)
+                  </CardTitle>
+                  <CardDescription>
+                    Resolución de dependencias mediante ImportRemapper, mitigación de importaciones circulares y prevención de recursividad estructural.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    La gestión de dependencias en Solidity se cimenta sobre un **Sistema de Archivos Virtual (VFS)** que aísla al compilador de las llamadas directas al sistema operativo anfitrión. Las rutas se sanitizan y normalizan sistemáticamente mediante la rutina <code>util::sanitizePath</code> en barras diagonales (<code>/</code>). El direccionamiento dinámico de rutas se realiza a través de la clase <code>ImportRemapper</code>, la cual aplica un algoritmo de mejor coincidencia por longitud para resolver prefijos.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/resolucion_vfs_remapeo.png"
+                      alt="Resolución VFS y Remapeo"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Traducción y redirección de rutas locales y remotas administrada por el ImportRemapper.
+                    </p>
+                  </div>
+
+                  <p>
+                    Cuando se utiliza el compilador físico, se definen los directorios autorizados a través de los flags de seguridad <code>--base-path</code> y <code>--allow-paths</code>, impidiendo lecturas no deseadas en el disco del host. Esto se implementa en <code>FileReader::readFile</code> al validar prefijos y no opera en el entorno simulado de las pruebas de sintaxis estándar del compilador.
+                  </p>
+
+                  <div className="my-4 overflow-x-auto border border-border rounded-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40">
+                          <th className="p-3 font-semibold text-foreground">Sintaxis de Importación</th>
+                          <th className="p-3 font-semibold text-foreground">Mecánica de Resolución</th>
+                          <th className="p-3 font-semibold text-foreground">Consecuencia en Espacio de Nombres</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`import "path";`</td>
+                          <td className="p-3">Importa todos los símbolos globales de la ruta destino directamente.</td>
+                          <td className="p-3 text-red-500">Riesgo elevado de contaminación del espacio de nombres (namespace pollution).</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`import * as alias from "path";`</td>
+                          <td className="p-3">Encapsula todos los símbolos externos bajo un objeto virtual calificado.</td>
+                          <td className="p-3 text-green-500">Aislamiento limpio del espacio de nombres. Equivalente a `import "path" as alias;`.</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`import &#123;sym as alias&#125; from "path";`</td>
+                          <td className="p-3">Importación selectiva e inyección de identificadores específicos en la tabla.</td>
+                          <td className="p-3 text-green-500">Excelente control granular contra colisiones sintácticas.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Importaciones Cíclicas y Recursión en Layouts</h3>
+                  <p>
+                    Durante la resolución del grafo de dependencias, la clase <code>CompilerStack</code> en <code>CompilerStack.cpp</code> procesa los archivos importados construyendo un Grafo Dirigido de dependencias. Para tolerar ciclos de importación mutua (donde <code>A.sol</code> importa a <code>B.sol</code> y viceversa), se implementa un algoritmo de búsqueda en profundidad (DFS) en <code>resolveImports</code> que rastrea el estado de exploración mediante colores de marcado (blanco, gris y negro) para evitar bucles infinitos durante el parsing.
+                  </p>
+                  <p>
+                    A pesar de que el compilador tolera las importaciones circulares sintácticas, el analizador semántico impone una restricción estricta en el layout físico de los datos en la EVM: si un struct contiene una dependencia recursiva directa que implique un tamaño de almacenamiento infinito, la compilación fallará emitiendo el error <code>TypeError 2046</code>. Para romper esta recursión infinita en la memoria secuencial de la EVM, se exige direccionar los datos aninados mediante una clave asociativa (<code>mapping</code>), la cual almacena únicamente una referencia hash intermedia de longitud fija (32 bytes).
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: USING FOR (SOLIDITY) */}
+            {activeSubSection === 'solidity-using' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    Directiva Using For y Abstracciones de Coste Cero
+                  </CardTitle>
+                  <CardDescription>
+                    Vinculación local y global de tipos de datos, no-transitividad de importaciones y sobrecarga de operadores para UDVT.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    La directiva <code>using A for B</code> permite vincular funciones libres o de biblioteca a tipos de datos específicos en Solidity, simulando los "métodos de extensión" de lenguajes tradicionales. Con la versión 0.8.13, se introdujo la vinculación global de archivos añadiendo el modificador <code>global</code> (ej. <code>using &#123;add&#125; for uint256 global;</code>).
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/using_for_zero_cost.png"
+                      alt="Abstracciones de Coste Cero"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Resolución de llamadas en compilación sin sobrecarga de gas (Zero-Cost Abstractions).
+                    </p>
+                  </div>
+
+                  <p>
+                    La vinculación es resuelta por el <code>NameAndTypeResolver::resolveUsingForDirective</code> en <code>NameAndTypeResolver.cpp</code>. El motor exige coincidencia de firmas donde el primer parámetro de la función receptora debe ser del mismo tipo elemental o ubicación de datos del tipo enlazado. Es fundamental notar la no-transitividad de las declaraciones sin modificador global: si un archivo importa una biblioteca con una directiva <code>using for</code> local, el compilador bloquea su propagación hacia el archivo importador emitiendo el error <code>TypeError 9582</code>, evitando colisiones accidentales de firmas.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Sobrecarga de Operadores (v0.8.19+) y UDVT</h3>
+                  <p>
+                    A partir de Solidity v0.8.19+, es posible sobrecargar operadores aritméticos, relacionales y lógicos vinculando funciones libres que cumplan las siguientes restricciones: (1) deben ser funciones libres definidas a nivel de archivo (no miembros de contratos), (2) deben estar marcadas como <code>pure</code> (sin acceso a almacenamiento ni efectos secundarios), y (3) los tipos de los argumentos deben coincidir exactamente con el **User-defined Value Type (UDVT)** definido por el usuario.
+                  </p>
+
+                  <div className="my-4 overflow-x-auto border border-border rounded-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40">
+                          <th className="p-3 font-semibold text-foreground">Operadores</th>
+                          <th className="p-3 font-semibold text-foreground">Firma Requerida</th>
+                          <th className="p-3 font-semibold text-foreground">Tipo de Retorno</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`+`, `-`, `*`, `/`, `%`</td>
+                          <td className="p-3">`function(T, T) pure`</td>
+                          <td className="p-3">`T` (Mismo UDVT)</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`==`, `!=`, `&lt;`, `&lt;=`, `&gt;`, `&gt;=`</td>
+                          <td className="p-3">`function(T, T) pure`</td>
+                          <td className="p-3">`bool`</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`~`, `&amp;`, `|`, `^`</td>
+                          <td className="p-3">`function(T, T) pure`</td>
+                          <td className="p-3">`T` (Mismo UDVT)</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Abstracciones de Coste Cero</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      A diferencia de las llamadas a bibliotecas externas que consumen gas de red mediante el opcode <code>DELEGATECALL</code> y validaciones de memoria dinámicas en la EVM, la directiva <code>using for</code> realiza una inyección estática en compilación. La llamada <code>variable.metodo()</code> se traduce directamente en opcodes planos como una función interna, permitiendo que la seguridad sintáctica del encapsulamiento de tipos (Type-Safety) se logre sin sobrecoste alguno en la transacción.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: NATSPEC Y LINEALIZACIÓN C3 (SOLIDITY) */}
+            {activeSubSection === 'solidity-natspec' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Info className="h-5 w-5 text-primary" />
+                    Documentación NatSpec y Linealización C3
+                  </CardTitle>
+                  <CardDescription>
+                    Mapeo estructurado en el DocStringParser, generación de Userdoc/Devdoc e invariabilidad bajo la herencia múltiple.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    La infraestructura de comentarios estructurados NatSpec (Ethereum Natural Language Specification Format) permite enriquecer semánticamente la interfaz de los contratos inteligentes. El compilador procesa estos comentarios y genera dos JSON de metadatos independientes: **Userdoc** (orientado al usuario final, centrado en `@notice` para visualización en billeteras antes de firmar) y **Devdoc** (especificaciones técnicas y de API orientadas a desarrolladores, auditores e indexadores).
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/natspec_parser_c3_inheritance.png"
+                      alt="NatSpec y Herencia C3"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Adopción y validación de comentarios estructurados a lo largo de la jerarquía de herencia.
+                    </p>
+                  </div>
+
+                  <p>
+                    El motor de parsing, ubicado en <code>libsolidity/parsing/DocStringParser.cpp</code>, valida que las etiquetas <code>@param</code> y <code>@return</code> coincidan exactamente con los parámetros definidos en la firma de la función. Cualquier desviación, como la omisión del identificador o descripción del parámetro, interrumpe el compilador disparando los errores deterministas <code>3335</code> o <code>9942</code>, evitando metadatos discordantes en exploradores de bloques.
+                  </p>
+
+                  <div className="my-4 overflow-x-auto border border-border rounded-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40">
+                          <th className="p-3 font-semibold text-foreground">Etiqueta NatSpec</th>
+                          <th className="p-3 font-semibold text-foreground">Ámbito Permitido</th>
+                          <th className="p-3 font-semibold text-foreground">Destino en Metadato</th>
+                          <th className="p-3 font-semibold text-foreground">Validación Asociada en Parser</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`@notice`</td>
+                          <td className="p-3">Todos los constructos</td>
+                          <td className="p-3">Userdoc</td>
+                          <td className="p-3">Asumido por defecto si el comentario carece de etiquetas específicas.</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`@param`</td>
+                          <td className="p-3">Funciones, Eventos, Errores</td>
+                          <td className="p-3">Devdoc</td>
+                          <td className="p-3">Requiere correspondencia exacta con nombres de variables (Errores 3335/9942).</td>
+                        </tr>
+                        <tr className="hover:bg-muted/10">
+                          <td className="p-3 font-medium text-foreground">`@inheritdoc`</td>
+                          <td className="p-3">Contratos, Funciones</td>
+                          <td className="p-3">Devdoc / Userdoc</td>
+                          <td className="p-3">Hereda NatSpec de un ancestro. Dispara error 4682 si no se halla coincidencia.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Herencia y Linealización de Precedencia C3</h3>
+                  <p>
+                    En arquitecturas de herencia múltiple complejas (e.g. contratos que heredan de múltiples interfaces), si un contrato hijo sobrescribe una función omitiendo los comentarios NatSpec, el compilador debe decidir de manera unívoca qué ancestro provee la documentación predeterminada. Para resolver esta precedencia, el compilador ejecuta el algoritmo de <strong>Linealización C3</strong> (el mismo empleado para resolver la herencia múltiple y el problema del diamante).
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/c3_linearization_diamond.png"
+                      alt="Linealización C3 del Diamante"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Resolución lineal de precedencia de contratos ancestros aplicando C3 Merge.
+                    </p>
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Resolución Matemática de Precedencia</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      La linealización del contrato $D$ se obtiene calculando la precedencia de sus bases mediante la ecuación:
+                      <br />
+                      <span className="block text-center my-1 font-semibold">
+                        {"$L[D] = D + \\text{merge}(L[B], L[C], [B, C])$"}
+                      </span>
+                      Este algoritmo garantiza que la búsqueda recursiva de la documentación en el componente <code>DocStringAnalyser.cpp</code> respete la jerarquía de herencia declarada, bloqueando la compilación si existe una inconsistencia insalvable de linealización.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: COMENTARIOS Y SEGURIDAD UNICODE (SOLIDITY) */}
+            {activeSubSection === 'solidity-unicode' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary" />
+                    Comentarios, Terminadores de Línea y Defensa contra Trojan Source
+                  </CardTitle>
+                  <CardDescription>
+                    Validación BiDi en el escáner, estados transaccionales de LiteralScope y neutralización de la vulnerabilidad CVE-2021-42574.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Solidity soporta comentarios de línea (<code>//</code>) y bloque (<code>/* ... */</code>), los cuales el lexer ignora para el flujo lógico del parser, pero que impactan en el bloque CBOR de metadatos. Durante el análisis léxico, el compilador procesa los terminadores de línea y restringe severamente caracteres no ASCII fuera de los comentarios (como NEL, LS o PS) para evitar desvíos en la tokenización.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/lexer_contextual_matrix.png"
+                      alt="Matriz de Estados del Lexer"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Conmutación de estados contextuales del escáner en liblangutil.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Defensa Activa contra Trojan Source (CVE-2021-42574)</h3>
+                  <p>
+                    A partir de la versión v0.8.10, el compilador incorpora defensas nativas contra los vectores de ataque de dirección visual, conocidos colectivamente como **Trojan Source**. Estos ataques explotan los caracteres invisibles de control de dirección Unicode (BiDi) tales como <code>U+202E</code> (Right-To-Left Override) y <code>U+202D</code> (Left-To-Right Override) para reordenar la representación visual del código en el editor humano, haciendo que sentencias lógicamente ejecutables parezcan comentarios inocuos.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/trojan_source_bidi_ast.png"
+                      alt="Defensa Trojan Source BiDi"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Mecanismo de validación bidireccional sobre la pila de tokens del Scanner.
+                    </p>
+                  </div>
+
+                  <p>
+                    Para neutralizar esta manipulación, el método <code>validateBiDiMarkup</code> en <code>Scanner.cpp</code> escanea de forma aislada y transaccional cada secuencia de caracteres dentro de un objeto administrador <code>LiteralScope</code>. El analizador evalúa los marcadores utilizando una pila de control direccional (pushdown stack). Cada carácter de control de apertura debe corresponder con un marcador de pop direccional (<code>U+202C</code>) antes de finalizar el literal o línea. Cualquier asimetría provoca que el escáner aborte deterministamente emitiendo el error <code>ScannerError::DirectionalOverrideMismatch</code>.
+                  </p>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Gestión Transaccional de LiteralScope</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      La clase <code>LiteralScope</code> gestiona las transiciones del lexer garantizando la integridad. Si ocurre un fallo sintáctico o escape inválido, el destructor limpia la memoria intermedia abortando la compilación antes de emitir nodos contaminados al AST de Solidity. Esto blinda a los contratos inteligentes de reordenamientos visuales maliciosos en el año 2026.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: ALMACENAMIENTO EIP-7201 (SOLIDITY) */}
+            {activeSubSection === 'solidity-storage' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-primary" />
+                    Gestión de Almacenamiento con Espacio de Nombres (EIP-7201)
+                  </CardTitle>
+                  <CardDescription>
+                    Estructuración de StorageLayoutSpecifier, mitigación de colisiones en proxies y optimización matemática de slots base alineados.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Con la adopción de patrones de contratos modulares (como proxies y estructuras de diamante EIP-2535), la gestión de colisiones de variables en almacenamiento persistente se ha vuelto crucial. Solidity implementa de forma nativa la propuesta de mejora de Ethereum número 7201 (<strong>EIP-7201: Namespaced Storage Layout</strong>), procesada sintácticamente por el <code>StorageLayoutSpecifier</code> en <code>Parser::parseStorageLayoutSpecifier</code>.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/constructos/eip_7201_storage_layout.png"
+                      alt="Diseño EIP-7201 Namespaced Storage"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Comparativa estructural entre slot secuenciales y slots aislados en EIP-7201.
+                    </p>
+                  </div>
+
+                  <p>
+                    Este estándar permite aislar los subgrupos de variables en slots de almacenamiento remotos y predecibles calculados a partir de un identificador textual unívoco. La fórmula matemática para calcular el slot base del espacio de nombres se define formalmente en el compilador como:
+                  </p>
+
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 text-center font-mono my-2 text-xs">
+                    slot = (keccak256(keccak256(id) - 1)) &amp; ~0xff
+                  </div>
+
+                  <p>
+                    Donde el decremento en una unidad (<code>- 1</code>) desplaza la dirección base del slot fuera de las regiones iniciales ocupadas secuencialmente por defecto. El operador binario AND por el complemento de un byte (<code>&amp; ~0xff</code>) limpia los 8 bits menos significativos a cero. Esto alinea la dirección de ranura en una frontera limpia de 256 bytes, permitiendo reservar hasta 256 posiciones continuas consecutivas para variables del struct sin riesgo de superposición.
+                  </p>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Reglas Semánticas del StorageLayoutSpecifier</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El compilador impone restricciones de seguridad severas sobre el <code>StorageLayoutSpecifier</code>: (1) solo puede declararse en el contrato superior del árbol de herencia, bloqueará compilaciones si se intenta heredar de layouts customizados (Error 8894); (2) no se permite en contratos abstractos (Error 7587), interfaces o bibliotecas; (3) se admite un único especificador por contrato (Error 8714); y (4) si la dirección base del layout y el tamaño acumulado de variables sobrepasa el límite direccionable de 256 bits de la EVM, se aborta mediante el error <code>TypeError 5015</code>.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Optimización de Gas y Evitación de Hashing Recursivo</h3>
+                  <p>
+                    En el direccionamiento ordinario de Solidity, el acceso a variables dentro de estructuras dinámicas requiere que la EVM ejecute operaciones criptográficas <code>keccak256</code> consecutivas en tiempo de ejecución, consumiendo 30 de gas por cada hash adicional. El almacenamiento con espacios de nombres de EIP-7201 calcula el slot base una sola vez durante la compilación. El acceso subsecuente a variables secuenciales se realiza aplicando simples sumas aritméticas estáticas (<code>baseSlot + offset</code>), eliminando la recursión de hash dinámico de la EVM y logrando una óptima eficiencia de gas operativa en el año 2026.
+                  </p>
                 </CardContent>
               </Card>
             )}
