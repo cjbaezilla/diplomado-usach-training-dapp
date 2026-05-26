@@ -932,29 +932,8 @@ const DEXPage: NextPage = () => {
                     <div className="flex items-center justify-center py-6">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-                  ) : (!poolExists && !isWethDirectSwap) ? (
-                    <div className="text-center py-8 border border-dashed border-border/40 rounded-xl space-y-3">
-                      <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
-                      <div className="space-y-1">
-                        <h4 className="font-semibold text-sm">No existe una piscina para este par</h4>
-                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                          Antes de poder intercambiar o aportar liquidez, se debe desplegar el contrato del pool para {metadataA.symbol} y {metadataB.symbol}.
-                        </p>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setNewPoolToken0(tokenA);
-                          setNewPoolToken1(tokenB);
-                        }}
-                        className="text-xs font-semibold"
-                        variant="outline"
-                      >
-                        Ir a Crear Piscina
-                      </Button>
-
-                    </div>
                   ) : (
-                    /* Piscina Existente - Mostrar Swap */
+                    /* Mostrar Swap */
                     <form onSubmit={handleSwap} className="space-y-5">
                           <div className="space-y-4">
                             
@@ -1049,8 +1028,39 @@ const DEXPage: NextPage = () => {
                             </div>
                           )}
 
+                          {/* Mensaje de piscina inexistente */}
+                          {!poolExists && !isWethDirectSwap && (
+                            <div className="flex flex-col gap-2.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+                              <div className="flex items-start gap-1.5">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>No existe una piscina de liquidez para el par {metadataA.symbol} / {metadataB.symbol}. Primero debes crear la piscina de liquidez para este par.</span>
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="text-[10px] h-7 px-3 self-start border-amber-500/30 hover:bg-amber-500/20 text-amber-500 hover:text-amber-400 font-bold font-sans"
+                                onClick={() => {
+                                  setNewPoolToken0(tokenA);
+                                  setNewPoolToken1(tokenB);
+                                  document.getElementById('create-pool-card')?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                              >
+                                Configurar Creación de Piscina
+                              </Button>
+                            </div>
+                          )}
+
                           {/* Botón de Acción de Swap */}
-                          {(tokenA === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
+                          {!poolExists && !isWethDirectSwap ? (
+                            <Button
+                              type="button"
+                              disabled
+                              className="w-full font-bold shadow-md opacity-60 cursor-not-allowed"
+                            >
+                              Intercambio no disponible (Sin Piscina)
+                            </Button>
+                          ) : (tokenA === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
                             <Button
                               type="button"
                               onClick={handleSwap}
@@ -1157,7 +1167,7 @@ const DEXPage: NextPage = () => {
             <div className="space-y-8">
 
               {/* Crear Nueva Piscina (Pool) */}
-              <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <Card id="create-pool-card" className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 to-primary"></div>
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
