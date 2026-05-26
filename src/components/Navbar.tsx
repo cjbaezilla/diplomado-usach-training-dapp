@@ -3,9 +3,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Coins, User, Award, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAccount } from 'wagmi';
+import { useHydrated } from '@/hooks/useHydrated';
 
 export function Navbar() {
   const router = useRouter();
+  const isHydrated = useHydrated();
+  const { address, isConnected } = useAccount();
 
   // Función para verificar si la ruta actual es la activa
   const isActive = (path: string) => router.pathname === path;
@@ -91,6 +95,20 @@ export function Navbar() {
             <Award className="h-4 w-4" />
             Reliquias
           </Link>
+          {isHydrated && isConnected && address && (
+            <Link
+              href={`/estudiante/${address.toLowerCase()}`}
+              className={cn(
+                "flex items-center gap-1.5 transition-colors",
+                isActive(`/estudiante/${address.toLowerCase()}`)
+                  ? "text-primary-foreground underline decoration-2 underline-offset-4"
+                  : "text-primary-foreground/85 hover:text-primary-foreground"
+              )}
+            >
+              <User className="h-4 w-4" />
+              Mi Perfil
+            </Link>
+          )}
         </nav>
 
         {/* Botón de Conexión de RainbowKit */}
