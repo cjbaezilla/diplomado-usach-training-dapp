@@ -43,6 +43,7 @@ import { useAllTokens, useTokenFactoryActions } from '@/hooks/useTokenFactory';
 import { useBaseERC20, useERC20Balance } from '@/hooks/useBaseERC20';
 import { useHydrated } from '@/hooks/useHydrated';
 import { TokenIcon } from '@/components/TokenIcon';
+import { Footer } from '@/components/Footer';
 
 interface Transaction {
   id: string;
@@ -1122,9 +1123,7 @@ const ERC20Page: NextPage = () => {
         )}
       </main>
 
-      <footer className="w-full border-t border-border/40 py-6 text-center text-xs text-muted-foreground bg-muted/30 mt-auto">
-        <p>Universidad de Santiago de Chile &bull; Diplomado en Tecnologías Blockchain</p>
-      </footer>
+      <Footer />
     </div>
   );
 };

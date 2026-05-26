@@ -9,6 +9,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useStudentProfile } from '@/hooks/useStudentIdentity';
 import { useBaseERC1155 } from '@/hooks/useBaseERC1155';
 import { useHydrated } from '@/hooks/useHydrated';
+import { Footer } from '@/components/Footer';
 import { BASE_ERC1155_CONTRACT } from '@/contracts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1005,9 +1006,7 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
         </Dialog>
       </main>
 
-      <footer className="w-full border-t border-border/40 py-6 text-center text-xs text-muted-foreground bg-muted/40 mt-auto">
-        <p>Universidad de Santiago de Chile &bull; Diplomado en Tecnologías Blockchain</p>
-      </footer>
+      <Footer />
     </div>
   );
 };

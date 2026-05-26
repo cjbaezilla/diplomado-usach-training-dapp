@@ -11,6 +11,7 @@ import { WalletGuide } from '@/components/WalletGuide';
 import { useHydrated } from '@/hooks/useHydrated';
 import { StudentSearch } from '@/components/StudentSearch';
 import { CreatedTokens } from '@/components/CreatedTokens';
+import { Footer } from '@/components/Footer';
 
 const Home: NextPage = () => {
   const isHydrated = useHydrated();
@@ -162,9 +163,7 @@ const Home: NextPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-border/40 py-6 text-center text-xs text-muted-foreground bg-muted/40 mt-auto">
-        <p>Universidad de Santiago de Chile &bull; Diplomado en Tecnologías Blockchain</p>
-      </footer>
+      <Footer />
     </div>
   );
 };

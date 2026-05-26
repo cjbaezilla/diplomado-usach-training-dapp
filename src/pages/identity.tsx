@@ -39,6 +39,7 @@ import { useStudentProfile, useAllStudents, useStudentIdentityActions } from '@/
 import { useHydrated } from '@/hooks/useHydrated';
 import { UserAvatar } from '@/components/UserAvatar';
 import { StudentSearch } from '@/components/StudentSearch';
+import { Footer } from '@/components/Footer';
 
 // StudentCard se movió al componente StudentSearch reutilizable
 
@@ -816,9 +817,7 @@ const IdentityPage: NextPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-border/40 py-6 text-center text-xs text-muted-foreground bg-muted/40 mt-auto">
-        <p>Universidad de Santiago de Chile &bull; Diplomado en Tecnologías Blockchain</p>
-      </footer>
+      <Footer />
     </div>
   );
 };
