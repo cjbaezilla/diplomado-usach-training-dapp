@@ -433,7 +433,6 @@ const DEXPage: NextPage = () => {
 
   // Input de Swap
   const [swapAmountIn, setSwapAmountIn] = useState('');
-  const [swapTokenIn, setSwapTokenIn] = useState<`0x${string}` | undefined>(undefined);
   const [estimatedOut, setEstimatedOut] = useState('0.00');
 
   // Input de Agregar Liquidez
@@ -460,17 +459,10 @@ const DEXPage: NextPage = () => {
     }
   }, [selectableTokens, tokenA, tokenB]);
 
-  // Selección por defecto del token de entrada para Swap
-  useEffect(() => {
-    if (tokenA && !swapTokenIn) {
-      setSwapTokenIn(tokenA);
-    }
-  }, [tokenA, swapTokenIn]);
-
 
   // Manejar el cambio automático de inputs al calcular Swap
   useEffect(() => {
-    if (!tokenA || !tokenB || !swapTokenIn) {
+    if (!tokenA || !tokenB) {
       setEstimatedOut('0.00');
       return;
     }
@@ -486,9 +478,8 @@ const DEXPage: NextPage = () => {
     }
 
     try {
-      const isA = swapTokenIn.toLowerCase() === tokenA.toLowerCase();
-      const decimalsIn = isA ? metadataA.decimals : metadataB.decimals;
-      const decimalsOut = isA ? metadataB.decimals : metadataA.decimals;
+      const decimalsIn = metadataA.decimals;
+      const decimalsOut = metadataB.decimals;
 
       const amtIn = parseUnits(swapAmountIn, decimalsIn);
       if (amtIn <= 0n) {
@@ -497,7 +488,7 @@ const DEXPage: NextPage = () => {
       }
 
       // Ordenar las reservas de acuerdo a token0 y token1 del pool
-      const isToken0 = swapTokenIn.toLowerCase() === poolToken0?.toLowerCase();
+      const isToken0 = tokenA.toLowerCase() === poolToken0?.toLowerCase();
       const resIn = isToken0 ? poolReserve0 : poolReserve1;
       const resOut = isToken0 ? poolReserve1 : poolReserve0;
 
@@ -506,7 +497,7 @@ const DEXPage: NextPage = () => {
     } catch {
       setEstimatedOut('0.00');
     }
-  }, [swapAmountIn, swapTokenIn, poolReserve0, poolReserve1, tokenA, tokenB, poolToken0, currentPoolAddress, metadataA, metadataB, isWethDirectSwap]);
+  }, [swapAmountIn, poolReserve0, poolReserve1, tokenA, tokenB, poolToken0, currentPoolAddress, metadataA, metadataB, isWethDirectSwap]);
 
   // Auto-cálculo óptimo de token1 cuando se cambia token0 en Liquidez
   const handleLiq0Change = (val: string) => {
@@ -724,19 +715,16 @@ const DEXPage: NextPage = () => {
   // Ejecutar Swap
   const handleSwap = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!swapTokenIn || !swapAmountIn) return;
+    if (!tokenA || !tokenB || !swapAmountIn) return;
     try {
-      const isA = swapTokenIn.toLowerCase() === tokenA?.toLowerCase();
-      const swapTokenOut = isA ? tokenB : tokenA;
-      const decimals = isA ? metadataA.decimals : metadataB.decimals;
-      const amt = parseUnits(swapAmountIn, decimals);
+      const amt = parseUnits(swapAmountIn, metadataA.decimals);
 
       // CASO 1: Wrap / Unwrap directo (ETH <-> WETH)
       if (
-        (swapTokenIn === ETH_ADDRESS && swapTokenOut === WETH_ADDRESS) ||
-        (swapTokenIn === WETH_ADDRESS && swapTokenOut === ETH_ADDRESS)
+        (tokenA === ETH_ADDRESS && tokenB === WETH_ADDRESS) ||
+        (tokenA === WETH_ADDRESS && tokenB === ETH_ADDRESS)
       ) {
-        if (swapTokenIn === ETH_ADDRESS) {
+        if (tokenA === ETH_ADDRESS) {
           setLastWethAction('wrap');
           wethDeposit(amt);
         } else {
@@ -747,7 +735,7 @@ const DEXPage: NextPage = () => {
       }
 
       // CASO 2: Swap involucrando ETH nativo
-      if (swapTokenIn === ETH_ADDRESS) {
+      if (tokenA === ETH_ADDRESS) {
         // ETH -> Token: requiere envolver primero si no hay suficiente WETH
         const missingWeth = amt > wethBalance ? amt - wethBalance : 0n;
         if (missingWeth > 0n) {
@@ -762,16 +750,16 @@ const DEXPage: NextPage = () => {
         // Si hay suficiente WETH, procedemos con el swap estándar del pool usando WETH
         if (!currentPoolAddress) return;
         actionSwap(WETH_ADDRESS, amt);
-      } else if (swapTokenOut === ETH_ADDRESS) {
+      } else if (tokenB === ETH_ADDRESS) {
         // Token -> ETH: Swap estándar Token -> WETH y luego Unwrap
         if (!currentPoolAddress) return;
         const estOutBigInt = parseUnits(estimatedOut, 18);
         setUnwrapAmountOnSuccess(estOutBigInt);
-        actionSwap(swapTokenIn, amt);
+        actionSwap(tokenA, amt);
       } else {
         // Swap estándar entre tokens ERC20 de fábrica
         if (!currentPoolAddress) return;
-        actionSwap(swapTokenIn, amt);
+        actionSwap(tokenA, amt);
       }
     } catch {
       setNotification({ type: 'error', message: 'Monto de intercambio no válido.' });
@@ -852,15 +840,14 @@ const DEXPage: NextPage = () => {
   }
 
   // Comprobación de requerimientos de aprobación para Swap
-  const isSwapA = swapTokenIn?.toLowerCase() === tokenA?.toLowerCase();
-  const currentSwapAllowance = isSwapA ? allowanceA : allowanceB;
-  const currentSwapBalance = isSwapA ? resolvedBalanceA : resolvedBalanceB;
-  const currentSwapDecimals = isSwapA ? metadataA.decimals : metadataB.decimals;
-  const currentSwapSymbol = isSwapA ? metadataA.symbol : metadataB.symbol;
+  const currentSwapAllowance = allowanceA;
+  const currentSwapBalance = resolvedBalanceA;
+  const currentSwapDecimals = metadataA.decimals;
+  const currentSwapSymbol = metadataA.symbol;
   const swapAmountBigInt = swapAmountIn ? parseUnits(swapAmountIn, currentSwapDecimals) : 0n;
   
   // Si el token es ETH nativo, no requiere aprobación ERC20
-  const isInputEth = (isSwapA ? tokenA : tokenB) === ETH_ADDRESS;
+  const isInputEth = tokenA === ETH_ADDRESS;
   const needsSwapApproval = isInputEth ? false : swapAmountBigInt > currentSwapAllowance;
   const hasEnoughSwapBalance = currentSwapBalance >= swapAmountBigInt;
 
@@ -1092,26 +1079,6 @@ const DEXPage: NextPage = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  {/* Selector del Par Activo */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-border/30">
-                    <TokenSelector
-                      label="Token A (Token0)"
-                      selectedToken={tokenA}
-                      onSelect={(addr) => setTokenA(addr)}
-                      tokenList={selectableTokens}
-                      userAddress={address}
-                      excludeToken={tokenB}
-                    />
-                    <TokenSelector
-                      label="Token B (Token1)"
-                      selectedToken={tokenB}
-                      onSelect={(addr) => setTokenB(addr)}
-                      tokenList={selectableTokens}
-                      userAddress={address}
-                      excludeToken={tokenA}
-                    />
-                  </div>
-
                   {!tokenA || !tokenB ? (
                     <div className="text-center py-6 text-xs text-muted-foreground">
                       Debes seleccionar ambos tokens para comenzar.
@@ -1169,14 +1136,17 @@ const DEXPage: NextPage = () => {
                                   step="any"
                                 />
                                 <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                  <TokenIcon address={swapTokenIn || ''} className="h-5 w-5" />
+                                  <TokenIcon address={tokenA || ''} className="h-5 w-5" />
                                   <select
-                                    value={swapTokenIn || ''}
-                                    onChange={(e) => setSwapTokenIn(e.target.value as `0x${string}`)}
-                                    className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0"
+                                    value={tokenA || ''}
+                                    onChange={(e) => setTokenA(e.target.value as `0x${string}`)}
+                                    className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
                                   >
-                                    <option value={tokenA} className="bg-card text-foreground">{metadataA.symbol}</option>
-                                    <option value={tokenB} className="bg-card text-foreground">{metadataB.symbol}</option>
+                                    {selectableTokens
+                                      .filter((addr) => addr !== tokenB)
+                                      .map((addr) => (
+                                        <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
+                                      ))}
                                   </select>
                                 </div>
                               </div>
@@ -1185,7 +1155,11 @@ const DEXPage: NextPage = () => {
                             {/* Icono de Dirección de Swap */}
                             <div className="flex justify-center -my-2.5">
                               <div className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors p-2 rounded-full cursor-pointer shadow-inner"
-                                onClick={() => setSwapTokenIn(swapTokenIn?.toLowerCase() === tokenA.toLowerCase() ? tokenB : tokenA)}
+                                onClick={() => {
+                                  const temp = tokenA;
+                                  setTokenA(tokenB);
+                                  setTokenB(temp);
+                                }}
                               >
                                 <ArrowDownUp className="h-4 w-4" />
                               </div>
@@ -1196,7 +1170,7 @@ const DEXPage: NextPage = () => {
                               <div className="flex justify-between items-center text-xs">
                                 <Label className="text-muted-foreground font-medium">Tú recibes (estimado):</Label>
                                 <span className="font-mono text-[10.5px] text-muted-foreground">
-                                  Saldo: {parseFloat(formatUnits(swapTokenIn?.toLowerCase() === tokenA.toLowerCase() ? balanceB : balanceA, swapTokenIn?.toLowerCase() === tokenA.toLowerCase() ? metadataB.decimals : metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {swapTokenIn?.toLowerCase() === tokenA.toLowerCase() ? metadataB.symbol : metadataA.symbol}
+                                  Saldo: {parseFloat(formatUnits(balanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3">
@@ -1204,10 +1178,18 @@ const DEXPage: NextPage = () => {
                                   {parseFloat(estimatedOut).toLocaleString(undefined, { maximumFractionDigits: 6 })}
                                 </span>
                                 <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                  <TokenIcon address={swapTokenIn?.toLowerCase() === tokenA.toLowerCase() ? (tokenB || '') : (tokenA || '')} className="h-5 w-5" />
-                                  <span className="text-xs font-bold text-foreground">
-                                    {swapTokenIn?.toLowerCase() === tokenA.toLowerCase() ? metadataB.symbol : metadataA.symbol}
-                                  </span>
+                                  <TokenIcon address={tokenB || ''} className="h-5 w-5" />
+                                  <select
+                                    value={tokenB || ''}
+                                    onChange={(e) => setTokenB(e.target.value as `0x${string}`)}
+                                    className="bg-transparent border-none text-xs font-bold text-foreground focus:outline-none focus:ring-0 cursor-pointer"
+                                  >
+                                    {selectableTokens
+                                      .filter((addr) => addr !== tokenA)
+                                      .map((addr) => (
+                                        <TokenOptionItem key={addr} tokenAddress={addr} userAddress={address} />
+                                      ))}
+                                  </select>
                                 </div>
                               </div>
                             </div>
@@ -1223,7 +1205,7 @@ const DEXPage: NextPage = () => {
                           )}
 
                           {/* Botón de Acción de Swap */}
-                          {(swapTokenIn === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
+                          {(tokenA === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
                             <Button
                               type="button"
                               onClick={handleSwap}
@@ -1244,11 +1226,11 @@ const DEXPage: NextPage = () => {
                           ) : needsSwapApproval && hasEnoughSwapBalance ? (
                             <Button
                               type="button"
-                              onClick={() => handleApprove(swapTokenIn!, swapAmountIn, currentSwapDecimals)}
-                              disabled={isPendingApproveA || isPendingApproveB}
+                              onClick={() => handleApprove(tokenA!, swapAmountIn, currentSwapDecimals)}
+                              disabled={isPendingApproveA}
                               className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
                             >
-                              {isPendingApproveA || isPendingApproveB ? (
+                              {isPendingApproveA ? (
                                 <>
                                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                                   Aprobando {currentSwapSymbol}...
@@ -1272,8 +1254,8 @@ const DEXPage: NextPage = () => {
                                 </>
                               ) : (
                                 <>
-                                  {swapTokenIn === ETH_ADDRESS && (isSwapA ? tokenB : tokenA) === WETH_ADDRESS ? "Envolver ETH (Wrap)" : 
-                                   swapTokenIn === WETH_ADDRESS && (isSwapA ? tokenB : tokenA) === ETH_ADDRESS ? "Desenvolver WETH (Unwrap)" : 
+                                  {tokenA === ETH_ADDRESS && tokenB === WETH_ADDRESS ? "Envolver ETH (Wrap)" : 
+                                   tokenA === WETH_ADDRESS && tokenB === ETH_ADDRESS ? "Desenvolver WETH (Unwrap)" : 
                                    "Intercambiar (Swap)"}
                                 </>
                               )}
@@ -1300,26 +1282,31 @@ const DEXPage: NextPage = () => {
                           </div>
                         ) : (
                           <div className="space-y-6">
-                            <div className="flex border-b border-border/20 pb-3 flex-wrap gap-2">
-                              <button
-                                onClick={() => setActiveLiquidityTab('add')}
-                                className={cn(
-                                  "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                                  activeLiquidityTab === 'add' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
-                                )}
-                              >
-                                Aportar Liquidez
-                              </button>
-                              <button
-                                onClick={() => setActiveLiquidityTab('remove')}
-                                className={cn(
-                                  "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                                  activeLiquidityTab === 'remove' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
-                                )}
-                              >
-                                Retirar Liquidez
-                              </button>
-                            </div>
+                            <div className="flex justify-between items-center border-b border-border/20 pb-3 flex-wrap gap-2">
+                               <div className="flex gap-2">
+                                 <button
+                                   onClick={() => setActiveLiquidityTab('add')}
+                                   className={cn(
+                                     "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                                     activeLiquidityTab === 'add' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
+                                   )}
+                                 >
+                                   Aportar Liquidez
+                                 </button>
+                                 <button
+                                   onClick={() => setActiveLiquidityTab('remove')}
+                                   className={cn(
+                                     "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                                     activeLiquidityTab === 'remove' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
+                                   )}
+                                 >
+                                   Retirar Liquidez
+                                 </button>
+                               </div>
+                               <span className="text-xs font-bold text-muted-foreground bg-muted/30 px-2.5 py-1 rounded-lg border border-border/20">
+                                 Par: {metadataA.symbol} / {metadataB.symbol}
+                               </span>
+                             </div>
 
                             {activeLiquidityTab === 'add' ? (
                               /* APORTAR LIQUIDEZ */
