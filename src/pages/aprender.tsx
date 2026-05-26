@@ -71,8 +71,13 @@ const Aprender: NextPage = () => {
       label: 'Exchange AMM',
       icon: ArrowRightLeft,
       subcategories: [
-        { id: 'dex-concepto', label: 'El AMM' },
-        { id: 'dex-defi', label: 'Conceptos DeFi' }
+        { id: 'dex-concepto', label: 'El AMM y Producto Constante' },
+        { id: 'dex-liquidez', label: 'Provisión de Liquidez' },
+        { id: 'dex-impermanente', label: 'Pérdida Impermanente' },
+        { id: 'dex-seguridad', label: 'Arquitectura y Seguridad' },
+        { id: 'dex-mev', label: 'MEV y Ataques Sándwich' },
+        { id: 'dex-aritmetica', label: 'Modelos de AMM y EVM' },
+        { id: 'dex-bonding', label: 'Curvas de Vinculación' }
       ]
     },
     {
@@ -601,62 +606,652 @@ const Aprender: NextPage = () => {
               </Card>
             )}
 
-            {/* SUB-SECCIÓN: EL AMM */}
+            {/* SUB-SECCIÓN: EL AMM Y PRODUCTO CONSTANTE */}
             {activeSubSection === 'dex-concepto' && (
               <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <ArrowRightLeft className="h-5 w-5 text-primary" />
-                    Creador de Mercado Automatizado (AMM)
+                    El AMM y la Fórmula del Producto Constante
                   </CardTitle>
                   <CardDescription>
-                    Cómo funciona la fijación de precios algorítmica en pools de liquidez.
+                    Fundamentos matemáticos y el funcionamiento de la hipérbola de precios x * y = k.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
                   <p>
-                    A diferencia de los mercados tradicionales basados en un libro de órdenes de compra y venta, los exchanges descentralizados modernos utilizan **Pools de Liquidez** (reservas de tokens bloqueadas en un contrato inteligente).
+                    En los mercados financieros tradicionales (TradFi), la liquidez se gestiona a través de un <strong>Libro de Órdenes (Order Book)</strong>, donde compradores y vendedores registran sus intenciones de precios de manera asíncrona y un motor de emparejamiento centralizado liquida las transacciones cuando las curvas de oferta y demanda se cruzan. En el ecosistema de cadenas de bloques descentralizadas, replicar esta arquitectura resulta inviable debido a tres limitaciones estructurales: la latencia intrínseca en el consenso de bloques, el rendimiento computacional restringido (throughput) y el costo prohibitivo de gas asociado a la creación, modificación y cancelación de órdenes individuales en el almacenamiento global de Ethereum.
                   </p>
                   <p>
-                    El precio de intercambio se calcula matemáticamente basándose en la proporción de tokens en el pool siguiendo la fórmula de Uniswap V2:
+                    Para resolver este cuello de botella tecnológico, surgieron los <strong>Creadores de Mercado Automatizados (AMM)</strong>. En esta arquitectura, el libro de órdenes se sustituye por un contrato inteligente inmutable que custodia físicamente un par de activos en una <strong>Piscina de Liquidez (Liquidity Pool)</strong>. Los usuarios ya no negocian con otros participantes del mercado en un esquema *peer-to-peer*, sino que ejecutan transacciones de manera inmediata y determinista contra el pool, el cual actúa como una contraparte pasiva única que recalcula los precios algorítmicamente en cada transacción.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/comparacion_del_descubrimiento_de_precios_libros_de_ordenes_vs_amm.png"
+                      alt="Comparación Libro de Órdenes vs AMM"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Descubrimiento de precios mediante Libro de Órdenes tradicional frente a una Piscina de Liquidez (AMM).
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Descubrimiento de Precios y Liquidez</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama anterior ilustra la transición estructural del modelo de emparejamiento discreto (Order Book) al modelo de liquidez continua en DeFi (AMM). Mientras que el libro de órdenes depende de creadores de mercado activos que aporten inventario y ajusten el diferencial (bid-ask spread) en base al flujo informativo, el AMM garantiza liquidez instantánea y determinista a través de una fórmula matemática. El pool de liquidez actúa como una bóveda inmutable cuya cotización spot se desplaza a lo largo de una curva predefinida de forma puramente algorítmica. Esto elimina los riesgos de front-running sistémico por parte de intermediarios centralizados y democratiza el rol de provisión de liquidez, permitiendo que cualquier usuario de la red participe y reciba tarifas por proveer capital.
+                    </p>
+                  </div>                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. La Ecuación Fundamental</h3>
+                  <p>
+                    El modelo más pedagógico (Uniswap V2) se rige por el modelo de producto constante:
                   </p>
                   <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl text-center my-3">
                     <code className="text-xl font-mono text-primary font-bold">x * y = k</code>
                     <p className="text-[11px] text-muted-foreground mt-2">
-                      Donde <strong className="text-foreground">x</strong> e <strong className="text-foreground">y</strong> son los balances de reserva de los dos tokens, y <strong className="text-foreground">k</strong> es una constante que no debe variar durante el intercambio.
+                      Donde <strong>x</strong> e <strong>y</strong> son las reservas del par de tokens, y <strong>k</strong> es una constante que permanece inalterada durante los intercambios.
+                    </p>
+                  </div>
+                  <p>
+                    Dado que las reservas deben ser mayores a cero, la ecuación define una hipérbola. Esto tiene una implicación académica fundamental: <strong>la piscina nunca puede quedarse completamente sin ninguno de los dos tokens</strong>, ya que retirar todo un activo requeriría aportar una cantidad infinita del otro.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                    <div className="border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                      <img
+                        src="/docs/dex/la_dinamica_de_la_curva_hiperbolica_y_el_deslizamiento_slippage.png"
+                        alt="Curva Hiperbólica y Slippage - Parte 1"
+                        className="w-full h-auto rounded-lg filter drop-shadow-md"
+                      />
+                      <p className="text-center text-[11px] text-muted-foreground mt-2 font-medium">
+                        Diagrama: Dinámica de la curva de producto constante, el impacto de precios (pendiente secante) y deslizamiento.
+                      </p>
+                    </div>
+                    <div className="border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                      <img
+                        src="/docs/dex/la_dinamica_de_la_curva_hiperbolica_y_el_deslizamiento_slippage-2.png"
+                        alt="Curva Hiperbólica y Slippage - Parte 2"
+                        className="w-full h-auto rounded-lg filter drop-shadow-md"
+                      />
+                      <p className="text-center text-[11px] text-muted-foreground mt-2 font-medium">
+                        Detalle: Relación entre el volumen del swap, la profundidad del pool y el impacto porcentual del deslizamiento.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Curva de Producto Constante e Impacto de Precio (Slippage)</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El conjunto de infografías expone el comportamiento geométrico y operativo de la curva $x \cdot y = k$. En el primer gráfico (Parte 1), observamos que el precio spot marginal es la pendiente de la línea tangente a la curva en el punto de coordenadas actual de las reservas $(x, y)$. Al ejecutar una transacción discreta de tamaño considerable ($\Delta x$), el punto de operación se desplaza a lo largo de la hipérbola hasta una nueva posición, resultando en un precio de ejecución efectivo equivalente a la pendiente de la recta secante que une ambas coordenadas. La diferencia entre este precio de ejecución y el precio spot inicial constituye el <em>deslizamiento o impacto de precio (slippage)</em>.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      En el segundo gráfico (Parte 2), se detalla la sensibilidad del slippage respecto al volumen del swap y a la profundidad de reservas (el valor de $k$). Para un mismo tamaño de swap, una piscina con mayor liquidez ($k_2 &gt; k_1$) presenta una curvatura mucho más plana en términos locales, lo que minimiza la desviación de precio. Por el contrario, en pools poco profundos, pequeños volúmenes empujan la transacción hacia los extremos de la hipérbola, encareciendo exponencialmente la compra del activo objetivo. Para contrarrestar este fenómeno, los enrutadores DeFi obligan a especificar una tolerancia máxima de deslizamiento (ej. $0.5\%$), actuando como un candado que revierte la ejecución si el deslizamiento matemático excede el rango tolerado por el usuario.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Deducción de Fórmulas de Swap</h3>
+                  <p>
+                    Para calcular cuántos tokens de salida (<strong>Δy</strong>) se obtienen al depositar una cantidad de entrada (<strong>Δx</strong>), resolvemos:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary/95 space-y-1">
+                    <p>x * y = (x + Δx) * (y - Δy)</p>
+                    <p>Δy = (y * Δx) / (x + Δx)  ← Cantidad de Salida (getAmountOut)</p>
+                  </div>
+
+                  <p>
+                    De forma inversa, si queremos obtener una cantidad exacta de salida (<strong>Δy</strong>), la cantidad de entrada requerida (<strong>Δx</strong>) se calcula como:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary/95">
+                    <p>Δx = (x * Δy) / (y - Δy)  ← Cantidad de Entrada (getAmountIn)</p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">3. Incorporación de Comisiones</h3>
+                  <p>
+                    Para incentivar a los proveedores, se cobra una tarifa (ej. 0.3%). Para evitar el uso de punto flotante en Solidity, se escalan las operaciones por 1000:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300 space-y-2">
+                    <p className="text-primary font-bold">// getAmountOut en Solidity (0.3% tarifa)</p>
+                    <p>uint256 cantidadEntradaConComision = cantidadEntrada * 997;</p>
+                    <p>uint256 numerador = cantidadEntradaConComision * resSalida;</p>
+                    <p>uint256 denominador = (resEntrada * 1000) + cantidadEntradaConComision;</p>
+                    <p>cantidadSalida = numerador / denominador;</p>
+                  </div>
+                  <p>
+                    Para el cálculo de entrada (<code>getAmountIn</code>), sumamos 1 al resultado de la división entera para redondear a favor del pool, mitigando la devaluación de reservas por redondeos hacia abajo:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300">
+                    <p className="text-primary font-bold">// getAmountIn en Solidity (con redondeo hacia arriba +1)</p>
+                    <p>uint256 numerador = resEntrada * cantidadSalida * 1000;</p>
+                    <p>uint256 denominador = (resSalida - cantidadSalida) * 997;</p>
+                    <p>cantidadEntrada = (numerador / denominador) + 1;</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: PROVISIÓN DE LIQUIDEZ */}
+            {activeSubSection === 'dex-liquidez' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <ArrowRightLeft className="h-5 w-5 text-primary" />
+                    Provisión de Liquidez y LP Tokens
+                  </CardTitle>
+                  <CardDescription>
+                    Cómo los proveedores aportan capital a los pools y el mecanismo de emisión de LP Tokens.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Aportar liquidez consiste en depositar ambos tokens del par en una proporción igual a la del precio de mercado actual. A cambio, el contrato emite <strong>LP Tokens</strong> (Liquidity Provider Tokens) que representan la participación del usuario en la piscina de reservas.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/ciclo_de_vida_de_provision_de_liquidez_y_acunacion_de_lp_tokens.png"
+                      alt="Ciclo de Vida de Liquidez y LP Tokens"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Provisión inicial, depósitos proporcionales y remoción de liquidez con reclamo de comisiones.
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Dinámica del Suministro de Liquidez y LP Tokens</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama expone de forma secuencial las tres fases fundamentales en la interacción financiera con un creador de mercado automatizado: la provisión inicial, los depósitos subsecuentes y el rescate o retiro de activos. En la fase de provisión inicial, el primer proveedor de liquidez (LP) determina arbitrariamente la paridad cambiaria al inyectar las cantidades de ambos tokens. Esta acción fija el precio de mercado inicial y emite tokens de proveedor de liquidez (LP Tokens) en base a la raíz del producto de las cantidades depositadas. Los LP Tokens funcionan como un recibo contable fraccional que representa la copropiedad de la piscina de reserva.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Durante el funcionamiento de la piscina, cada intercambio (swap) ejecutado por agentes externos genera una comisión comercial que se acumula directamente dentro de las reservas de la piscina en lugar de ser distribuida inmediatamente. Esto expande físicamente el valor del producto constante de la hipérbola. En la fase final de retiro, cuando un proveedor devuelve y quema sus LP Tokens en el contrato inteligente, este le devuelve las reservas subyacentes más la parte proporcional de todas las comisiones acumuladas durante su permanencia en el pool, garantizando un incentivo económico pasivo.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. Medición de la Liquidez (L)</h3>
+                  <p>
+                    En el modelo de producto constante, la liquidez de una hipérbola se define como la media geométrica de las reservas:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-center text-primary text-base font-bold">
+                    L = sqrt(x * y)
+                  </div>
+                  <p>
+                    Un incremento en la liquidez desplaza la curva de la hipérbola hacia afuera, aumentando la profundidad y disminuyendo el impacto de precio en las transacciones de los usuarios.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Emisión Inicial de LP Tokens</h3>
+                  <p>
+                    Al inicializar la piscina por primera vez, no hay precios de referencia. El primer proveedor define la paridad y recibe LP tokens basados en la media geométrica:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary/95">
+                    LP_inicial = sqrt(x_aportado * y_aportado)
+                  </div>
+                  <p>
+                    La media geométrica garantiza que la cantidad de LP tokens emitidos dependa del valor real y no de la escala nominal de precios inicial escogida por el creador.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/anatomia_funcion_sqrt.png"
+                      alt="Anatomía de la Función Sqrt"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Algoritmo de raíz cuadrada iterativa (Método de Babilonia) en Solidity para calcular la media geométrica sin coma flotante.
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Aritmética de Raíz Cuadrada Entera (Solidity sqrt)</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama técnico detalla el comportamiento del algoritmo iterativo de raíz cuadrada, un elemento crítico en DeFi ya que la máquina virtual de Ethereum (EVM) no dispone de instrucciones nativas ni de coprocesador matemático para operaciones de coma flotante o raíces cuadradas. Para computar $\sqrt&#123;x \cdot y&#125;$ en la inicialización del pool, se implementa el <strong>Método de Babilonia</strong>, una simplificación del algoritmo de Newton-Raphson. Este método aproxima de forma determinista la raíz cuadrada entera mediante estimaciones sucesivas de la forma $x_&#123;n+1&#125; = \frac&#123;y/x_n + x_n&#125;&#123;2&#125;$, convergiendo con rapidez cuadrática a la parte entera de la raíz real.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Como se observa en el flujo lógico, la rutina inicializa el valor estimado $z$ con el dividendo original $y$ si este es mayor a 3, y establece un valor de aproximación inicial de arranque en $x = (y / 2) + 1$. A continuación, un bucle <code>while (x &lt; z)</code> refina iterativamente el valor hasta que la estimación deja de decrecer, asegurando que el cálculo final sea exacto al truncarse por división entera. Esta aproximación determinista es esencial para evitar bifurcaciones o discrepancias de redondeo entre diferentes nodos y clientes de ejecución, manteniendo la integridad del estado financiero global a un costo de gas predecible y optimizado.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">3. Mitigación del Ataque de Inflación</h3>
+                  <p>
+                    En producción, para evitar que un atacante infle artificialmente el precio de una acción de LP mediante donaciones directas (drenando a usuarios con depósitos pequeños debido al truncamiento entero), los contratos profesionales queman permanentemente una fracción infinitesimal de la liquidez inicial:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300">
+                    LP_inicial = sqrt(x_aportado * y_aportado) - MINIMUM_LIQUIDITY;
+                  </div>
+                  <p>
+                    Donde <code>MINIMUM_LIQUIDITY</code> (1000 wei) se envía de forma irreversible a la dirección cero (<code>address(0)</code>).
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">4. Depósitos Subsecuentes</h3>
+                  <p>
+                    Una vez activo el pool, los depósitos subsecuentes deben mantener la proporción actual:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary/95">
+                    x_nuevo / y_nuevo = x_reserva / y_reserva
+                  </div>
+                  <p>
+                    La cantidad de LP tokens emitidos se calcula tomando el mínimo de las proporciones para proteger a los proveedores preexistentes contra la inyección de valor desbalanceado:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300">
+                    LP_emitidos = min((x_aportado * LP_total) / x_reserva, (y_aportado * LP_total) / y_reserva)
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: PÉRDIDA IMPERMANENTE */}
+            {activeSubSection === 'dex-impermanente' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <ArrowRightLeft className="h-5 w-5 text-primary" />
+                    Pérdida Impermanente y Arbitraje
+                  </CardTitle>
+                  <CardDescription>
+                    Análisis matemático del riesgo de pérdida por variación de precios y la dinámica de arbitraje.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    La <strong>Pérdida Impermanente (Impermanent Loss - IL)</strong> es la pérdida de valor que experimenta un proveedor de liquidez al depositar fondos en un pool en lugar de simplemente mantenerlos en una billetera externa (estrategia HODL), debido a la divergencia de precios de los tokens en el mercado.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/perdida_impermanente_y_arbitraje_entre_mercados.png"
+                      alt="Pérdida Impermanente y Arbitraje"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Brecha de precios externa e intervención del arbitrador, con el correspondiente cálculo del balance final del portafolio.
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Pérdida Impermanente e Intervención del Arbitrador</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama anterior ilustra el mecanismo microeconómico por el cual se materializa la pérdida impermanente en un AMM y cómo los precios del pool se mantienen alineados con los mercados externos a través del arbitraje financiero. Cuando ocurre una brecha de precios externa (por ejemplo, el precio spot de un activo aumenta en intercambios centralizados de referencia como Binance), la piscina de liquidez se convierte temporalmente en una oportunidad de descuento para operadores externos. Un <em>arbitrador</em> interviene extrayendo el activo infravalorado del pool e inyectando a cambio el otro activo, repitiendo este swap hasta que la relación interna de reservas empuje el precio del pool a la paridad exacta con el mercado externo.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Este reequilibrio constante tiene un costo para los proveedores de liquidez. Al vender sistemáticamente el activo que se aprecia y acumular el activo que se deprecia, la composición de la piscina cambia desfavorablemente para el LP. En el balance final del portafolio, el valor total del capital en la piscina (que ahora tiene menos unidades del token que subió de precio) es matemáticamente inferior al valor que habría tenido el capital de haberse mantenido intacto (Buy and Hold) fuera del pool de reservas. La diferencia porcentual entre ambas trayectorias de valor constituye la pérdida impermanente, la cual es financiada por las tarifas recaudadas para que proveer liquidez resulte rentable en el mediano plazo.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. Deducción Matemática</h3>
+                  <p>
+                    Si la variación relativa del precio del par externo con respecto al original es <strong>r = P_final / P_inicial</strong>, la pérdida impermanente porcentual se calcula formalmente como:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl text-center my-3 font-mono text-lg text-primary font-bold">
+                    IL(r) = (2 * sqrt(r)) / (1 + r) - 1
+                  </div>
+                  <p>
+                    Esta pérdida ocurre porque la piscina de producto constante vende continuamente el token que sube de precio y compra el token que se devalúa para reequilibrar la proporción. Se denomina "impermanente" debido a que si el ratio de precios regresa al valor original (<strong>r = 1</strong>), la pérdida se reduce a cero.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Tabla de Referencia Práctica</h3>
+                  <div className="overflow-x-auto my-3 border border-border rounded-xl">
+                    <table className="w-full text-xs text-left text-muted-foreground">
+                      <thead className="text-[10px] bg-muted/50 text-foreground uppercase font-bold border-b border-border">
+                        <tr>
+                          <th className="px-4 py-2">Variación de Precio (r)</th>
+                          <th className="px-4 py-2">Cambio Relativo</th>
+                          <th className="px-4 py-2">Pérdida Impermanente (%)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60">
+                        <tr>
+                          <td className="px-4 py-2 font-mono">0.25x</td>
+                          <td className="px-4 py-2">Caída del 75%</td>
+                          <td className="px-4 py-2 font-mono text-red-400">-20.00%</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono">0.50x</td>
+                          <td className="px-4 py-2">Caída del 50%</td>
+                          <td className="px-4 py-2 font-mono text-red-400">-5.72%</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono">1.00x</td>
+                          <td className="px-4 py-2">Sin cambio</td>
+                          <td className="px-4 py-2 font-mono text-emerald-400">0.00%</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono">2.00x</td>
+                          <td className="px-4 py-2">Aumento de 2x</td>
+                          <td className="px-4 py-2 font-mono text-red-400">-5.72%</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono">4.00x</td>
+                          <td className="px-4 py-2">Aumento de 4x</td>
+                          <td className="px-4 py-2 font-mono text-red-400">-20.00%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">3. Dinámica del Arbitraje Óptimo</h3>
+                  <p>
+                    Los agentes de arbitraje intervienen para igualar los precios de la piscina con el precio externo. Un arbitrador sofisticado calcula el swap óptimo (<strong>Δx_opt</strong>) que maximiza sus ganancias considerando la comisión del 0.3% del pool:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary/95 text-center">
+                    Δx_opt = (sqrt(x * y * P_ext * 0.997) - x) / 0.997
+                  </div>
+                  <p>
+                    Las comisiones del 0.3% cobradas por los swaps se acumulan de forma continua incrementando el invariante <code>k</code>. Esto permite que, a largo plazo y bajo suficiente volumen comercial, las tarifas acumuladas por los proveedores de liquidez superen el impacto de la pérdida impermanente.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: ARQUITECTURA Y SEGURIDAD */}
+            {activeSubSection === 'dex-seguridad' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <ArrowRightLeft className="h-5 w-5 text-primary" />
+                    Arquitectura de Smart Contracts y Seguridad
+                  </CardTitle>
+                  <CardDescription>
+                    Estructuras de diseño en producción y mitigación de vulnerabilidades de Reentrada.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Los pools de liquidez manejan millones de dólares y representan un objetivo prioritario para exploits en DeFi. Una de las vulnerabilidades más comunes es la <strong>Reentrada (Reentrancy)</strong>, que ocurre cuando un contrato malicioso vuelve a llamar a una función de retiro antes de que el contrato original actualice su estado o balance.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/foranatomia_de_un_bloqueo_de_reentrada_en_smart_contracts_seguridad.png"
+                      alt="Anatomía del Bloqueo de Reentrada"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Secuencia recursiva de un ataque de reentrada y la protección mediante candado de exclusión mutua (Mutex).
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Anatomía de la Reentrada y el Candado Mutex</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama técnico superior expone de forma detallada la anatomía de un ataque de reentrada (Reentrancy) y la mecánica de protección mediante candados de exclusión mutua o guardias mutex. Un ataque de reentrada se produce cuando un contrato externo malicioso, que actúa como contraparte en un swap o retiro de liquidez, aprovecha una llamada de transferencia física (como <code>call.value()</code> o transferencias de tokens con ganchos de notificación como ERC-777) para ejecutar código arbitrario antes de que el pool actualice su estado interno. El contrato atacante vuelve a invocar recursivamente la función de retiro, encontrando las variables de balance en su estado original pre-transferencia, lo que le permite retirar fondos repetidamente hasta agotar las reservas de la piscina.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Para mitigar este riesgo catastrófico, se introducen dos mecanismos de defensa fundamentales. En primer lugar, la <em>Guardia de Reentrada (nonReentrant)</em> utiliza un modificador basado en un estado binario inalterable (mutex) que transiciona de <code>_UNLOCKED</code> a <code>_LOCKED</code> al entrar en la función y exige que el estado esté desbloqueado. Si ocurre una llamada recursiva, la validación inicial falla de inmediato, abortando toda la transacción. En segundo lugar, el patrón de diseño Checks-Effects-Interactions garantiza que incluso en ausencia de guardias de reentrada, los balances internos del contrato se reduzcan en disco antes de interactuar externamente, eliminando el incentivo matemático de la llamada recursiva.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. El Patrón Checks-Effects-Interactions</h3>
+                  <p>
+                    Para evitar exploits de reentrada, todas las funciones de escritura críticas deben seguir este orden lógico estricto:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-2 text-xs">
+                    <li><strong>Checks (Validaciones):</strong> Evaluar condiciones y requisitos lógicos iniciales usando <code>require</code>.</li>
+                    <li><strong>Effects (Efectos):</strong> Actualizar el estado interno del contrato (modificar balances en disco, quemar LP tokens) <em>antes</em> de transferir fondos.</li>
+                    <li><strong>Interactions (Interacciones):</strong> Realizar llamadas externas o transferencias físicas hacia direcciones o tokens externos.</li>
+                  </ul>
+                  <p>
+                    Al quemar los LP tokens del usuario en los efectos antes de invocar la transferencia de tokens subyacentes en las interacciones, cualquier llamada recursiva maliciosa que intente reingresar leerá un balance de LP igual a cero y la transacción fallará.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Guardia de Reentrada (nonReentrant)</h3>
+                  <p>
+                    Además del patrón de diseño, se utiliza un candado de exclusión mutua (mutex) mediante variables de estado:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300">
+                    <p className="text-primary font-bold">// Mutex simplificado en Solidity</p>
+                    <p>bool private _locked;</p>
+                    <p>modifier nonReentrant() &#123;</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;require(!_locked, "ReentrancyGuard: reentrant call");</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;_locked = true;</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;_;</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;_locked = false;</p>
+                    <p>&#125;</p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">3. Desacoplamiento en Core y Periphery</h3>
+                  <p>
+                    En la industria (Uniswap), la arquitectura se divide para optimizar gas y seguridad:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                    <li><strong>Core (Núcleo):</strong> Contratos inmutables de bajo nivel (<code>Factory</code> y <code>Pair</code>). Su única función es la custodia física y segura de fondos, y la ejecución matemática directa del swap. No contienen lógica compleja para reducir superficie de ataque.</li>
+                    <li><strong>Periphery (Periferia):</strong> Contratos mutables actualizables (<code>Router</code>) que interactúan con el usuario. Manejan el enrutamiento multisalto (multi-hop), validan tolerancias al deslizamiento y tiempos de expiración.</li>
+                  </ul>
+                  <div className="bg-primary/5 border border-primary/10 p-3 rounded-xl space-y-1 text-xs">
+                    <span className="block font-bold text-primary">Nota Didáctica</span>
+                    <p>
+                      Nuestro contrato <code>DEXPool.sol</code> unifica deliberadamente ambas responsabilidades de forma monolítica para facilitar la lectura del código, aunque en producción industrial se desacoplan de forma estricta.
                     </p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* SUB-SECCIÓN: CONCEPTOS DEFI */}
-            {activeSubSection === 'dex-defi' && (
+            {/* SUB-SECCIÓN: MEV Y ATAQUES SÁNDWICH */}
+            {activeSubSection === 'dex-mev' && (
               <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <ArrowRightLeft className="h-5 w-5 text-primary" />
-                    Conceptos DeFi Clave
+                    MEV y Ataques Sándwich
                   </CardTitle>
                   <CardDescription>
-                    Principales mecánicas que ocurren en las finanzas descentralizadas.
+                    Efectos del Valor Máximo Extraíble en la mempool y oráculos de precios TWAP.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-                  <div className="grid grid-cols-1 gap-3.5 text-xs">
-                    <div className="bg-muted/40 p-3.5 rounded-xl border border-border/20">
-                      <strong className="text-foreground block mb-0.5">Proveer Liquidez:</strong>
-                      Aportas dos tokens en valor equivalente (ej. 50% Token A y 50% Token B). A cambio, recibes **Tokens LP** que representan tu participación en la piscina de reservas.
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    El diseño transparente de la mempool pública permite que operadores de nodos y bots analicen transacciones pendientes para reordenarlas de forma ventajosa antes de ser minadas, dando origen al <strong>Valor Máximo Extraíble (MEV)</strong>.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. Anatomía del Ataque Sándwich</h3>
+                  <p>
+                    Es el ataque de MEV más perjudicial para los traders del AMM:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-2 text-xs">
+                    <li>El bot detecta un swap grande pendiente en la mempool que alterará significativamente el precio.</li>
+                    <li><strong>Front-run:</strong> El bot compra el mismo token objetivo con una tarifa de gas alta para asegurar que su transacción se procese inmediatamente antes de la víctima, inflando el precio.</li>
+                    <li>La transacción de la víctima se ejecuta al precio inflado, sufriendo un alto impacto y elevando aún más la cotización.</li>
+                    <li><strong>Back-run:</strong> El bot vende inmediatamente sus tokens al precio inflado por la víctima en la misma transacción de bloque, reclamando una ganancia neta libre de riesgo.</li>
+                  </ol>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/fundamentos_dex.png"
+                      alt="Fundamentos DEX y MEV"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Flujo operativo de un bot MEV que realiza un ataque sándwich a una transacción de swap de gran volumen.
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Anatomía del MEV y Ataques Sándwich</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama anterior esquematiza la dinámica del Valor Máximo Extraíble (MEV) mediante un <em>ataque sándwich</em>, una técnica de manipulación del orden de transacciones que explota la visibilidad pública de la mempool de Ethereum. La secuencia comienza cuando un bot MEV detecta una transacción de intercambio de gran volumen pendiente en la mempool, la cual inevitablemente desplazará de forma significativa el precio spot en el pool. Para capitalizar este movimiento, el bot transmite dos transacciones propias: la primera (Front-run) compra el activo objetivo con una tarifa de gas (priority fee) superior para asegurar que los validadores la ordenen inmediatamente antes de la transacción de la víctima, encareciendo artificialmente el activo.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Posteriormente, la transacción de la víctima se ejecuta, absorbiendo todo el impacto del deslizamiento de precios (slippage) y empujando el valor de cotización aún más hacia arriba. Inmediatamente en el mismo bloque, la segunda transacción del bot (Back-run) vende el activo adquirido al nuevo precio inflado. Al ejecutarse ambas órdenes de compra y venta del bot rodeando ("sándwich") la transacción de la víctima, el atacante asegura un retorno libre de riesgo a expensas de la pérdida directa de eficiencia cambiaria del usuario legítimo. Para mitigar esta vulnerabilidad, se han desarrollado redes de mempools privadas (como Flashbots Protect/MEV-Share) que envían transacciones directamente a los constructores de bloques sin exponerlas públicamente.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Protección: Slippage y Deadlines</h3>
+                  <p>
+                    Para mitigar estos ataques, el Router del AMM incluye parámetros estrictos de validación:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-xs">
+                    <li><code>amountOutMin</code>: Si el precio es empujado más allá del límite de deslizamiento permitido, la transacción de la víctima se cancela (revert), anulando la ganancia del bot atacante.</li>
+                    <li><code>deadline</code>: Marca de tiempo límite UNIX de red. Si una transacción queda en cola por gas bajo y se procesa después de esta marca, expira automáticamente para proteger al trader de volatilidades tardías.</li>
+                  </ul>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">3. Oráculos de Precios: Spot vs. TWAP</h3>
+                  <p>
+                    Usar el precio spot marginal instantáneo del pool (<code>y / x</code>) como oráculo para otros contratos es altamente vulnerable a manipulación mediante préstamos rápidos (<strong>Flash Loans</strong>).
+                  </p>
+                  <p>
+                    Para blindar los sistemas contra esto, se utiliza el <strong>Precio Promedio Ponderado en el Tiempo (TWAP)</strong>. En lugar de registrar el precio spot actual, el pool almacena un acumulador persistente que multiplica el precio spot por la diferencia de tiempo entre bloques:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl text-center my-3 font-mono text-base text-primary font-bold">
+                    TWAP_[t1, t2] = (precioAcumulado(t2) - precioAcumulado(t1)) / (t2 - t1)
+                  </div>
+                  <p>
+                    Dado que las manipulaciones con préstamos rápidos solo duran un instante dentro del mismo bloque de transacción, su efecto sobre los acumuladores es prácticamente nulo en periodos prolongados.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: MODELOS DE AMM Y EVM */}
+            {activeSubSection === 'dex-aritmetica' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <ArrowRightLeft className="h-5 w-5 text-primary" />
+                    Modelos de AMM y Aritmética de Máquina (EVM)
+                  </CardTitle>
+                  <CardDescription>
+                    Taxonomía de creadores de mercado y técnicas de programación de bajo nivel en Solidity.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    El diseño de los AMM varía en su formulación matemática en función de la naturaleza de los activos involucrados y las optimizaciones físicas de almacenamiento que impone la máquina virtual de Ethereum.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. Familias de AMM (CFMM)</h3>
+                  <ul className="list-disc pl-5 space-y-2 text-xs">
+                    <li><strong>Suma Constante (x + y = k):</strong> Permite swaps con deslizamiento cero, pero si hay una desviación de precio externo, los bots drenan por completo la piscina del activo subvaluado.</li>
+                    <li><strong>Producto Constante (x * y = k):</strong> Resiliencia de liquidez infinita (el pool nunca se agota), pero tiene una baja eficiencia en el uso de capital para swaps cotidianos.</li>
+                    <li><strong>Invariante Híbrido (Curve Stableswap):</strong> Combina suma y producto con un factor de apalancamiento dinámico. Diseñado para tokens con valor correlacionado (stablecoins), ofreciendo deslizamiento mínimo.</li>
+                    <li><strong>Liquidez Concentrada (Uniswap V3):</strong> Los proveedores definen rangos de precios [Pa, Pb] específicos para sus depósitos, aumentando drásticamente la eficiencia de capital pero elevando el riesgo de pérdida impermanente si el precio sale del rango.</li>
+                  </ul>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Aritmética de Punto Fijo (UQ112x112)</h3>
+                  <p>
+                    Para operar con fracciones de forma exacta y determinista en la EVM, se utiliza el estándar <code>UQ112x112</code>. Este formato codifica un entero sin signo de 224 bits, donde los 112 bits menos significativos representan la parte fraccionaria y los 112 bits más significativos la parte entera:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-[11px] text-primary/95 text-center">
+                    Valor Almacenado (X) = piso(x * 2^112)
+                  </div>
+                  <p>
+                    Esto permite realizar multiplicaciones y divisiones a nivel de bits (desplazamientos con <code>shr</code> y <code>shl</code>) con una precisión extremadamente alta, ideal para calcular oráculos de precios eficientes en gas.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                    <div className="border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                      <img
+                        src="/docs/dex/aritmetica_de_punto_fijo_y_la_estructura_de_datos_uq112x112_en_la_evm.png"
+                        alt="Aritmética UQ112x112 y Storage - Parte 1"
+                        className="w-full h-auto rounded-lg filter drop-shadow-md"
+                      />
+                      <p className="text-center text-[11px] text-muted-foreground mt-2 font-medium">
+                        Diagrama: Estructura física de datos en memoria para el formato de punto fijo UQ112x112 y empaquetado de variables de almacenamiento.
+                      </p>
                     </div>
-                    <div className="bg-muted/40 p-3.5 rounded-xl border border-border/20">
-                      <strong className="text-foreground block mb-0.5">Slippage (Deslizamiento):</strong>
-                      La variación de precio que ocurre entre el momento en que envías la transacción y el momento en que se confirma en bloque, debido al tamaño relativo de tu swap en comparación con la liquidez del pool.
-                    </div>
-                    <div className="bg-muted/40 p-3.5 rounded-xl border border-border/20">
-                      <strong className="text-foreground block mb-0.5">Impermanent Loss (Pérdida Impermanente):</strong>
-                      La pérdida porcentual que sufre un proveedor de liquidez en comparación con simplemente mantener los tokens en su billetera, ocasionada por la divergencia de precios de los tokens en el mercado.
+                    <div className="border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                      <img
+                        src="/docs/dex/aritmetica_de_punto_fijo_y_la_estructura_de_datos_uq112x112_en_la_evm-2.png"
+                        alt="Aritmética UQ112x112 y Storage - Parte 2"
+                        className="w-full h-auto rounded-lg filter drop-shadow-md"
+                      />
+                      <p className="text-center text-[11px] text-muted-foreground mt-2 font-medium">
+                        Detalle: Representación binaria, operaciones de desplazamiento de bits y rango de valores soportados en la EVM.
+                      </p>
                     </div>
                   </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Aritmética UQ112x112 y Optimización de Gas</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Las infografías anteriores ilustran detalladamente el estándar aritmético de punto fijo <code>UQ112x112</code> y el empaquetado de variables de almacenamiento (Packed Storage), técnicas fundamentales para realizar cálculos fraccionarios exactos y optimizar el consumo de gas en Solidity. En la Parte 1, observamos cómo se asignan los bits dentro del tipo primitivo de 256 bits (<code>uint256</code>) para representar fracciones. Al no contar con soporte nativo para números decimales (coma flotante) en la EVM, se divide el espacio de almacenamiento asignando los 112 bits más significativos a la parte entera y los 112 bits menos significativos a la parte decimal o fraccionaria. Esto permite almacenar ratios de precios con hasta 34 decimales de precisión, blindando al oráculo frente a ataques de manipulación aritmética sutil.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      En la Parte 2, se expone la interacción con el almacenamiento físico de la EVM (Storage Slots). Un slot completo mide exactamente 256 bits. Al limitar las variables de reservas a <code>uint112</code> cada una, y el timestamp de bloque a <code>uint32</code>, Uniswap V2 logra empaquetar de manera óptima las tres variables (112 + 112 + 32 = 256 bits) en un solo slot consecutivo. Como consecuencia directa, durante la ejecución de swaps, el contrato realiza una única lectura y una única escritura del storage, evitando los costosos cargos de gas asociados a modificar múltiples slots de forma independiente (ahorrando aproximadamente 15,000 unidades de gas por transacción).
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">3. Empaquetado físico de variables (Packed Storage)</h3>
+                  <p>
+                    Dado que las lecturas y escrituras de storage en Solidity (opcodes <code>sload</code> y <code>sstore</code>) son los procesos que más consumen recursos de gas, se aplica empaquetado para agrupar variables menores a 32 bytes consecutivas en el mismo slot de 256 bits:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300">
+                    uint112 private reserve0; // 112 bits
+                    <br />
+                    uint112 private reserve1; // 112 bits
+                    <br />
+                    uint32 private blockTimestampLast; // 32 bits (Total = 256 bits)
+                  </div>
+                  <p>
+                    Al realizar un swap, el pool actualiza ambas reservas y la marca de tiempo de la última transacción ejecutando un único opcode de lectura y uno de escritura, reduciendo a la mitad los costos de gas.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">4. Tokens Deflacionarios (Fee-on-Transfer)</h3>
+                  <p>
+                    Si un pool recibe un token deflacionario que cobra impuestos internos por transacción, el saldo real de entrada transferido diferirá del nominal declarado, lo que corrompe la constante <code>k</code>. Para evitar vulnerabilidades de integración, se miden los balances dinámicos:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary/95 text-center">
+                    Δx_real = balanceActual - balancePrevio
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CURVAS DE VINCULACIÓN */}
+            {activeSubSection === 'dex-bonding' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <ArrowRightLeft className="h-5 w-5 text-primary" />
+                    Curvas de Vinculación y Algoritmo de Bancor
+                  </CardTitle>
+                  <CardDescription>
+                    Mecánicas de emisión autónoma de tokens respaldados por un tesoro de colateral.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Una <strong>Curva de Vinculación (Bonding Curve)</strong> es un contrato inteligente que actúa como el emisor autónomo y único contraparte de un token, gestionando directamente la acuñación (minting) y quema (burning) en respuesta a la demanda, eliminando la necesidad de proveedores de liquidez pasivos.
+                  </p>
+
+                  <div className="my-4 border border-border rounded-xl overflow-hidden bg-background p-1.5 shadow-inner">
+                    <img
+                      src="/docs/dex/curvas_de_vinculacion_bonding_curves.png"
+                      alt="Curvas de Vinculación y Bancor"
+                      className="w-full h-auto rounded-lg filter drop-shadow-md"
+                    />
+                    <p className="text-center text-xs text-muted-foreground mt-2 font-medium">
+                      Diagrama: Relación entre suministro, colateral de reserva y precio spot marginal en curvas de vinculación (Bancor).
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-2">
+                    <span className="font-bold text-primary">Análisis Académico: Dinámica de Curvas de Vinculación e Invariantes</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      El diagrama expone el funcionamiento matemático de una curva de vinculación de Bancor, una alternativa de emisión de liquidez soberana. En lugar de emparejar dos activos en una hipérbola de producto constante, el contrato acuña y emite un token de utilidad nativo a cambio de un colateral de reserva físico (como ETH o DAI) depositado y custodiado de forma exclusiva por el contrato inteligente. El precio del token se determina de forma continua en función de la oferta circulante actual (Suministro), siguiendo una ecuación predefinida por el <em>Reserve Ratio (CRR) o peso del conector (F)</em>.
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Como se detalla en el gráfico, un peso del conector inferior al $100\%$ establece una curva de precios de apreciación exponencial. Esto garantiza liquidez matemática infinita y una rampa de precios en la que cada nueva unidad emitida se encarece progresivamente, incentivando la inyección de capital en etapas tempranas. La integral del área bajo la curva representa la cantidad total de colateral custodiada físicamente por el contrato inteligente. Cuando un usuario desea liquidar sus posiciones, el contrato quema sus tokens y le devuelve de manera garantizada y determinista la cantidad correspondiente de colateral, operando como un banco de reserva inmutable y automatizado sin riesgo de insolvencia.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">1. Algoritmo de Bancor y Reserve Ratio (CRR)</h3>
+                  <p>
+                    La <strong>Relación de Reserva Constante (CRR o Connector Weight - F)</strong> define una proporción fija que el contrato inteligente debe mantener entre el balance del colateral guardado (<strong>R</strong>) y la capitalización de mercado virtual del token emitido:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl text-center my-3 font-mono text-lg text-primary font-bold">
+                    F = R / (S * P)
+                  </div>
+                  <p>
+                    Donde <strong>S</strong> es el suministro circulante del token y <strong>P</strong> es el precio unitario spot marginal. 
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-muted-foreground">
+                    <li>Un <strong>F = 100%</strong> define un precio constante insensible al suministro (respaldo total 1:1, como en una stablecoin colateralizada).</li>
+                    <li>Un <strong>F &lt; 100%</strong> (ej. 20%) define una curva polinómica de apreciación acelerada que premia financieramente a los primeros compradores.</li>
+                  </ul>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">2. Costo de Compra y Retorno de Venta</h3>
+                  <p>
+                    Como el precio spot cambia infinitesimalmente con el suministro, el costo de adquirir un lote discreto de tokens (<strong>ΔS</strong>) se calcula resolviendo la integral definida del área bajo la curva de precios:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-xs text-slate-300 space-y-2">
+                    <p className="text-primary font-bold">// Costo de Compra (Cargas de Colateral a depositar)</p>
+                    <p>Costo = R * [ ( 1 + ΔS/S )^(1/F) - 1 ]</p>
+                    <p className="text-primary font-bold mt-3">// Retorno de Venta (Colateral a devolver al quemar tokens)</p>
+                    <p>Retorno = R * [ 1 - ( 1 - ΔS/S )^(1/F) ]</p>
+                  </div>
+                  <p>
+                    Para codificar potencias reales fraccionarias de manera eficiente y determinista en la EVM sin consumir demasiado gas, los contratos de producción implementan aproximaciones polinómicas rápidas (Series de Taylor).
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -752,6 +1347,27 @@ const Aprender: NextPage = () => {
                         Un archivo en formato JSON que detalla todas las funciones, argumentos y retornos de un contrato inteligente. Permite que el frontend en JavaScript/TypeScript sepa cómo comunicarse con la blockchain de forma tipada.
                       </p>
                     </div>
+
+                    <div className="border border-border/60 rounded-xl overflow-hidden bg-muted/10 p-4 space-y-3">
+                      <span className="font-mono text-primary font-bold text-xs block mb-1">Representación de Decimales en Ethereum: De Wei a Ether</span>
+                      <p className="text-xs text-muted-foreground leading-relaxed font-normal">
+                        Dado que la EVM no admite internamente números decimales (punto flotante), todos los saldos y cálculos se realizan utilizando la unidad mínima indivisible: el <strong>Wei</strong> (1 Ether = 10<sup>18</sup> Wei).
+                      </p>
+                      <div className="my-3 border border-border/80 rounded-lg overflow-hidden bg-background p-1.5 shadow-inner">
+                        <img src="/docs/dex/representacion_de_decimales_en_ethereum_de_wei_a_ether.png" alt="Representación de Decimales" className="w-full h-auto rounded filter drop-shadow" />
+                        <p className="text-center text-[10px] text-muted-foreground mt-2 font-medium">Diagrama: Escala y denominación de unidades en Ethereum.</p>
+                      </div>
+                      <div className="bg-primary/5 border border-primary/10 p-3.5 rounded-lg text-xs space-y-2 mt-2">
+                        <span className="font-bold text-primary">Análisis Académico: Precisión Entera en la Capa de Ejecución</span>
+                        <p className="text-muted-foreground leading-relaxed font-normal">
+                          El diagrama anterior esquematiza la denominación de magnitudes en Ethereum, un pilar del diseño de sistemas de registros distribuidos. Al no contar con representación de punto flotante en la EVM (lo que introduciría indeterminación y problemas de consenso debido al redondeo de coma flotante de hardware), Ethereum maneja toda la contabilidad financiera con aritmética entera de 256 bits (<code>uint256</code>). La unidad estándar, Ether, se expresa internamente escalada por $10^&#123;18&#125;$ unidades de Wei. Otras denominaciones históricas intermedias incluyen el Gwei ($10^9$ Wei), utilizado primordialmente para cuantificar el costo del gas en el mercado de subastas de bloques (EIP-1559).
+                        </p>
+                        <p className="text-muted-foreground leading-relaxed font-normal">
+                          En el desarrollo de interfaces de usuario (frontends), este diseño obliga a realizar una conversión de unidades constante. Las librerías de cliente como Viem y ethers.js proveen utilidades de formateo (tales como <code>formatEther</code> y <code>parseEther</code>) que desplazan el punto decimal para presentar cifras legibles al usuario, mientras que todas las transacciones físicas enviadas a la red y operaciones matemáticas de contratos inteligentes continúan operando estrictamente en la escala discreta de Wei para evitar cualquier pérdida de valor por redondeo.
+                        </p>
+                      </div>
+                    </div>
+
                   </div>
                 </CardContent>
               </Card>
