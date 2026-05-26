@@ -21,16 +21,19 @@ interface UserAvatarProps {
  * - Muestra un efecto de carga skeleton mientras consulta la información.
  */
 export function UserAvatar({ address, className }: UserAvatarProps) {
-  const { profile, isLoading } = useStudentProfile(address);
+  // Sanitizar la dirección a minúsculas para evitar variaciones del avatar por diferencias de mayúsculas/minúsculas
+  const sanitizedAddress = address?.toLowerCase() as `0x${string}` | undefined;
+
+  const { profile, isLoading } = useStudentProfile(sanitizedAddress);
   const [imgError, setImgError] = useState(false);
 
   // Reiniciar el estado de error de la imagen si la dirección consultada cambia
   useEffect(() => {
     setImgError(false);
-  }, [address]);
+  }, [sanitizedAddress]);
 
   // Si está cargando la información de la blockchain (y está habilitada la consulta)
-  if (isLoading && address) {
+  if (isLoading && sanitizedAddress) {
     return (
       <div
         className={cn(
@@ -42,8 +45,8 @@ export function UserAvatar({ address, className }: UserAvatarProps) {
   }
 
   // Si no hay dirección o no se ha encontrado perfil registrado, usar DiceBear (colección dylan)
-  // Usamos la dirección como seed, o fallback a 'USER_PRIVATE_KEY' si la dirección no está disponible
-  const diceBearUrl = `https://api.dicebear.com/9.x/dylan/svg?seed=${address || 'USER_PRIVATE_KEY'}`;
+  // Usamos la dirección sanitizada como seed, o fallback a 'USER_PRIVATE_KEY' si la dirección no está disponible
+  const diceBearUrl = `https://api.dicebear.com/9.x/dylan/svg?seed=${sanitizedAddress || 'USER_PRIVATE_KEY'}`;
 
   // Determinar si debemos usar el avatar de la blockchain o el fallback de DiceBear
   const hasOnChainAvatar = !!(profile?.isRegistered && profile?.avatar && !imgError);
