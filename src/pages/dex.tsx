@@ -672,7 +672,6 @@ const DEXPage: NextPage = () => {
   // Estados de los formularios de DEX
   const [tokenA, setTokenA] = useState<`0x${string}` | undefined>(undefined);
   const [tokenB, setTokenB] = useState<`0x${string}` | undefined>(undefined);
-  const [showAddLiquidityGuide, setShowAddLiquidityGuide] = useState(false);
 
   // Direcciones resueltas para interactuar con los pools (mapeando ETH a WETH)
   const resolvedTokenA = useMemo(() => {
@@ -1442,18 +1441,21 @@ const DEXPage: NextPage = () => {
               
               <CardContent className="space-y-4">
                 <Tabs defaultValue="conceptos" className="w-full">
-                  <TabsList className="w-full flex bg-muted/50 p-1 rounded-lg border border-border/10">
-                    <TabsTrigger value="conceptos" className="flex-1 text-xs py-1.5 font-semibold">
+                  <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 h-auto gap-1 bg-muted/50 p-1 rounded-lg border border-border/10">
+                    <TabsTrigger value="conceptos" className="text-xs py-1.5 font-semibold">
                       Fundamentos
                     </TabsTrigger>
-                    <TabsTrigger value="matematicas" className="flex-1 text-xs py-1.5 font-semibold">
-                    Matemática (x * y = k)
+                    <TabsTrigger value="matematicas" className="text-xs py-1.5 font-semibold">
+                      Matemática (x * y = k)
                     </TabsTrigger>
-                    <TabsTrigger value="variables" className="flex-1 text-xs py-1.5 font-semibold">
+                    <TabsTrigger value="variables" className="text-xs py-1.5 font-semibold">
                       Variables de Estado
                     </TabsTrigger>
-                    <TabsTrigger value="funciones" className="flex-1 text-xs py-1.5 font-semibold">
+                    <TabsTrigger value="funciones" className="text-xs py-1.5 font-semibold">
                       Funciones Clave
+                    </TabsTrigger>
+                    <TabsTrigger value="mecanica liquidez" className="text-xs py-1.5 font-semibold">
+                      Provisión de Liquidez
                     </TabsTrigger>
                   </TabsList>
 
@@ -1631,6 +1633,109 @@ const DEXPage: NextPage = () => {
                         <p className="text-muted-foreground leading-relaxed font-light text-[11px]">
                           • <code className="text-foreground font-mono">nonReentrant</code>: Guarda basada en el patrón Checks-Effects-Interactions (Verificaciones-Efectos-Interacciones). Utiliza un cerrojo binario en memoria temporal para revertir la transacción en caso de llamadas concurrentes anidadas (ataque de reentrada).
                         </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Provisión de Liquidez */}
+                  <TabsContent value="mecanica liquidez" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      La <strong className="text-foreground font-semibold">Provisión de Liquidez</strong> es el proceso mediante el cual los usuarios aportan valor a una piscina de intercambio (DEX), permitiendo que otros realicen swaps de forma descentralizada a cambio de incentivos económicos.
+                    </p>
+
+                    {/* Sección 1: Aprobación de Tokens */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans uppercase tracking-wider">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold font-sans">1</span>
+                        ¿Por qué se requiere la Aprobación (Approve)?
+                      </h5>
+                      <p className="pl-6 text-[11px] leading-relaxed">
+                        En la blockchain de Ethereum (EVM), el estándar <strong className="text-foreground">ERC-20</strong> posee una medida de seguridad fundamental: los contratos externos no pueden transferir tus tokens de forma autónoma.
+                      </p>
+                      <div className="ml-6 bg-muted/15 p-2.5 rounded-lg border border-border/10 mt-1.5 font-mono text-[10px] space-y-1 text-foreground/90">
+                        <p className="font-bold text-emerald-400">Paso 1: Approve (Aprobar gasto)</p>
+                        <p className="text-muted-foreground">Otorga permiso al contrato inteligente del DEX para mover hasta una cantidad específica de tokens en tu nombre.</p>
+                        <p className="font-bold text-primary mt-2">Paso 2: TransferFrom (Transferencia interna)</p>
+                        <p className="text-muted-foreground">El contrato del DEX ejecuta la transacción consumiendo la aprobación y depositando tus tokens en las reservas del pool.</p>
+                      </div>
+                      <p className="pl-6 text-[11px] leading-relaxed mt-1.5">
+                        Esto garantiza que ningún protocolo pueda vulnerar tu saldo sin tu firma explícita, manteniendo el control absoluto de tus activos.
+                      </p>
+                    </div>
+
+                    {/* Sección 2: Depósito Proporcional */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans uppercase tracking-wider">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold font-sans">2</span>
+                        El Mecanismo de Depósito Proporcional
+                      </h5>
+                      <p className="pl-6 text-[11px] leading-relaxed">
+                        Los Creadores de Mercado Automatizados (AMM) de producto constante (<code className="text-foreground font-mono">x &middot; y = k</code>) exigen que las reservas de ambos tokens mantengan una relación de valor equilibrada.
+                      </p>
+                      <div className="ml-6 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-card/45 p-3 rounded-lg border border-border/20 space-y-1 text-center">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground font-sans">Ratio del Pool</span>
+                          <p className="text-sm font-mono text-emerald-400 font-bold">R = x / y</p>
+                          <p className="text-[10px] text-muted-foreground">Relación de precios entre las reservas del Token A (x) y Token B (y).</p>
+                        </div>
+                        <div className="bg-card/45 p-3 rounded-lg border border-border/20 space-y-1 text-center">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground font-sans">Fórmula de Depósito</span>
+                          <p className="text-sm font-mono text-primary font-bold">&Delta;y = &Delta;x &middot; (y / x)</p>
+                          <p className="text-[10px] text-muted-foreground">La cantidad a depositar del segundo activo debe ser proporcional al ratio del pool.</p>
+                        </div>
+                      </div>
+                      <p className="pl-6 text-[11px] leading-relaxed mt-1.5">
+                        Depositar ambos activos de forma proporcional asegura que no se altere el precio marginal del pool al momento del depósito, protegiendo al proveedor de liquidez de un arbitraje inmediato perjudicial.
+                      </p>
+                    </div>
+
+                    {/* Sección 3: Casos de Reserva */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans uppercase tracking-wider">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold font-sans">3</span>
+                        Casos de Provisión según las Reservas del Pool
+                      </h5>
+                      <div className="pl-6 space-y-2">
+                        <div className="bg-amber-500/5 border border-amber-500/20 p-2.5 rounded-lg">
+                          <strong className="text-amber-500 block font-semibold mb-0.5 text-[11px] font-sans">Caso A: Pools sin Reservas (0 Reservas)</strong>
+                          <p className="text-muted-foreground text-[11px] leading-relaxed">
+                            Si eres el primer proveedor de liquidez, el pool no tiene fondos y <strong>no existe un ratio inicial</strong>. En este caso, eres libre de establecer la proporción que desees. La relación de los montos que aportes determinará el precio inicial del par en el pool. 
+                            <em className="block mt-1 text-[10.5px] text-amber-500/90 font-sans">
+                              ¡Atención! Si estableces un precio muy alejado del mercado real, los bots de arbitraje extraerán valor rápidamente a tu costa.
+                            </em>
+                          </p>
+                        </div>
+                        <div className="bg-emerald-500/5 border border-emerald-500/20 p-2.5 rounded-lg">
+                          <strong className="text-emerald-500 block font-semibold mb-0.5 text-[11px] font-sans">Caso B: Pools con Liquidez Activa (Reservas &gt; 0)</strong>
+                          <p className="text-muted-foreground text-[11px] leading-relaxed">
+                            Cuando el pool ya posee liquidez, la tasa de intercambio está predefinida matemáticamente. Es <strong>obligatorio depositar activos de forma estrictamente proporcional</strong> al ratio actual. Si intentas enviar un depósito asimétrico, el contrato inteligente del enrutador ajustará el depósito o lo rechazará para evitar ineficiencias matemáticas y proteger el equilibrio del pool.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sección 4: Wrapped Ether (WETH) */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans uppercase tracking-wider">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold font-sans">4</span>
+                        Wrapped Ether (WETH): El Estándar y Paridad 1:1
+                      </h5>
+                      <p className="pl-6 text-[11px] leading-relaxed">
+                        En este DEX, al igual que en la mayoría de los protocolos DeFi modernos, se utiliza <strong className="text-foreground">WETH</strong> en lugar de ETH nativo para la provisión de liquidez y los intercambios en pools.
+                      </p>
+                      <div className="pl-6 space-y-2">
+                        <div className="bg-blue-500/5 border border-blue-500/20 p-2.5 rounded-lg">
+                          <strong className="text-blue-400 block font-semibold mb-0.5 text-[11px] font-sans">¿Qué es WETH y la paridad 1:1?</strong>
+                          <p className="text-muted-foreground text-[11px] leading-relaxed">
+                            WETH (Wrapped Ether) es la versión tokenizada de Ether (ETH). A diferencia del ETH nativo, WETH se comporta estrictamente como un token <strong className="text-foreground">ERC-20</strong>. Se mantiene una relación inquebrantable de <strong className="text-foreground">1:1 con ETH</strong>: puedes depositar (envolver) 1 ETH en el contrato de WETH para recibir exactamente 1 WETH, o quemar (desenvolver) 1 WETH para recuperar 1 ETH nativo en cualquier momento.
+                          </p>
+                        </div>
+                        <div className="bg-indigo-500/5 border border-indigo-500/20 p-2.5 rounded-lg">
+                          <strong className="text-indigo-400 block font-semibold mb-0.5 text-[11px] font-sans">¿Por qué es indispensable utilizarlo?</strong>
+                          <p className="text-muted-foreground text-[11px] leading-relaxed">
+                            El Ether (ETH) es el activo nativo de la red y fue creado antes de que se diseñara el estándar de tokens ERC-20. Como consecuencia, carece de funciones estándar como <code className="text-foreground font-mono">approve()</code>, <code className="text-foreground font-mono">transferFrom()</code> o <code className="text-foreground font-mono">allowance()</code>. Los contratos inteligentes de piscinas de liquidez requieren que todos sus activos participantes utilicen interfaces homogéneas para ejecutar transferencias automáticas y seguras. Al "envolver" tu ETH en WETH, permites que el DEX gestione el Ether con la misma lógica uniforme que cualquier otro token ERC-20 de la red.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
@@ -2195,125 +2300,6 @@ const DEXPage: NextPage = () => {
                               </Button>
                             )}
                           </form>
-
-                          {/* Guía Académica y Mecanismos de Liquidez */}
-                          <div className="mt-6 border border-border/40 rounded-xl overflow-hidden bg-card/30 backdrop-blur-sm transition-all duration-300">
-                            <button
-                              type="button"
-                              onClick={() => setShowAddLiquidityGuide(!showAddLiquidityGuide)}
-                              className="flex items-center justify-between w-full p-4 text-left text-xs font-semibold text-foreground/90 hover:text-foreground bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer"
-                            >
-                              <span className="flex items-center gap-2">
-                                <BookOpen className="h-4.5 w-4.5 text-primary shrink-0" />
-                                <span>Guía Académica: Mecanismos de Provisión de Liquidez</span>
-                              </span>
-                              {showAddLiquidityGuide ? (
-                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </button>
-
-                            {showAddLiquidityGuide && (
-                              <div className="p-4 border-t border-border/20 space-y-4 text-xs text-muted-foreground leading-relaxed animate-in fade-in slide-in-from-top-1 duration-250">
-                                {/* Sección 1: Aprobación de Tokens */}
-                                <div className="space-y-1.5">
-                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold font-sans">1</span>
-                                    ¿Por qué se requiere la Aprobación (Approve)?
-                                  </h5>
-                                  <p className="pl-6 text-[11px]">
-                                    En la blockchain de Ethereum (EVM), el estándar <strong className="text-foreground">ERC-20</strong> posee una medida de seguridad fundamental: los contratos externos no pueden transferir tus tokens de forma autónoma.
-                                  </p>
-                                  <div className="ml-6 bg-muted/15 p-2.5 rounded-lg border border-border/10 mt-1.5 font-mono text-[10px] space-y-1 text-foreground/90">
-                                    <p className="font-bold text-emerald-400">Paso 1: Approve (Aprobar gasto)</p>
-                                    <p className="text-muted-foreground">Otorga permiso al contrato inteligente del DEX para mover hasta una cantidad específica de tokens en tu nombre.</p>
-                                    <p className="font-bold text-primary mt-2">Paso 2: TransferFrom (Transferencia interna)</p>
-                                    <p className="text-muted-foreground">El contrato del DEX ejecuta la transacción consumiendo la aprobación y depositando tus tokens en las reservas del pool.</p>
-                                  </div>
-                                  <p className="pl-6 text-[11px] mt-1.5">
-                                    Esto garantiza que ningún protocolo pueda vulnerar tu saldo sin tu firma explícita, manteniendo el control absoluto de tus activos.
-                                  </p>
-                                </div>
-
-                                {/* Sección 2: Depósito Proporcional */}
-                                <div className="space-y-1.5">
-                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold font-sans">2</span>
-                                    El Mecanismo de Depósito Proporcional
-                                  </h5>
-                                  <p className="pl-6 text-[11px]">
-                                    Los Creadores de Mercado Automatizados (AMM) de producto constante (<code className="text-foreground font-mono">x &middot; y = k</code>) exigen que las reservas de ambos tokens mantengan una relación de valor equilibrada.
-                                  </p>
-                                  <div className="ml-6 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div className="bg-card/45 p-3 rounded-lg border border-border/20 space-y-1 text-center">
-                                      <span className="text-[10px] uppercase font-bold text-muted-foreground font-sans">Ratio del Pool</span>
-                                      <p className="text-sm font-mono text-emerald-400 font-bold">R = x / y</p>
-                                      <p className="text-[10px] text-muted-foreground">Relación de precios entre las reservas del Token A (x) y Token B (y).</p>
-                                    </div>
-                                    <div className="bg-card/45 p-3 rounded-lg border border-border/20 space-y-1 text-center">
-                                      <span className="text-[10px] uppercase font-bold text-muted-foreground font-sans">Fórmula de Depósito</span>
-                                      <p className="text-sm font-mono text-primary font-bold">&Delta;y = &Delta;x &middot; (y / x)</p>
-                                      <p className="text-[10px] text-muted-foreground">La cantidad a depositar del segundo activo debe ser proporcional al ratio del pool.</p>
-                                    </div>
-                                  </div>
-                                  <p className="pl-6 text-[11px] mt-1.5">
-                                    Depositar ambos activos de forma proporcional asegura que no se altere el precio marginal del pool al momento del depósito, protegiendo al proveedor de liquidez de un arbitraje inmediato perjudicial.
-                                  </p>
-                                </div>
-
-                                {/* Sección 3: Casos de Reserva */}
-                                <div className="space-y-1.5">
-                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold font-sans">3</span>
-                                    Casos de Provisión según las Reservas del Pool
-                                  </h5>
-                                  <div className="pl-6 space-y-2">
-                                    <div className="bg-amber-500/5 border border-amber-500/20 p-2.5 rounded-lg">
-                                      <strong className="text-amber-500 block font-semibold mb-0.5 text-[11px] font-sans">Caso A: Pools sin Reservas (0 Reservas)</strong>
-                                      <p className="text-muted-foreground text-[11px]">
-                                        Si eres el primer proveedor de liquidez, el pool no tiene fondos y <strong>no existe un ratio inicial</strong>. En este caso, eres libre de establecer la proporción que desees. La relación de los montos que aportes determinará el precio inicial del par en el pool. 
-                                        <em className="block mt-1 text-[10.5px] text-amber-500/90 font-sans">
-                                          ¡Atención! Si estableces un precio muy alejado del mercado real, los bots de arbitraje extraerán valor rápidamente a tu costa.
-                                        </em>
-                                      </p>
-                                    </div>
-                                    <div className="bg-emerald-500/5 border border-emerald-500/20 p-2.5 rounded-lg">
-                                      <strong className="text-emerald-500 block font-semibold mb-0.5 text-[11px] font-sans">Caso B: Pools con Liquidez Activa (Reservas &gt; 0)</strong>
-                                      <p className="text-muted-foreground text-[11px]">
-                                        Cuando el pool ya posee liquidez, la tasa de intercambio está predefinida matemáticamente. Es <strong>obligatorio depositar activos de forma estrictamente proporcional</strong> al ratio actual. Si intentas enviar un depósito asimétrico, el contrato inteligente del enrutador ajustará el depósito o lo rechazará para evitar ineficiencias matemáticas y proteger el equilibrio del pool.
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Sección 4: Wrapped Ether (WETH) */}
-                                <div className="space-y-1.5">
-                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold font-sans">4</span>
-                                    Wrapped Ether (WETH): El Estándar y Paridad 1:1
-                                  </h5>
-                                  <p className="pl-6 text-[11px]">
-                                    En este DEX, al igual que en la mayoría de los protocolos DeFi modernos, verás que se utiliza <strong className="text-foreground">WETH</strong> en lugar de ETH nativo para la provisión de liquidez y los intercambios en pools.
-                                  </p>
-                                  <div className="pl-6 space-y-2">
-                                    <div className="bg-blue-500/5 border border-blue-500/20 p-2.5 rounded-lg">
-                                      <strong className="text-blue-400 block font-semibold mb-0.5 text-[11px] font-sans">¿Qué es WETH y la paridad 1:1?</strong>
-                                      <p className="text-muted-foreground text-[11px]">
-                                        WETH (Wrapped Ether) es la versión tokenizada de Ether (ETH). A diferencia del ETH nativo, WETH se comporta estrictamente como un token <strong className="text-foreground">ERC-20</strong>. Se mantiene una relación inquebrantable de <strong className="text-foreground">1:1 con ETH</strong>: puedes depositar (envolver) 1 ETH en el contrato de WETH para recibir exactamente 1 WETH, o quemar (desenvolver) 1 WETH para recuperar 1 ETH nativo en cualquier momento.
-                                      </p>
-                                    </div>
-                                    <div className="bg-indigo-500/5 border border-indigo-500/20 p-2.5 rounded-lg">
-                                      <strong className="text-indigo-400 block font-semibold mb-0.5 text-[11px] font-sans">¿Por qué es indispensable utilizarlo?</strong>
-                                      <p className="text-muted-foreground text-[11px]">
-                                        El Ether (ETH) es el activo nativo de la red y fue creado antes de que se diseñara el estándar de tokens ERC-20. Como consecuencia, carece de funciones estándar como <code className="text-foreground font-mono">approve()</code>, <code className="text-foreground font-mono">transferFrom()</code> o <code className="text-foreground font-mono">allowance()</code>. Los contratos inteligentes de piscinas de liquidez requieren que todos sus activos participantes utilicen interfaces homogéneas para ejecutar transferencias automáticas y seguras. Al "envolver" tu ETH en WETH, permites que el DEX gestione el Ether con la misma lógica uniforme que cualquier otro token ERC-20 de la red.
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
                         </TabsContent>
 
                         {/* TAB REMOVE LIQUIDITY */}
