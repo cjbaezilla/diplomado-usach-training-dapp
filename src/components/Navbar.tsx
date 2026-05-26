@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Coins, User, Award, ArrowRightLeft, Menu, X, Home, HelpCircle } from 'lucide-react';
+import { Coins, User, Award, ArrowRightLeft, Menu, X, Home, HelpCircle, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAccount } from 'wagmi';
 import { useHydrated } from '@/hooks/useHydrated';
@@ -224,6 +224,10 @@ export function Navbar() {
               <User className="h-3.5 w-3.5" />
               Identidad
             </Link>
+            <Link href="/desafios" className={getNavLinkClass('/desafios')}>
+              <Trophy className="h-3.5 w-3.5" />
+              Desafíos
+            </Link>
             <Link href="/relics" className={getNavLinkClass('/relics')}>
               <Award className="h-3.5 w-3.5" />
               Reliquias
@@ -346,6 +350,14 @@ export function Navbar() {
               >
                 <User className="h-4 w-4" />
                 Identidad
+              </Link>
+              <Link
+                href="/desafios"
+                className={getMobileNavLinkClass('/desafios')}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Trophy className="h-4 w-4" />
+                Desafíos
               </Link>
               <Link
                 href="/relics"
