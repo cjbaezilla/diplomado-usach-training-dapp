@@ -1,5 +1,5 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { getBaseERC20Contract } from '@/contracts';
+import { getBaseERC20Contract, WETH_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
 
 /**
@@ -44,11 +44,13 @@ export function useBaseERC20(tokenAddress?: `0x${string}`) {
     },
   });
 
+  const isWeth = tokenAddress?.toLowerCase() === WETH_CONTRACT.address.toLowerCase();
+
   const { data: owner, isLoading: isLoadingOwner } = useReadContract({
     ...(contract || {}),
     functionName: 'owner',
     query: {
-      enabled: isHydrated && !!contract,
+      enabled: isHydrated && !!contract && !isWeth,
     },
   });
 

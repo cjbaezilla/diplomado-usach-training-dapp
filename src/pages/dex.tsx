@@ -19,6 +19,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
+import {
   ArrowRightLeft,
   Coins,
   TrendingUp,
@@ -812,11 +818,11 @@ const DEXPage: NextPage = () => {
           </div>
         </div>
 
-        {/* Sección Superior: Grid Educativo */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+      {/* Grid Educativo */}
+      <div className="grid grid-cols-1 xl:grid-cols-10 gap-8">
           
           {/* Fórmulas y Teoría */}
-          <Card className="xl:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          <Card className="xl:col-span-6 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-teal-500"></div>
             <div>
               <CardHeader className="pb-3">
@@ -825,48 +831,167 @@ const DEXPage: NextPage = () => {
                   Mecánica de un AMM
                 </CardTitle>
                 <CardDescription>
-                  Cómo se determinan los precios y la liquidez en DeFi.
+                  Cómo se determinan los precios, la liquidez y las transacciones en DeFi.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm text-muted-foreground">
-                <p>
-                  Un <strong className="text-foreground font-semibold">Creador de Mercado Automatizado (AMM)</strong> elimina la necesidad de libros de órdenes centralizados, utilizando pools que contienen reservas de dos tokens.
-                </p>
+              
+              <CardContent className="space-y-4">
+                <Tabs defaultValue="conceptos" className="w-full">
+                  <TabsList className="w-full flex bg-muted/50 p-1 rounded-lg border border-border/10">
+                    <TabsTrigger value="conceptos" className="flex-1 text-xs py-1.5 font-semibold">
+                      Fundamentos
+                    </TabsTrigger>
+                    <TabsTrigger value="matematicas" className="flex-1 text-xs py-1.5 font-semibold">
+                      Matemática (x * y = k)
+                    </TabsTrigger>
+                    <TabsTrigger value="variables" className="flex-1 text-xs py-1.5 font-semibold">
+                      Variables de Estado
+                    </TabsTrigger>
+                    <TabsTrigger value="funciones" className="flex-1 text-xs py-1.5 font-semibold">
+                      Funciones Clave
+                    </TabsTrigger>
+                  </TabsList>
 
-                <div className="bg-muted/40 p-3 rounded-lg border border-border/20 space-y-1">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Fórmula de Producto Constante</h4>
-                  <p className="text-lg font-mono font-bold text-primary text-center my-1.5">
-                    x &middot; y = k
-                  </p>
-                  <p className="text-[11px] leading-relaxed">
-                    Donde <code className="text-foreground font-semibold">x</code> e <code className="text-foreground font-semibold">y</code> representan las cantidades de reserva de cada token en el pool. Cualquier intercambio que se realice debe mantener el producto <code className="text-foreground font-semibold">k</code> constante (antes de aplicar comisiones).
-                  </p>
-                </div>
+                  {/* Fundamentos */}
+                  <TabsContent value="conceptos" className="space-y-4 mt-4 text-sm text-muted-foreground">
+                    <p>
+                      Un <strong className="text-foreground font-semibold">Creador de Mercado Automatizado (AMM)</strong> es un tipo de protocolo de intercambio descentralizado (DEX) que utiliza fórmulas matemáticas para fijar el precio de los activos en lugar de un libro de órdenes tradicional.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      <div className="bg-muted/20 p-3 rounded-lg border border-border/10 space-y-1">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                          <Coins className="h-3.5 w-3.5 text-primary" /> Pools de Liquidez
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                          En lugar de negociar directamente con contrapartes, los usuarios interactúan con un contrato inteligente que contiene reservas de dos tokens. Esto garantiza liquidez inmediata y constante sin intermediarios.
+                        </p>
+                      </div>
+                      <div className="bg-muted/20 p-3 rounded-lg border border-border/10 space-y-1">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                          <Layers className="h-3.5 w-3.5 text-emerald-500" /> Proveedores de Liquidez (LPs)
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                          Cualquier usuario puede proveer liquidez depositando ambos tokens en proporciones de valor equivalentes. A cambio, reciben tokens LP que representan su participación proporcional en las reservas de la piscina.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg flex gap-2">
+                      <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <p className="text-[11.5px] leading-relaxed text-primary-foreground/90">
+                        <strong className="text-primary font-semibold">Incentivos de Comisión:</strong> Cada intercambio en el pool cobra una comisión fija de <strong className="text-foreground">0.3%</strong>. Esta comisión se suma directamente a las reservas del pool, aumentando el valor de los tokens LP que poseen los proveedores de liquidez cuando deciden retirarse.
+                      </p>
+                    </div>
+                  </TabsContent>
 
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Cálculo de Deslizamiento (Slippage)</h4>
-                  <p className="text-xs">
-                    Dado que el precio relativo cambia dinámicamente con la proporción de reservas, intercambiar cantidades muy grandes en relación al tamaño de la piscina provocará un peor tipo de cambio (deslizamiento).
-                  </p>
-                </div>
+                  {/* Matemática */}
+                  <TabsContent value="matematicas" className="space-y-4 mt-4 text-sm text-muted-foreground">
+                    <p>
+                      El pool utiliza la fórmula de producto constante popularizada por Uniswap V2 para determinar la relación de precios entre los tokens:
+                    </p>
+                    <div className="bg-muted/40 p-4 rounded-xl border border-border/20 space-y-2 text-center">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Fórmula Base</p>
+                      <p className="text-2xl font-mono font-black text-primary my-1">
+                        x &middot; y = k
+                      </p>
+                      <p className="text-[11px] text-muted-foreground max-w-md mx-auto leading-relaxed">
+                        Donde <code className="text-foreground font-semibold">x</code> es la reserva del Token 0, <code className="text-foreground font-semibold">y</code> es la reserva del Token 1, y <code className="text-foreground font-semibold">k</code> es el producto constante que debe mantenerse invariante tras cada intercambio.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <h5 className="font-bold text-xs text-foreground uppercase tracking-wider">Mecánica del Intercambio (Swap)</h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                          Si un usuario deposita una cantidad &Delta;x de Token 0, la nueva reserva de Token 0 aumenta a x + &Delta;x. Para mantener k constante, la reserva de Token 1 debe reducirse a y - &Delta;y. Por ende, la cantidad de salida devuelta al usuario es:
+                        </p>
+                        <p className="text-xs font-mono font-bold bg-muted/30 p-2 rounded text-center border border-border/10 text-foreground">
+                          &Delta;y = (y &middot; &Delta;x) / (x + &Delta;x)
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <h5 className="font-bold text-xs text-foreground uppercase tracking-wider">Deslizamiento (Slippage)</h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                          El precio de un activo se define marginalmente como P = y / x. Si la cantidad de intercambio &Delta;x es muy grande en comparación con la reserva x, el precio de ejecución final se desviará significativamente del precio marginal, resultando en un precio menos favorable (deslizamiento).
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
 
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-semibold">Comisión del Protocolo</h4>
-                  <p className="text-xs">
-                    Este pool cobra una tarifa fija de <strong className="text-foreground">0.3%</strong> por cada intercambio. Esta tarifa se acumula en las reservas de la piscina de liquidez, recompensando directamente a los proveedores de liquidez (LPs) al incrementar el valor de sus LP tokens.
-                  </p>
-                </div>
+                  {/* Variables */}
+                  <TabsContent value="variables" className="space-y-4 mt-4 text-sm text-muted-foreground">
+                    <p>
+                      El contrato <code className="text-foreground font-mono">DEXPool.sol</code> almacena de forma persistente en la blockchain de la EVM el estado de la piscina mediante las siguientes variables:
+                    </p>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-emerald-400 font-bold shrink-0">address public token0</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
+                          Dirección del contrato inteligente del primer token ERC20 de la piscina (ordenado alfabéticamente para evitar duplicados del par).
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-emerald-400 font-bold shrink-0">address public token1</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
+                          Dirección del contrato inteligente del segundo token ERC20 de la piscina.
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-primary font-bold shrink-0">uint256 public reserve0</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
+                          Cantidad de reserva acumulada del <code className="text-foreground">token0</code>. Se actualiza al final de cada operación de swap o liquidez.
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-primary font-bold shrink-0">uint256 public reserve1</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
+                          Cantidad de reserva acumulada del <code className="text-foreground">token1</code>. Se sincroniza consultando el balance del contrato inteligente.
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-purple-400 font-bold shrink-0">totalSupply / balanceOf</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed">
+                          Heredadas de <code className="text-foreground font-mono">ERC20</code>. Registran la emisión total de tokens LP de la piscina y cuántos posee cada proveedor de liquidez.
+                        </span>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Funciones */}
+                  <TabsContent value="funciones" className="space-y-4 mt-4 text-sm text-muted-foreground">
+                    <p>
+                      Las funciones principales del contrato inteligente controlan la lógica transaccional y la transferencia de valor en la EVM:
+                    </p>
+                    <div className="space-y-3 text-xs">
+                      <div className="bg-muted/15 p-3 rounded-lg border border-border/10 space-y-1.5">
+                        <span className="font-mono text-emerald-400 font-bold block">swap(address tokenEntrada, uint256 cantidadEntrada)</span>
+                        <p className="text-muted-foreground leading-relaxed">
+                          Función externa que permite realizar intercambios. Identifica si el token entrante es `token0` o `token1`, lee las reservas asociadas, aplica una tarifa del 0.3% (<code className="text-foreground font-mono">cantidadEntrada * 997 / 1000</code>) y calcula los tokens de salida mediante el producto constante.
+                        </p>
+                        <div className="flex flex-col gap-1 pl-3 border-l-2 border-primary/40 font-mono text-[10px] text-muted-foreground">
+                          <span>1. Requerimiento: Transferencia desde el usuario al pool (transferFrom)</span>
+                          <span>2. Transferencia: Envío de los tokens de salida al usuario (transfer)</span>
+                          <span>3. Sincronización: Actualización de reserve0 y reserve1 con balanceOf(address(this))</span>
+                        </div>
+                      </div>
+                      <div className="bg-muted/15 p-3 rounded-lg border border-border/10 space-y-1">
+                        <span className="font-mono text-primary font-bold block">nonReentrant (ReentrancyGuard)</span>
+                        <p className="text-muted-foreground leading-relaxed">
+                          Modificador de seguridad aplicado a las funciones de mutación. Evita ataques de reentrada donde un contrato malicioso intenta llamar de nuevo a la función `swap` o retirar fondos en medio del flujo de ejecución antes de que se actualicen las reservas locales.
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </div>
             <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
               <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <HelpCircle className="h-3.5 w-3.5 text-primary" /> x = Reserva Token0, y = Reserva Token1
+                <HelpCircle className="h-3.5 w-3.5 text-primary" /> Usa las pestañas para explorar cada sección del AMM en detalle.
               </span>
             </CardFooter>
           </Card>
 
           {/* Código de Solidity del DEX */}
-          <Card className="xl:col-span-3 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          <Card className="xl:col-span-4 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 to-emerald-500"></div>
             <div>
               <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
@@ -940,7 +1065,6 @@ const DEXPage: NextPage = () => {
               </span>
             </CardFooter>
           </Card>
-
         </div>
 
         {/* Sección Inferior: Interfaz de Usuario e Interacción */}
