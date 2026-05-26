@@ -8,6 +8,132 @@ import { useAccount } from 'wagmi';
 import { useHydrated } from '@/hooks/useHydrated';
 import { EthPriceTicker } from './EthPriceTicker';
 
+function CustomConnectButton() {
+  const isHydrated = useHydrated();
+  const router = useRouter();
+  const { address } = useAccount();
+
+  const isActive = (path: string) => router.pathname === path;
+
+  return (
+    <ConnectButton.Custom>
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        authenticationStatus,
+        mounted,
+      }) => {
+        const ready = mounted && authenticationStatus !== 'loading';
+        const connected =
+          ready &&
+          account &&
+          chain &&
+          (!authenticationStatus ||
+            authenticationStatus === 'authenticated');
+
+        if (!ready) {
+          return (
+            <div
+              aria-hidden={true}
+              style={{
+                opacity: 0,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}
+              className="h-8 w-28 bg-slate-800 rounded-lg animate-pulse"
+            />
+          );
+        }
+
+        if (!connected) {
+          return (
+            <button
+              onClick={openConnectModal}
+              type="button"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3.5 py-1.5 rounded-lg text-xs tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-md shadow-primary/10 border border-primary/20"
+            >
+              Conectar
+            </button>
+          );
+        }
+
+        if (chain.unsupported) {
+          return (
+            <button
+              onClick={openChainModal}
+              type="button"
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-3.5 py-1.5 rounded-lg text-xs tracking-wider uppercase transition-all duration-200 active:scale-95 border border-red-500/30"
+            >
+              Red no soportada
+            </button>
+          );
+        }
+
+        const profilePath = `/estudiante/${address?.toLowerCase()}`;
+
+        return (
+          <div className="flex items-center gap-2">
+            {/* Enlace "Mi Perfil" al lado izquierdo del selector de red */}
+            {isHydrated && address && (
+              <Link
+                href={profilePath}
+                title="Mi Perfil"
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-primary hover:border-primary/50 transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shrink-0",
+                  isActive(profilePath) && "text-primary border-primary bg-primary/5"
+                )}
+              >
+                <User className="h-4 w-4" />
+              </Link>
+            )}
+
+            {/* Selector de red */}
+            <button
+              onClick={openChainModal}
+              type="button"
+              className="flex items-center gap-1.5 h-8 px-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:border-slate-700 transition-all duration-200 active:scale-95 shrink-0"
+            >
+              {chain.hasIcon && (
+                <div
+                  style={{
+                    background: chain.iconBackground,
+                    width: 16,
+                    height: 16,
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                  }}
+                  className="flex items-center justify-center shrink-0"
+                >
+                  {chain.iconUrl && (
+                    <img
+                      alt={chain.name ?? 'Chain icon'}
+                      src={chain.iconUrl}
+                      style={{ width: 16, height: 16 }}
+                    />
+                  )}
+                </div>
+              )}
+              <span className="hidden sm:inline">{chain.name}</span>
+            </button>
+
+            {/* Selector de cuenta */}
+            <button
+              onClick={openAccountModal}
+              type="button"
+              className="flex items-center justify-center h-8 px-3 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:border-slate-700 transition-all duration-200 active:scale-95 shrink-0"
+            >
+              {account.displayName}
+            </button>
+          </div>
+        );
+      }}
+    </ConnectButton.Custom>
+  );
+}
+
 export function Navbar() {
   const router = useRouter();
   const isHydrated = useHydrated();
@@ -63,7 +189,9 @@ export function Navbar() {
           <div className="flex items-center gap-6">
             <EthPriceTicker variant="dark" />
             <div className="h-6 w-[1px] bg-slate-800" />
-            <ConnectButton />
+            <div className="scale-90 origin-right">
+              <CustomConnectButton />
+            </div>
           </div>
         </div>
       </div>
@@ -92,15 +220,7 @@ export function Navbar() {
               <Award className="h-3.5 w-3.5" />
               Reliquias
             </Link>
-            {isHydrated && isConnected && address && (
-              <Link
-                href={`/estudiante/${address.toLowerCase()}`}
-                className={getNavLinkClass(`/estudiante/${address.toLowerCase()}`)}
-              >
-                <User className="h-3.5 w-3.5" />
-                Mi Perfil
-              </Link>
-            )}
+
           </nav>
         </div>
       </div>
@@ -127,8 +247,8 @@ export function Navbar() {
 
           {/* Acciones y Hamburguesa */}
           <div className="flex items-center gap-2">
-            <div className="scale-90 origin-right">
-              <ConnectButton />
+            <div className="scale-85 origin-right">
+              <CustomConnectButton />
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -196,16 +316,7 @@ export function Navbar() {
                 <Award className="h-4 w-4" />
                 Reliquias
               </Link>
-              {isHydrated && isConnected && address && (
-                <Link
-                  href={`/estudiante/${address.toLowerCase()}`}
-                  className={getMobileNavLinkClass(`/estudiante/${address.toLowerCase()}`)}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <User className="h-4 w-4" />
-                  Mi Perfil
-                </Link>
-              )}
+
             </nav>
           </div>
 
