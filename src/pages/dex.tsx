@@ -1174,9 +1174,12 @@ const DEXPage: NextPage = () => {
                                 </span>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="text-lg font-mono flex-1 font-bold text-foreground px-1 py-0.5">
-                                  {parseFloat(estimatedOut).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                </span>
+                                <Input
+                                  type="text"
+                                  readOnly
+                                  value={parseFloat(estimatedOut) > 0 ? parseFloat(estimatedOut).toLocaleString(undefined, { maximumFractionDigits: 6 }) : '0.0'}
+                                  className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none cursor-default"
+                                />
                                 <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
                                   <TokenIcon address={tokenB || ''} className="h-5 w-5" />
                                   <select
