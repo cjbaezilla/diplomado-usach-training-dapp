@@ -148,13 +148,14 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
 
   if (isLoadingPool || isLoadingMeta0 || isLoadingMeta1 || isLoadingLpBalance) {
     return (
-      <div className="flex flex-col gap-2 p-4 rounded-xl border border-border/40 animate-pulse bg-muted/10">
-        <div className="flex justify-between">
-          <div className="h-4 w-28 bg-muted rounded" />
-          <div className="h-4 w-12 bg-muted rounded" />
-        </div>
-        <div className="h-3 w-40 bg-muted rounded" />
-      </div>
+      <tr className="animate-pulse bg-muted/5">
+        <td className="py-4 pl-4"><div className="h-4 w-28 bg-muted rounded" /></td>
+        <td className="py-4"><div className="h-4 w-20 bg-muted rounded" /></td>
+        <td className="py-4"><div className="h-6 w-32 bg-muted rounded" /></td>
+        <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
+        <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
+        <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+      </tr>
     );
   }
 
@@ -181,71 +182,96 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
     : 0;
 
   return (
-    <div className="p-4 rounded-xl border border-border/40 bg-card/30 hover:border-primary/45 transition-all duration-300">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <TokenIcon address={token0 || ''} className="h-6 w-6" />
-          <TokenIcon address={token1 || ''} className="h-6 w-6 -ml-3" />
-          <span className="font-bold text-sm text-foreground">
-            {metadata0.symbol || '??'} / {metadata1.symbol || '??'}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {creatorAddress && (
-            <div className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-full border border-border/20" title={`Creador: ${creatorAddress}`}>
-              <UserAvatar address={creatorAddress} className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-[9px] text-muted-foreground font-mono">
-                {creatorAddress.substring(0, 6)}...{creatorAddress.substring(creatorAddress.length - 4)}
-              </span>
+    <tr className="hover:bg-muted/10 transition-colors border-b border-border/20 group/row text-xs">
+      {/* Par / Contrato */}
+      <td className="py-4 pl-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center shrink-0">
+              <TokenIcon address={token0 || ''} className="h-5 w-5" />
+              <TokenIcon address={token1 || ''} className="h-5 w-5 -ml-2" />
             </div>
-          )}
-          <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-0.5 rounded">
+            <span className="font-bold text-sm text-foreground">
+              {metadata0.symbol || '??'} / {metadata1.symbol || '??'}
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-muted-foreground block" title={poolAddress}>
             {poolAddress.substring(0, 6)}...{poolAddress.substring(poolAddress.length - 4)}
           </span>
         </div>
-      </div>
+      </td>
 
-      <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-border/10 text-xs">
-        <div>
-          <span className="text-[10px] text-muted-foreground block">Reservas</span>
-          <span className="font-mono text-foreground block">
+      {/* Creador */}
+      <td className="py-4">
+        {creatorAddress ? (
+          <div className="flex items-center gap-1.5" title={`Creador: ${creatorAddress}`}>
+            <UserAvatar address={creatorAddress} className="h-5 w-5 shrink-0" />
+            <span className="text-[11px] text-muted-foreground font-mono">
+              {creatorAddress.substring(0, 6)}...{creatorAddress.substring(creatorAddress.length - 4)}
+            </span>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground font-mono">-</span>
+        )}
+      </td>
+
+      {/* Reservas */}
+      <td className="py-4">
+        <div className="flex flex-col text-xs">
+          <span className="font-mono text-foreground">
             {parseFloat(formattedReserve0).toLocaleString(undefined, { maximumFractionDigits: 4 })} {metadata0.symbol}
             {reserve0Usd > 0 && (
-              <span className="text-[10px] text-emerald-400 font-bold block">
+              <span className="text-[10px] text-emerald-400 font-bold ml-1">
                 (~${reserve0Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)
               </span>
             )}
           </span>
-          <span className="font-mono text-foreground block mt-1">
+          <span className="font-mono text-foreground mt-0.5">
             {parseFloat(formattedReserve1).toLocaleString(undefined, { maximumFractionDigits: 4 })} {metadata1.symbol}
             {reserve1Usd > 0 && (
-              <span className="text-[10px] text-emerald-400 font-bold block">
+              <span className="text-[10px] text-emerald-400 font-bold ml-1">
                 (~${reserve1Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)
               </span>
             )}
           </span>
         </div>
-        <div>
-          <span className="text-[10px] text-muted-foreground block">Precio y Proporción</span>
-          <span className="font-mono text-foreground block">
+      </td>
+
+      {/* Precio y Ratio */}
+      <td className="py-4">
+        <div className="flex flex-col text-xs">
+          <span className="font-mono text-foreground font-medium">
             1 {metadata0.symbol} = {ratio.toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadata1.symbol}
           </span>
-          <span className="text-[10px] text-muted-foreground">
-            Total LP: {parseFloat(formattedTotalLP).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          <span className="text-[10px] text-muted-foreground font-mono mt-0.5">
+            1 {metadata1.symbol} = {ratio > 0 ? (1 / ratio).toLocaleString(undefined, { maximumFractionDigits: 6 }) : 0} {metadata0.symbol}
           </span>
         </div>
-      </div>
+      </td>
 
-      {userAddress && lpBalance > 0n && (
-        <div className="mt-3 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg flex items-center justify-between text-xs">
-          <span className="font-medium text-primary">Tu Participación (LP):</span>
-          <span className="font-mono font-bold text-primary">
-            {parseFloat(formattedLPBalance).toLocaleString(undefined, { maximumFractionDigits: 6 })} Tokens LP
-          </span>
-        </div>
-      )}
-    </div>
+      {/* Total LP */}
+      <td className="py-4">
+        <span className="font-mono text-foreground text-xs">
+          {parseFloat(formattedTotalLP).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+        </span>
+      </td>
+
+      {/* Tu Participación */}
+      <td className="py-4 pr-4 text-right">
+        {userAddress && lpBalance > 0n ? (
+          <div className="inline-flex flex-col items-end">
+            <span className="font-mono font-bold text-primary text-xs">
+              {parseFloat(formattedLPBalance).toLocaleString(undefined, { maximumFractionDigits: 6 })} LP
+            </span>
+            <span className="text-[10px] text-muted-foreground font-sans">
+              ({totalSupply > 0n ? ((Number(lpBalance) * 100) / Number(totalSupply)).toFixed(2) : '0.00'}%)
+            </span>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground font-mono">-</span>
+        )}
+      </td>
+    </tr>
   );
 }
 
@@ -1401,10 +1427,10 @@ const DEXPage: NextPage = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-8">
             
-            {/* Panel Izquierdo: Operaciones de Swap y Liquidez */}
-            <div className="lg:col-span-2 space-y-8">
+            {/* Fila superior con 3 elementos en pantallas grandes */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
               <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-emerald-500 to-primary"></div>
@@ -2090,51 +2116,6 @@ const DEXPage: NextPage = () => {
                 </Tabs>
               </Card>
 
-              {/* Registro de transacciones de la sesión */}
-              <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-emerald-500" />
-                    Transacciones de la Sesión
-                  </CardTitle>
-                  <CardDescription>
-                    Monitorea en tiempo real las operaciones que envías en esta página.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {transactions.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-muted-foreground">
-                      Aún no has enviado transacciones en esta sesión.
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
-                      {transactions.map((tx) => (
-                        <div key={tx.id} className="flex justify-between items-center p-3 rounded-lg border border-border/20 bg-muted/10 text-xs">
-                          <div>
-                            <span className="font-semibold text-foreground block">{tx.description}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px] block">
-                              Hash: {tx.hash.substring(0, 12)}...
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[10px] text-muted-foreground block">{tx.timestamp}</span>
-                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 mt-0.5">
-                              <Check className="h-2.5 w-2.5" /> {tx.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-            </div>
-
-            {/* Panel Derecho: Pools e inicialización */}
-            <div className="space-y-8">
-
               {/* Crear Nueva Piscina (Pool) */}
               <Card id="create-pool-card" className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 to-primary"></div>
@@ -2197,55 +2178,139 @@ const DEXPage: NextPage = () => {
                 </form>
               </Card>
 
-              {/* Lista de Pools creadas */}
+              {/* Registro de transacciones de la sesión */}
               <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-teal-500"></div>
-                <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 space-y-0">
-                  <div>
-                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      <Layers className="h-5 w-5 text-primary" />
-                      Piscinas Disponibles
-                    </CardTitle>
-                    <CardDescription>
-                      Piscinas creadas en la fábrica de DEX.
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <EthPriceTicker />
-                    <div className="flex items-center gap-1.5 bg-primary/10 px-2.5 py-1 rounded-full text-xs font-semibold text-primary border border-primary/20">
-                      {allPoolAddresses.length} pools
-                    </div>
-                  </div>
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-emerald-500" />
+                    Transacciones de la Sesión
+                  </CardTitle>
+                  <CardDescription>
+                    Monitorea en tiempo real las operaciones que envías en esta página.
+                  </CardDescription>
                 </CardHeader>
-
-                <CardContent className="space-y-4 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border">
-                  {isLoadingPools ? (
-                    <div className="flex flex-col gap-3">
-                      <div className="h-[96px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
-                      <div className="h-[96px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
-                    </div>
-                  ) : allPoolAddresses.length === 0 ? (
-                    <div className="text-center py-8 text-xs text-muted-foreground space-y-2 border border-dashed border-border/40 rounded-xl">
-                      <Info className="h-5 w-5 text-muted-foreground mx-auto" />
-                      <p className="font-semibold text-foreground">No hay piscinas creadas aún.</p>
-                      <p className="max-w-[200px] mx-auto text-[10.5px]">
-                        ¡Crea la primera piscina de liquidez usando el panel superior!
-                      </p>
+                <CardContent className="space-y-3">
+                  {transactions.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-muted-foreground">
+                      Aún no has enviado transacciones en esta sesión.
                     </div>
                   ) : (
-                    allPoolAddresses.map((poolAddr) => (
-                      <PoolRow
-                        key={poolAddr}
-                        poolAddress={poolAddr}
-                        userAddress={address}
-                        refreshTrigger={refreshTrigger}
-                      />
-                    ))
+                    <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                      {transactions.map((tx) => (
+                        <div key={tx.id} className="flex justify-between items-center p-3 rounded-lg border border-border/20 bg-muted/10 text-xs">
+                          <div>
+                            <span className="font-semibold text-foreground block">{tx.description}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px] block">
+                              Hash: {tx.hash.substring(0, 12)}...
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-muted-foreground block">{tx.timestamp}</span>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 mt-0.5">
+                              <Check className="h-2.5 w-2.5" /> {tx.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </CardContent>
               </Card>
 
             </div>
+
+            {/* Lista de Pools creadas (rediseñada como tabla al 100% de ancho) */}
+            <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-teal-500"></div>
+              <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 space-y-0">
+                <div>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-primary" />
+                    Piscinas Disponibles
+                  </CardTitle>
+                  <CardDescription>
+                    Piscinas creadas en la fábrica de DEX.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <EthPriceTicker />
+                  <div className="flex items-center gap-1.5 bg-primary/10 px-2.5 py-1 rounded-full text-xs font-semibold text-primary border border-primary/20">
+                    {allPoolAddresses.length} pools
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="overflow-x-auto pr-1">
+                {isLoadingPools ? (
+                  <div className="w-full">
+                    <table className="w-full border-collapse text-left">
+                      <thead>
+                        <tr className="border-b border-border/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <th className="pb-3 pl-4">Par / Contrato</th>
+                          <th className="pb-3">Creador</th>
+                          <th className="pb-3">Reservas</th>
+                          <th className="pb-3">Precio y Ratio</th>
+                          <th className="pb-3">Total LP</th>
+                          <th className="pb-3 pr-4 text-right">Tu Participación</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/20 text-xs">
+                        <tr className="animate-pulse bg-muted/5">
+                          <td className="py-4 pl-4"><div className="h-4 w-28 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-20 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-6 w-32 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
+                          <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                        </tr>
+                        <tr className="animate-pulse bg-muted/5">
+                          <td className="py-4 pl-4"><div className="h-4 w-28 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-20 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-6 w-32 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
+                          <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
+                          <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : allPoolAddresses.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-muted-foreground space-y-2 border border-dashed border-border/40 rounded-xl">
+                    <Info className="h-5 w-5 text-muted-foreground mx-auto" />
+                    <p className="font-semibold text-foreground">No hay piscinas creadas aún.</p>
+                    <p className="max-w-[200px] mx-auto text-[10.5px]">
+                      ¡Crea la primera piscina de liquidez usando el panel superior!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full border-collapse text-left min-w-[800px]">
+                      <thead>
+                        <tr className="border-b border-border/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <th className="pb-3 pl-4">Par / Contrato</th>
+                          <th className="pb-3">Creador</th>
+                          <th className="pb-3">Reservas</th>
+                          <th className="pb-3">Precio y Ratio</th>
+                          <th className="pb-3">Total LP</th>
+                          <th className="pb-3 pr-4 text-right">Tu Participación</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/20 text-xs">
+                        {allPoolAddresses.map((poolAddr) => (
+                          <PoolRow
+                            key={poolAddr}
+                            poolAddress={poolAddr}
+                            userAddress={address}
+                            refreshTrigger={refreshTrigger}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
           </div>
         )}
