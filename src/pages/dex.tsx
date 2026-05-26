@@ -43,7 +43,9 @@ import {
   Check,
   PlusCircle,
   Layers,
-  ArrowDownUp
+  ArrowDownUp,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useAllTokens } from '@/hooks/useTokenFactory';
 import { useBaseERC20, useERC20Balance, useERC20Allowance } from '@/hooks/useBaseERC20';
@@ -376,6 +378,7 @@ const DEXPage: NextPage = () => {
   // Estados de los formularios de DEX
   const [tokenA, setTokenA] = useState<`0x${string}` | undefined>(undefined);
   const [tokenB, setTokenB] = useState<`0x${string}` | undefined>(undefined);
+  const [showAddLiquidityGuide, setShowAddLiquidityGuide] = useState(false);
 
   // Direcciones resueltas para interactuar con los pools (mapeando ETH a WETH)
   const resolvedTokenA = useMemo(() => {
@@ -410,8 +413,8 @@ const DEXPage: NextPage = () => {
     refetch: refetchPoolDetails 
   } = useDEXPool(currentPoolAddress);
 
-  // Metadatos y acciones de tokens activos
-  const rawMetadataA = useBaseERC20(tokenA && tokenA !== ETH_ADDRESS ? tokenA : undefined);
+  // Metadatos y acciones de tokens activos (usando resolvedToken para soportar WETH en lugar de ETH nativo en aprobaciones)
+  const rawMetadataA = useBaseERC20(resolvedTokenA);
   const metadataA = useMemo(() => {
     if (tokenA === ETH_ADDRESS) {
       return {
@@ -425,7 +428,7 @@ const DEXPage: NextPage = () => {
     return rawMetadataA.metadata;
   }, [tokenA, rawMetadataA.metadata]);
 
-  const rawMetadataB = useBaseERC20(tokenB && tokenB !== ETH_ADDRESS ? tokenB : undefined);
+  const rawMetadataB = useBaseERC20(resolvedTokenB);
   const metadataB = useMemo(() => {
     if (tokenB === ETH_ADDRESS) {
       return {
@@ -440,13 +443,11 @@ const DEXPage: NextPage = () => {
   }, [tokenB, rawMetadataB.metadata]);
 
   const approveA = (spender: `0x${string}`, amount: bigint) => {
-    if (tokenA === ETH_ADDRESS) return;
     rawMetadataA.approve(spender, amount);
   };
   const isPendingApproveA = rawMetadataA.isPending;
 
   const approveB = (spender: `0x${string}`, amount: bigint) => {
-    if (tokenB === ETH_ADDRESS) return;
     rawMetadataB.approve(spender, amount);
   };
   const isPendingApproveB = rawMetadataB.isPending;
@@ -851,12 +852,12 @@ const DEXPage: NextPage = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  // Función para aprobar un token
-  const handleApprove = async (token: `0x${string}`, amountStr: string, decimals: number) => {
+  // Función para aprobar un token (isA indica si es el token A o el B)
+  const handleApprove = async (isA: boolean, amountStr: string, decimals: number) => {
     if (!currentPoolAddress || !amountStr) return;
     try {
       const amt = parseUnits(amountStr, decimals);
-      if (token.toLowerCase() === tokenA?.toLowerCase()) {
+      if (isA) {
         approveA(currentPoolAddress, amt);
       } else {
         approveB(currentPoolAddress, amt);
@@ -1551,7 +1552,7 @@ const DEXPage: NextPage = () => {
                             ) : needsSwapApproval && hasEnoughSwapBalance ? (
                               <Button
                                 type="button"
-                                onClick={() => handleApprove(tokenA!, swapAmountIn, currentSwapDecimals)}
+                                onClick={() => handleApprove(true, swapAmountIn, currentSwapDecimals)}
                                 disabled={isPendingApproveA}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
                               >
@@ -1762,7 +1763,7 @@ const DEXPage: NextPage = () => {
                             ) : needsAddApproveA && hasEnoughAddBalanceA ? (
                               <Button
                                 type="button"
-                                onClick={() => handleApprove(resolvedTokenA!, addAmountA, metadataA.decimals)}
+                                onClick={() => handleApprove(true, addAmountA, metadataA.decimals)}
                                 disabled={isPendingApproveA}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
                               >
@@ -1778,7 +1779,7 @@ const DEXPage: NextPage = () => {
                             ) : needsAddApproveB && hasEnoughAddBalanceB ? (
                               <Button
                                 type="button"
-                                onClick={() => handleApprove(resolvedTokenB!, addAmountB, metadataB.decimals)}
+                                onClick={() => handleApprove(false, addAmountB, metadataB.decimals)}
                                 disabled={isPendingApproveB}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
                               >
@@ -1808,6 +1809,100 @@ const DEXPage: NextPage = () => {
                               </Button>
                             )}
                           </form>
+
+                          {/* Guía Académica y Mecanismos de Liquidez */}
+                          <div className="mt-6 border border-border/40 rounded-xl overflow-hidden bg-card/30 backdrop-blur-sm transition-all duration-300">
+                            <button
+                              type="button"
+                              onClick={() => setShowAddLiquidityGuide(!showAddLiquidityGuide)}
+                              className="flex items-center justify-between w-full p-4 text-left text-xs font-semibold text-foreground/90 hover:text-foreground bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer"
+                            >
+                              <span className="flex items-center gap-2">
+                                <BookOpen className="h-4.5 w-4.5 text-primary shrink-0" />
+                                <span>Guía Académica: Mecanismos de Provisión de Liquidez</span>
+                              </span>
+                              {showAddLiquidityGuide ? (
+                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </button>
+
+                            {showAddLiquidityGuide && (
+                              <div className="p-4 border-t border-border/20 space-y-4 text-xs text-muted-foreground leading-relaxed animate-in fade-in slide-in-from-top-1 duration-250">
+                                {/* Sección 1: Aprobación de Tokens */}
+                                <div className="space-y-1.5">
+                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold font-sans">1</span>
+                                    ¿Por qué se requiere la Aprobación (Approve)?
+                                  </h5>
+                                  <p className="pl-6 text-[11px]">
+                                    En la blockchain de Ethereum (EVM), el estándar <strong className="text-foreground">ERC-20</strong> posee una medida de seguridad fundamental: los contratos externos no pueden transferir tus tokens de forma autónoma.
+                                  </p>
+                                  <div className="ml-6 bg-muted/15 p-2.5 rounded-lg border border-border/10 mt-1.5 font-mono text-[10px] space-y-1 text-foreground/90">
+                                    <p className="font-bold text-emerald-400">Paso 1: Approve (Aprobar gasto)</p>
+                                    <p className="text-muted-foreground">Otorga permiso al contrato inteligente del DEX para mover hasta una cantidad específica de tokens en tu nombre.</p>
+                                    <p className="font-bold text-primary mt-2">Paso 2: TransferFrom (Transferencia interna)</p>
+                                    <p className="text-muted-foreground">El contrato del DEX ejecuta la transacción consumiendo la aprobación y depositando tus tokens en las reservas del pool.</p>
+                                  </div>
+                                  <p className="pl-6 text-[11px] mt-1.5">
+                                    Esto garantiza que ningún protocolo pueda vulnerar tu saldo sin tu firma explícita, manteniendo el control absoluto de tus activos.
+                                  </p>
+                                </div>
+
+                                {/* Sección 2: Depósito Proporcional */}
+                                <div className="space-y-1.5">
+                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold font-sans">2</span>
+                                    El Mecanismo de Depósito Proporcional
+                                  </h5>
+                                  <p className="pl-6 text-[11px]">
+                                    Los Creadores de Mercado Automatizados (AMM) de producto constante (<code className="text-foreground font-mono">x &middot; y = k</code>) exigen que las reservas de ambos tokens mantengan una relación de valor equilibrada.
+                                  </p>
+                                  <div className="ml-6 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="bg-card/45 p-3 rounded-lg border border-border/20 space-y-1 text-center">
+                                      <span className="text-[10px] uppercase font-bold text-muted-foreground font-sans">Ratio del Pool</span>
+                                      <p className="text-sm font-mono text-emerald-400 font-bold">R = x / y</p>
+                                      <p className="text-[10px] text-muted-foreground">Relación de precios entre las reservas del Token A (x) y Token B (y).</p>
+                                    </div>
+                                    <div className="bg-card/45 p-3 rounded-lg border border-border/20 space-y-1 text-center">
+                                      <span className="text-[10px] uppercase font-bold text-muted-foreground font-sans">Fórmula de Depósito</span>
+                                      <p className="text-sm font-mono text-primary font-bold">&Delta;y = &Delta;x &middot; (y / x)</p>
+                                      <p className="text-[10px] text-muted-foreground">La cantidad a depositar del segundo activo debe ser proporcional al ratio del pool.</p>
+                                    </div>
+                                  </div>
+                                  <p className="pl-6 text-[11px] mt-1.5">
+                                    Depositar ambos activos de forma proporcional asegura que no se altere el precio marginal del pool al momento del depósito, protegiendo al proveedor de liquidez de un arbitraje inmediato perjudicial.
+                                  </p>
+                                </div>
+
+                                {/* Sección 3: Casos de Reserva */}
+                                <div className="space-y-1.5">
+                                  <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 font-sans">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold font-sans">3</span>
+                                    Casos de Provisión según las Reservas del Pool
+                                  </h5>
+                                  <div className="pl-6 space-y-2">
+                                    <div className="bg-amber-500/5 border border-amber-500/20 p-2.5 rounded-lg">
+                                      <strong className="text-amber-500 block font-semibold mb-0.5 text-[11px] font-sans">Caso A: Pools sin Reservas (0 Reservas)</strong>
+                                      <p className="text-muted-foreground text-[11px]">
+                                        Si eres el primer proveedor de liquidez, el pool no tiene fondos y <strong>no existe un ratio inicial</strong>. En este caso, eres libre de establecer la proporción que desees. La relación de los montos que aportes determinará el precio inicial del par en el pool. 
+                                        <em className="block mt-1 text-[10.5px] text-amber-500/90 font-sans">
+                                          ¡Atención! Si estableces un precio muy alejado del mercado real, los bots de arbitraje extraerán valor rápidamente a tu costa.
+                                        </em>
+                                      </p>
+                                    </div>
+                                    <div className="bg-emerald-500/5 border border-emerald-500/20 p-2.5 rounded-lg">
+                                      <strong className="text-emerald-500 block font-semibold mb-0.5 text-[11px] font-sans">Caso B: Pools con Liquidez Activa (Reservas &gt; 0)</strong>
+                                      <p className="text-muted-foreground text-[11px]">
+                                        Cuando el pool ya posee liquidez, la tasa de intercambio está predefinida matemáticamente. Es <strong>obligatorio depositar activos de forma estrictamente proporcional</strong> al ratio actual. Si intentas enviar un depósito asimétrico, el contrato inteligente del enrutador ajustará el depósito o lo rechazará para evitar ineficiencias matemáticas y proteger el equilibrio del pool.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </TabsContent>
 
                         {/* TAB REMOVE LIQUIDITY */}
