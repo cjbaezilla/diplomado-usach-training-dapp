@@ -46,6 +46,8 @@ import { useDEXPool, useDEXPoolBalance, useDEXPoolActions } from '@/hooks/useDEX
 import { useWETH } from '@/hooks/useWETH';
 import { useHydrated } from '@/hooks/useHydrated';
 import { TokenIcon } from '@/components/TokenIcon';
+import { useEthPrice } from '@/hooks/useEthPrice';
+import { EthPriceTicker } from '@/components/EthPriceTicker';
 
 // Representación de transacción local
 interface DEXTransaction {
@@ -82,6 +84,7 @@ function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
   const { metadata: metadata0, isLoadingMetadata: isLoadingMeta0 } = useBaseERC20(token0);
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
   const { balance: lpBalance, isLoading: isLoadingLpBalance } = useDEXPoolBalance(poolAddress, userAddress);
+  const { data: ethPrice } = useEthPrice();
 
   if (isLoadingPool || isLoadingMeta0 || isLoadingMeta1 || isLoadingLpBalance) {
     return (
@@ -104,6 +107,19 @@ function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
     ? (Number(reserve1) / 10 ** metadata1.decimals) / (Number(reserve0) / 10 ** metadata0.decimals)
     : 0;
 
+  // Determinar valor aproximado en USD si uno de los tokens del pool es WETH
+  const isToken0Weth = token0?.toLowerCase() === WETH_ADDRESS.toLowerCase();
+  const isToken1Weth = token1?.toLowerCase() === WETH_ADDRESS.toLowerCase();
+  const currentEthPrice = ethPrice || 0;
+
+  const reserve0Usd = isToken0Weth && currentEthPrice > 0
+    ? Number(formattedReserve0) * currentEthPrice
+    : 0;
+
+  const reserve1Usd = isToken1Weth && currentEthPrice > 0
+    ? Number(formattedReserve1) * currentEthPrice
+    : 0;
+
   return (
     <div className="p-4 rounded-xl border border-border/40 bg-card/30 hover:border-primary/45 transition-all duration-300">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -124,9 +140,19 @@ function PoolRow({ poolAddress, userAddress }: PoolRowProps) {
           <span className="text-[10px] text-muted-foreground block">Reservas</span>
           <span className="font-mono text-foreground block">
             {parseFloat(formattedReserve0).toLocaleString(undefined, { maximumFractionDigits: 4 })} {metadata0.symbol}
+            {reserve0Usd > 0 && (
+              <span className="text-[10px] text-emerald-400 font-bold block">
+                (~${reserve0Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)
+              </span>
+            )}
           </span>
-          <span className="font-mono text-foreground block">
+          <span className="font-mono text-foreground block mt-1">
             {parseFloat(formattedReserve1).toLocaleString(undefined, { maximumFractionDigits: 4 })} {metadata1.symbol}
+            {reserve1Usd > 0 && (
+              <span className="text-[10px] text-emerald-400 font-bold block">
+                (~${reserve1Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)
+              </span>
+            )}
           </span>
         </div>
         <div>
@@ -1231,7 +1257,7 @@ const DEXPage: NextPage = () => {
               {/* Lista de Pools creadas */}
               <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-teal-500"></div>
-                <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 space-y-0">
                   <div>
                     <CardTitle className="text-xl font-bold flex items-center gap-2">
                       <Layers className="h-5 w-5 text-primary" />
@@ -1241,8 +1267,11 @@ const DEXPage: NextPage = () => {
                       Piscinas creadas en la fábrica de DEX.
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-primary/10 px-2.5 py-1 rounded-full text-xs font-semibold text-primary border border-primary/20 shrink-0">
-                    {allPoolAddresses.length} pools
+                  <div className="flex items-center gap-2 shrink-0">
+                    <EthPriceTicker />
+                    <div className="flex items-center gap-1.5 bg-primary/10 px-2.5 py-1 rounded-full text-xs font-semibold text-primary border border-primary/20">
+                      {allPoolAddresses.length} pools
+                    </div>
                   </div>
                 </CardHeader>
 

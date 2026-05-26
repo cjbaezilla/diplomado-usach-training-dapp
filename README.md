@@ -9,6 +9,7 @@ La plataforma proporciona una base interactiva para que estudiantes y desarrolla
 ## 🚀 Características Clave
 
 *   **Conexión de Billeteras Multired**: Integración fluida con [RainbowKit v2](https://rainbowkit.com) y [Wagmi v2](https://wagmi.sh) para conectar billeteras como MetaMask, Coinbase Wallet, Rainbow, y WalletConnect en múltiples redes (incluyendo soporte condicional para Sepolia Testnet).
+*   **Indicador de Precio de ETH en Tiempo Real**: Componente y hook reutilizable conectado a la API de Binance (`ETHUSDT`) con actualización automática cada 15 segundos y detección visual de tendencias de precio (subida/bajada).
 *   **Simulador de Portal ERC-20**:
     *   **Despliegue Ficticio**: Define el nombre, símbolo y suministro de tu propio token y despliégalo localmente.
     *   **Transferencias de Saldo**: Realiza transferencias simuladas e instantáneas de tokens a cualquier dirección hexadecimal sin costos de gas.
@@ -55,6 +56,7 @@ La organización del proyecto se detalla a continuación:
 ├── tsconfig.json             # Configuración de alias de rutas de TypeScript (@/*)
 └── src/
     ├── components/           # Componentes comunes e interfaces
+    │   ├── EthPriceTicker.tsx # Indicador visual del precio de ETH en tiempo real (Binance API)
     │   ├── Navbar.tsx        # Barra de navegación responsiva con logo de la USACH
     │   └── ui/               # Componentes atómicos de shadcn/ui (Button, Card, Input, Label)
     ├── contracts/            # Configuración e integración de contratos inteligentes
@@ -67,6 +69,7 @@ La organización del proyecto se detalla a continuación:
     ├── hooks/                # Hooks de React personalizados y utilidades de Web3
     │   ├── useBaseERC20.ts       # Hooks unificados para tokens ERC20
     │   ├── useBaseERC1155.ts     # Hooks unificados para tokens semi-fungibles ERC1155
+    │   ├── useEthPrice.ts        # Hook para obtener el precio de ETH/USDT desde la API de Binance
     │   ├── useHydrated.ts        # Hook de utilidad para mitigar errores de hidratación en SSR
     │   ├── useStudentIdentity.ts # Hooks unificados para el contrato StudentIdentity.sol
     │   └── useTokenFactory.ts    # Hooks unificados para el contrato TokenFactory.sol

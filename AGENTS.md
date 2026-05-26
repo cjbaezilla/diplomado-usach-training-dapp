@@ -55,6 +55,7 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
 ├── tsconfig.json             # Configuración del compilador de TypeScript (alias de rutas)
 └── src/
     ├── components/
+    │   ├── EthPriceTicker.tsx # Componente para mostrar precio de ETH desde Binance
     │   └── ui/               # Primitivas reutilizables de shadcn/ui (ej. button.tsx)
     ├── contracts/
     │   ├── abis/             # ABIs de contratos inteligentes extraídos como constantes 'as const'
@@ -66,6 +67,7 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
     ├── hooks/
     │   ├── useBaseERC20.ts       # Hooks para interactuar con tokens ERC20
     │   ├── useBaseERC1155.ts     # Hooks para interactuar con tokens ERC1155
+    │   ├── useEthPrice.ts        # Hook para obtener el precio de ETH/USDT desde la API de Binance
     │   ├── useHydrated.ts        # Hook de utilidad para prevenir problemas de hidratación en SSR
     │   ├── useStudentIdentity.ts # Hooks de lectura y escritura para StudentIdentity.sol
     │   └── useTokenFactory.ts    # Hooks de lectura y escritura para TokenFactory.sol
