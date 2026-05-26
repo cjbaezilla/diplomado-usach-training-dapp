@@ -1046,9 +1046,8 @@ const DEXPage: NextPage = () => {
   const currentSwapSymbol = metadataA.symbol;
   const swapAmountBigInt = swapAmountIn ? parseUnits(swapAmountIn, currentSwapDecimals) : 0n;
   
-  // Si el token es ETH nativo, no requiere aprobación ERC20
-  const isInputEth = tokenA === ETH_ADDRESS;
-  const needsSwapApproval = isInputEth ? false : swapAmountBigInt > currentSwapAllowance;
+  // Si es conversión directa ETH <-> WETH no requiere aprobación ERC20. En cualquier otro caso, se verifica contra allowance.
+  const needsSwapApproval = isWethDirectSwap ? false : swapAmountBigInt > currentSwapAllowance;
   const hasEnoughSwapBalance = currentSwapBalance >= swapAmountBigInt;
 
   // Comprobaciones para Añadir Liquidez
