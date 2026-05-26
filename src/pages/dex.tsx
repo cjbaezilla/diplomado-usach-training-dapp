@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount, useBalance, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
+import { PageHeader } from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1407,21 +1408,27 @@ const DEXPage: NextPage = () => {
       {/* Contenido Principal - Completamente fluido (sin max-w) */}
       <main className="flex-1 w-full p-4 sm:p-8 space-y-8">
         
-        {/* Encabezado */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary mb-2 transition-colors">
-              <ArrowLeft className="h-3 w-3" /> Volver al Inicio
+        {/* Encabezado Principal Homologado */}
+        <PageHeader
+          title="Simulador de Intercambio Descentralizado (DEX)"
+          description="Explora cómo funcionan las piscinas de liquidez (Liquidity Pools) y la fórmula matemática del creador de mercado automatizado (x * y = k)."
+          icon={ArrowRightLeft}
+          breadcrumbItems={[
+            { label: 'DEX / Liquidez' }
+          ]}
+          actions={
+            <Link href="/ayuda">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                Ver Ayuda
+              </Button>
             </Link>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl bg-gradient-to-r from-primary via-emerald-500 to-teal-400 bg-clip-text text-transparent flex items-center gap-3">
-              <ArrowRightLeft className="h-8 w-8 text-primary animate-pulse" />
-              Simulador de Intercambio Descentralizado (DEX)
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              Explora cómo funcionan las piscinas de liquidez (Liquidity Pools) y la fórmula del creador de mercado automatizado ($x \cdot y = k$).
-            </p>
-          </div>
-        </div>
+          }
+        />
 
       {/* Grid Educativo */}
       <div className="grid grid-cols-1 xl:grid-cols-10 gap-8">

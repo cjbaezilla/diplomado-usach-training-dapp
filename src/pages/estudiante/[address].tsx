@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
 import { Navbar } from '@/components/Navbar';
+import { PageHeader } from '@/components/PageHeader';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TokenIcon } from '@/components/TokenIcon';
 import { Footer } from '@/components/Footer';
@@ -524,13 +525,43 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
       <Navbar />
 
       <main className="flex-1 w-full p-4 sm:p-6 md:p-8 space-y-6 flex flex-col">
-        {/* Encabezado con Botón de Regreso */}
-        <div className="flex items-center gap-2 text-left">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Volver a la Academia</span>
-          </Link>
-        </div>
+        {/* Encabezado Principal Homologado */}
+        <PageHeader
+          title={profile?.isRegistered ? `Perfil de ${profile.name}` : 'Perfil de Estudiante'}
+          description="Ficha académica y reputación Web3 del estudiante en la blockchain de entrenamiento de la Universidad de Santiago de Chile."
+          icon={UserCheck}
+          breadcrumbItems={[
+            { label: 'Directorio' },
+            { label: profile?.isRegistered ? profile.name : 'Perfil' }
+          ]}
+          actions={
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
+                onClick={() => {
+                  navigator.clipboard.writeText(studentAddress);
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copiar Wallet
+              </Button>
+              {isOwnerOfProfile && (
+                <Link href="/identity">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="gap-1.5 text-xs font-semibold bg-primary hover:bg-primary/95 text-primary-foreground"
+                  >
+                    <UserCheck className="h-3.5 w-3.5" />
+                    Editar Identidad
+                  </Button>
+                </Link>
+              )}
+            </div>
+          }
+        />
 
         {/* CONTENEDOR PRINCIPAL - 2 columnas en lg, fluida sin max-w */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">

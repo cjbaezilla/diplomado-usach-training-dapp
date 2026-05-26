@@ -1,9 +1,10 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
+import { PageHeader } from '@/components/PageHeader';
 import { cn, formatSocialLink, getSocialDisplayLabel } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -205,6 +206,7 @@ contract StudentIdentity {
 }`;
 
 const IdentityPage: NextPage = () => {
+  const router = useRouter();
   const isHydrated = useHydrated();
   const { isConnected, address } = useAccount();
 
@@ -369,23 +371,29 @@ const IdentityPage: NextPage = () => {
       )}
 
       {/* Contenido Principal - Ocupa ancho completo sin max-w */}
+      {/* Contenido Principal - Ocupa ancho completo sin max-w */}
       <main className="flex-1 w-full p-4 sm:p-8 space-y-8">
         
-        {/* Encabezado Principal */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary mb-2 transition-colors">
-              <ArrowLeft className="h-3 w-3" /> Volver al Inicio
-            </Link>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent flex items-center gap-3">
-              <User className="h-8 w-8 text-indigo-500 animate-pulse" />
-              Identidad Estudiantil Digital (Student Identity)
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              Crea tu perfil profesional en la blockchain de entrenamiento de la Universidad de Santiago de Chile. Asocia tu nombre, correo, LinkedIn y Twitter de forma descentralizada.
-            </p>
-          </div>
-        </div>
+        {/* Encabezado Principal Homologado */}
+        <PageHeader
+          title="Identidad Estudiantil Digital"
+          description="Crea tu perfil profesional en la blockchain de entrenamiento de la Universidad de Santiago de Chile. Asocia tu nombre, correo, LinkedIn y Twitter de forma descentralizada."
+          icon={User}
+          breadcrumbItems={[
+            { label: 'Identidad Digital' }
+          ]}
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
+              onClick={() => router.push('/ayuda')}
+            >
+              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+              Ver Ayuda
+            </Button>
+          }
+        />
 
         {/* Sección Superior: Grid de Identidad Personal y Buscador */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 import fs from 'fs';
 import path from 'path';
 import { useAccount, useReadContract } from 'wagmi';
 import { Navbar } from '@/components/Navbar';
+import { PageHeader } from '@/components/PageHeader';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useStudentProfile } from '@/hooks/useStudentIdentity';
 import { useBaseERC1155 } from '@/hooks/useBaseERC1155';
@@ -360,19 +362,27 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
       <Navbar />
 
       <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 space-y-6 w-full">
-        {/* Encabezado Principal */}
-        <div className="flex flex-col gap-2 border-b border-border/30 pb-6 text-left">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary w-fit">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Sistema de Gamificación Educativa</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-foreground via-foreground/90 to-cyan-500 bg-clip-text text-transparent">
-            Reliquias y Logros Académicos
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-4xl">
-            Descubre e interactúa con la rica historia de la Escuela de Artes y Oficios (EAO) y la Universidad de Santiago de Chile. Colecciona insignias históricas representadas por tokens ERC-1155, sube de nivel estudiantil y activa ventajas pasivas basadas en nuestro lore universitario.
-          </p>
-        </div>
+        {/* Encabezado Principal Homologado */}
+        <PageHeader
+          title="Reliquias y Logros Académicos"
+          description="Descubre e interactúa con la rica historia de la Escuela de Artes y Oficios (EAO) y la Universidad de Santiago de Chile. Colecciona insignias históricas representadas por tokens ERC-1155, sube de nivel estudiantil y activa ventajas pasivas basadas en nuestro lore universitario."
+          icon={Award}
+          breadcrumbItems={[
+            { label: 'Reliquias / Logros' }
+          ]}
+          actions={
+            <Link href="/ayuda">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                Ver Ayuda
+              </Button>
+            </Link>
+          }
+        />
 
         {/* Diseño General en Dos Columnas (Sidebar Estudiante + Cuadrícula de Reliquias) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">

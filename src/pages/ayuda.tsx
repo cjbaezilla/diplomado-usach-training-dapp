@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { Navbar } from '@/components/Navbar';
+import { PageHeader } from '@/components/PageHeader';
 import { Footer } from '@/components/Footer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -50,19 +51,15 @@ const AyudaWiki: NextPage = () => {
       <Navbar />
 
       <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 space-y-6 w-full">
-        {/* Encabezado Principal */}
-        <div className="flex flex-col gap-2 border-b border-border/30 pb-6 text-left">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary w-fit">
-            <Compass className="h-3.5 w-3.5" />
-            <span>Guía Técnica y de Usuario</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-foreground via-foreground/90 to-cyan-500 bg-clip-text text-transparent">
-            Centro de Ayuda y Wiki DApp
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-4xl">
-            Aprende cómo interactuar con los contratos inteligentes, emitir tus propios tokens ERC-20, proveer liquidez en el DEX, gestionar tu identidad digital estudiantil y desbloquear reliquias históricas de la Escuela de Artes y Oficios (EAO) en la red blockchain.
-          </p>
-        </div>
+        {/* Encabezado Principal Homologado */}
+        <PageHeader
+          title="Centro de Ayuda y Wiki DApp"
+          description="Aprende cómo interactuar con los contratos inteligentes, emitir tus propios tokens ERC-20, proveer liquidez en el DEX, gestionar tu identidad digital estudiantil y desbloquear reliquias históricas de la Escuela de Artes y Oficios (EAO) en la red blockchain."
+          icon={Compass}
+          breadcrumbItems={[
+            { label: 'Wiki / Ayuda' }
+          ]}
+        />
 
         {/* Layout Principal de Dos Columnas: Sidebar Izquierdo + Contenido Derecho */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">

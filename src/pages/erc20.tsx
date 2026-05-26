@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { parseUnits } from 'viem';
+import { PageHeader } from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -489,21 +490,27 @@ const ERC20Page: NextPage = () => {
       {/* Contenido Principal - Ocupa ancho completo sin max-w */}
       <main className="flex-1 w-full p-4 sm:p-8 space-y-8">
         
-        {/* Encabezado Principal */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary mb-2 transition-colors">
-              <ArrowLeft className="h-3 w-3" /> Volver al Inicio
+        {/* Encabezado Principal Homologado */}
+        <PageHeader
+          title="Estándar y Despliegue de Tokens ERC-20"
+          description="Aprende el funcionamiento técnico de los tokens fungibles de Ethereum, visualiza su código Solidity y crea tu propio contrato inteligente al instante."
+          icon={Coins}
+          breadcrumbItems={[
+            { label: 'Tokens ERC-20' }
+          ]}
+          actions={
+            <Link href="/ayuda">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                Ver Ayuda
+              </Button>
             </Link>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl bg-gradient-to-r from-primary via-emerald-500 to-teal-400 bg-clip-text text-transparent flex items-center gap-3">
-              <Coins className="h-8 w-8 text-primary animate-pulse" />
-              Estándar y Despliegue de Tokens ERC-20
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              Aprende el funcionamiento técnico de los tokens fungibles de Ethereum, visualiza su código Solidity y crea tu propio contrato inteligente al instante.
-            </p>
-          </div>
-        </div>
+          }
+        />
 
         {/* Sección Superior: Grid Educativo y de Despliegue (3 Columnas, tercera más pequeña) */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
