@@ -690,10 +690,10 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
         </div>
 
         {/* Sección Educativa y Código Smart Contract - 100% de Ancho de Contenido */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 w-full mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full mt-6">
 
           {/* Explicación Educativa ERC-1155 */}
-          <Card className="lg:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-cyan-500"></div>
             <div>
               <CardHeader className="pb-3">
@@ -766,7 +766,7 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
           </Card>
 
           {/* Código del Smart Contract (Solidity) */}
-          <Card className="lg:col-span-3 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 to-primary"></div>
             <div>
               <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
@@ -798,9 +798,83 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
                       solc 0.8.35
                     </span>
                   </div>
-                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 text-left max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
+                  <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 text-left max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <code>
-                      {solidityCode}
+                      <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
+                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.35</span>;{"\n\n"}
+                      
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">AccessControl</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/access/AccessControl.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC1155</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC1155/ERC1155.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC1155Burnable</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC1155Supply</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">Strings</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/utils/Strings.sol"</span>;{"\n\n"}
+
+                      <span className="text-blue-500">contract</span> <span className="text-yellow-400 font-bold">BaseERC1155</span> <span className="text-pink-500">is</span> <span className="text-yellow-400">ERC1155</span>, <span className="text-yellow-400">AccessControl</span>, <span className="text-yellow-400">ERC1155Burnable</span>, <span className="text-yellow-400">ERC1155Supply</span> {"{"}{"\n"}
+                      {"    "}<span className="text-pink-500">using</span> <span className="text-yellow-400">Strings</span> <span className="text-pink-500">for</span> <span className="text-blue-400">uint256</span>;{"\n\n"}
+                      
+                      {"    "}<span className="text-blue-400">bytes32</span> <span className="text-pink-500">public</span> <span className="text-pink-500">constant</span> URI_SETTER_ROLE = <span className="text-purple-400">keccak256</span>(<span className="text-emerald-400">"URI_SETTER_ROLE"</span>);{"\n"}
+                      {"    "}<span className="text-blue-400">bytes32</span> <span className="text-pink-500">public</span> <span className="text-pink-500">constant</span> MINTER_ROLE = <span className="text-purple-400">keccak256</span>(<span className="text-emerald-400">"MINTER_ROLE"</span>);{"\n\n"}
+
+                      {"    "}<span className="text-blue-500">constructor</span>(<span className="text-blue-400">address</span> defaultAdmin, <span className="text-blue-400">address</span> minter){"\n"}
+                      {"        "}<span className="text-yellow-400">ERC1155</span>(<span className="text-emerald-400">"https://cbaeza.com/nft/usach/badges/"</span>){"\n"}
+                      {"    "}{"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">_grantRole</span>(DEFAULT_ADMIN_ROLE, defaultAdmin);{"\n"}
+                      {"        "}<span className="text-purple-400">_grantRole</span>(URI_SETTER_ROLE, defaultAdmin);{"\n"}
+                      {"        "}<span className="text-purple-400">_grantRole</span>(MINTER_ROLE, minter);{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">setURI</span>(<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> newuri) <span className="text-pink-500">public</span> <span className="text-amber-500">onlyRole</span>(URI_SETTER_ROLE) {"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">_setURI</span>(newuri);{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+
+                      {"    "}<span className="text-zinc-500">/**{"\n"}
+                      {"     "}* @dev Devuelve la URI de metadatos para un token ID específico.{"\n"}
+                      {"     "}* Sobrescribe la implementación de ERC1155 para concatenar dinámicamente{"\n"}
+                      {"     "}* la base URI actual con el ID en decimal y el sufijo '.json'.{"\n"}
+                      {"     "}*/</span>{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">uri</span>(<span className="text-blue-400">uint256</span> id){"\n"}
+                      {"        "}<span className="text-pink-500">public</span>{"\n"}
+                      {"        "}<span className="text-pink-500">view</span>{"\n"}
+                      {"        "}<span className="text-pink-500">override</span>{"\n"}
+                      {"        "}<span className="text-pink-500">returns</span> (<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span>){"\n"}
+                      {"    "}{"{"}{"\n"}
+                      {"        "}<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> baseURI = <span className="text-purple-400">super.uri</span>(id);{"\n\n"}
+                      {"        "}<span className="text-pink-500">if</span> (<span className="text-purple-400">bytes</span>(baseURI).length &gt; <span className="text-blue-400">0</span>) {"{"}{"\n"}
+                      {"            "}<span className="text-pink-500">return</span> <span className="text-blue-400">string</span>(<span className="text-purple-400">abi.encodePacked</span>(baseURI, id.<span className="text-purple-400">toString</span>(), <span className="text-emerald-400">".json"</span>));{"\n"}
+                      {"        "}{"}"}{"\n\n"}
+                      {"        "}<span className="text-pink-500">return</span> <span className="text-emerald-400">""</span>;{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">mint</span>(<span className="text-blue-400">address</span> account, <span className="text-blue-400">uint256</span> id, <span className="text-blue-400">uint256</span> amount, <span className="text-blue-400">bytes</span> <span className="text-pink-500">memory</span> data){"\n"}
+                      {"        "}<span className="text-pink-500">public</span>{"\n"}
+                      {"        "}<span className="text-amber-500">onlyRole</span>(MINTER_ROLE){"\n"}
+                      {"    "}{"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">_mint</span>(account, id, amount, data);{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">mintBatch</span>(<span className="text-blue-400">address</span> to, <span className="text-blue-400">uint256</span>[] <span className="text-pink-500">memory</span> ids, <span className="text-blue-400">uint256</span>[] <span className="text-pink-500">memory</span> amounts, <span className="text-blue-400">bytes</span> <span className="text-pink-500">memory</span> data){"\n"}
+                      {"        "}<span className="text-pink-500">public</span>{"\n"}
+                      {"        "}<span className="text-amber-500">onlyRole</span>(MINTER_ROLE){"\n"}
+                      {"    "}{"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">_mintBatch</span>(to, ids, amounts, data);{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">_update</span>(<span className="text-blue-400">address</span> from, <span className="text-blue-400">address</span> to, <span className="text-blue-400">uint256</span>[] <span className="text-pink-500">memory</span> ids, <span className="text-blue-400">uint256</span>[] <span className="text-pink-500">memory</span> values){"\n"}
+                      {"        "}<span className="text-pink-500">internal</span>{"\n"}
+                      {"        "}<span className="text-pink-500">override</span>(<span className="text-yellow-400">ERC1155</span>, <span className="text-yellow-400">ERC1155Supply</span>){"\n"}
+                      {"    "}{"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">super._update</span>(from, to, ids, values);{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">supportsInterface</span>(<span className="text-blue-400">bytes4</span> interfaceId){"\n"}
+                      {"        "}<span className="text-pink-500">public</span>{"\n"}
+                      {"        "}<span className="text-pink-500">view</span>{"\n"}
+                      {"        "}<span className="text-pink-500">override</span>(<span className="text-yellow-400">ERC1155</span>, <span className="text-yellow-400">AccessControl</span>){"\n"}
+                      {"        "}<span className="text-pink-500">returns</span> (<span className="text-blue-400">bool</span>){"\n"}
+                      {"    "}{"{"}{"\n"}
+                      {"        "}<span className="text-pink-500">return</span> <span className="text-purple-400">super.supportsInterface</span>(interfaceId);{"\n"}
+                      {"    "}{"}"}{"\n"}
+                      {"}"}
                     </code>
                   </pre>
                 </div>
