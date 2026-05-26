@@ -152,7 +152,7 @@ const Aprender: NextPage = () => {
       <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 space-y-6 w-full">
         {/* Encabezado Principal Homologado */}
         <PageHeader
-          title="Centro de Aprendizaje DApp"
+          title="Centro de Aprendizaje"
           description="Aprende cómo interactuar con los contratos inteligentes, emitir tus propios tokens ERC-20, proveer liquidez en el DEX, gestionar tu identidad digital estudiantil y desbloquear reliquias históricas de la Escuela de Artes y Oficios (EAO) en la red blockchain."
           icon={Compass}
           breadcrumbItems={[
@@ -162,7 +162,7 @@ const Aprender: NextPage = () => {
 
         {/* Layout Principal de Dos Columnas: Sidebar Izquierdo + Contenido Derecho */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
-          
+
           {/* 1. NAVEGACIÓN MÓVIL (Compacta con acordeón o selector) */}
           <div className="lg:hidden w-full flex flex-col gap-2.5">
             <div className="bg-card border border-border p-3.5 rounded-xl flex items-center justify-between shadow-sm">
@@ -175,7 +175,7 @@ const Aprender: NextPage = () => {
                 </span>
               </div>
             </div>
-            
+
             {/* Carrusel compacto de categorías */}
             <div className="w-full overflow-x-auto pb-1.5 scrollbar-none -mx-4 px-4">
               <div className="flex gap-1.5 w-max">
@@ -244,7 +244,7 @@ const Aprender: NextPage = () => {
                 const Icon = sec.icon;
                 const isExpanded = !!expandedSections[sec.id];
                 const isParentActive = activeParentId === sec.id;
-                
+
                 return (
                   <div key={sec.id} className="flex flex-col gap-1 text-left">
                     {/* Botón de Categoría Principal */}
@@ -462,7 +462,7 @@ const Aprender: NextPage = () => {
                   <div className="p-3 bg-muted/40 border border-border/20 rounded-xl">
                     <span className="block font-bold text-foreground text-xs uppercase mb-1">Estructura en Solidity (Profile):</span>
                     <pre className="text-[11px] font-mono text-primary bg-background/80 p-2.5 rounded border border-border/30 overflow-x-auto">
-{`struct Profile {
+                      {`struct Profile {
     string name;
     string email;
     string linkedin;
@@ -576,7 +576,7 @@ const Aprender: NextPage = () => {
                       Es el estándar más popular de la red Ethereum para representar activos intercambiables o representaciones de valor. Todos los tokens ERC-20 implementan una interfaz matemática idéntica, lo que permite que billeteras, exchanges y pools DeFi interactúen con ellos de manera universal.
                     </p>
                   </div>
-                  
+
                   <ul className="space-y-3 text-xs text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
