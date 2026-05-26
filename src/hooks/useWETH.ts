@@ -1,0 +1,75 @@
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi';
+import { WETH_CONTRACT } from '@/contracts';
+import { useHydrated } from './useHydrated';
+
+/**
+ * Hook para interactuar con el contrato WETH (deposit/withdraw) de forma reactiva.
+ * @param userAddress Dirección de la billetera del usuario conectado.
+ */
+export function useWETH(userAddress?: `0x${string}`) {
+  const isHydrated = useHydrated();
+
+  // 1. Consultar balance de ETH nativo
+  const { data: ethBalance, refetch: refetchEthBalance } = useBalance({
+    address: userAddress,
+    query: {
+      enabled: isHydrated && !!userAddress,
+    },
+  });
+
+  // 2. Consultar balance de WETH
+  const { data: wethBalance, refetch: refetchWethBalance } = useReadContract({
+    ...WETH_CONTRACT,
+    functionName: 'balanceOf',
+    args: userAddress ? [userAddress] : undefined,
+    query: {
+      enabled: isHydrated && !!userAddress,
+    },
+  });
+
+  // 3. Acciones de escritura
+  const { writeContract, data: hash, error, isPending } = useWriteContract();
+  const { isLoading: isWaitingForTx, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  /**
+   * Envuelve ETH nativo enviando valor payable al contrato de WETH.
+   * @param amount Cantidad de ETH en wei a envolver.
+   */
+  const deposit = (amount: bigint) => {
+    writeContract({
+      ...WETH_CONTRACT,
+      functionName: 'deposit',
+      value: amount,
+    });
+  };
+
+  /**
+   * Quema tokens WETH para recibir ETH nativo.
+   * @param amount Cantidad de WETH en wei a retirar y desenvolver.
+   */
+  const withdraw = (amount: bigint) => {
+    writeContract({
+      ...WETH_CONTRACT,
+      functionName: 'withdraw',
+      args: [amount],
+    });
+  };
+
+  const refetchBalances = async () => {
+    await Promise.all([refetchEthBalance(), refetchWethBalance()]);
+  };
+
+  return {
+    ethBalance: ethBalance ? ethBalance.value : 0n,
+    wethBalance: wethBalance ? (wethBalance as bigint) : 0n,
+    deposit,
+    withdraw,
+    isPending: isPending || isWaitingForTx,
+    isSuccess,
+    hash,
+    error,
+    refetchBalances,
+  };
+}

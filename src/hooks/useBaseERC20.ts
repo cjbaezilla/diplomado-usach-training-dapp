@@ -146,3 +146,35 @@ export function useERC20Balance(tokenAddress?: `0x${string}`, accountAddress?: `
     refetch,
   };
 }
+
+/**
+ * Hook para consultar la cantidad aprobada (allowance) de un token para un tercero.
+ * @param tokenAddress Dirección del contrato del token ERC20.
+ * @param ownerAddress Dirección del propietario de los fondos.
+ * @param spenderAddress Dirección autorizada a gastar.
+ */
+export function useERC20Allowance(
+  tokenAddress?: `0x${string}`,
+  ownerAddress?: `0x${string}`,
+  spenderAddress?: `0x${string}`
+) {
+  const isHydrated = useHydrated();
+  const contract = tokenAddress ? getBaseERC20Contract(tokenAddress) : null;
+
+  const { data: allowance, isLoading, error, refetch } = useReadContract({
+    ...(contract || {}),
+    functionName: 'allowance',
+    args: ownerAddress && spenderAddress ? [ownerAddress, spenderAddress] : undefined,
+    query: {
+      enabled: isHydrated && !!contract && !!ownerAddress && !!spenderAddress,
+    },
+  });
+
+  return {
+    allowance: allowance ? (allowance as bigint) : 0n,
+    isLoading: !isHydrated || isLoading,
+    error,
+    refetch,
+  };
+}
+
