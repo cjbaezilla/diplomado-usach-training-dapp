@@ -735,11 +735,20 @@ const DEXPage: NextPage = () => {
   const handleCreatePool = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPoolToken0 || !newPoolToken1) return;
-    if (newPoolToken0.toLowerCase() === newPoolToken1.toLowerCase()) {
-      setNotification({ type: 'error', message: 'Los tokens deben ser diferentes.' });
+
+    // Resolver ETH nativo a WETH para la creación en fábrica, ya que las piscinas requieren tokens ERC20
+    const token0Resolved = newPoolToken0.toLowerCase() === ETH_ADDRESS.toLowerCase() ? WETH_ADDRESS : newPoolToken0;
+    const token1Resolved = newPoolToken1.toLowerCase() === ETH_ADDRESS.toLowerCase() ? WETH_ADDRESS : newPoolToken1;
+
+    if (token0Resolved.toLowerCase() === token1Resolved.toLowerCase()) {
+      setNotification({
+        type: 'error',
+        message: 'Los tokens deben ser diferentes (el ETH nativo se representa como WETH en las piscinas).'
+      });
       return;
     }
-    factoryCrearPool(newPoolToken0, newPoolToken1);
+
+    factoryCrearPool(token0Resolved, token1Resolved);
   };
 
 
