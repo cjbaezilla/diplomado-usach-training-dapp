@@ -27,7 +27,6 @@ import {
 import {
   ArrowRightLeft,
   Coins,
-  TrendingUp,
   Plus,
   Minus,
   Info,
