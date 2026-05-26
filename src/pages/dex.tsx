@@ -88,9 +88,10 @@ interface PoolRowProps {
   poolAddress: `0x${string}`;
   userAddress?: `0x${string}`;
   refreshTrigger?: number;
+  onSelectAction?: (token0: `0x${string}`, token1: `0x${string}`, tab: 'swap' | 'add' | 'remove') => void;
 }
 
-function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
+function PoolRow({ poolAddress, userAddress, refreshTrigger, onSelectAction }: PoolRowProps) {
   const { token0, token1, reserve0, reserve1, totalSupply, isLoading: isLoadingPool, refetch: refetchPool } = useDEXPool(poolAddress);
   const { metadata: metadata0, isLoadingMetadata: isLoadingMeta0 } = useBaseERC20(token0);
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
@@ -155,7 +156,8 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
         <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
         <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
         <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
-        <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+        <td className="py-4 text-right"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+        <td className="py-4 pr-4 text-right"><div className="h-7 w-48 bg-muted rounded ml-auto" /></td>
       </tr>
     );
   }
@@ -301,7 +303,7 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
       </td>
 
       {/* Tu Participación */}
-      <td className="py-4 pr-4 text-right">
+      <td className="py-4 text-right">
         {userAddress && lpBalance > 0n ? (
           <div className="inline-flex flex-col items-end">
             <span className="font-mono font-bold text-primary text-xs">
@@ -314,6 +316,51 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger }: PoolRowProps) {
         ) : (
           <span className="text-xs text-muted-foreground font-mono">-</span>
         )}
+      </td>
+
+      {/* Acciones */}
+      <td className="py-4 pr-4 text-right">
+        <div className="flex flex-col items-end justify-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 w-20 px-1 text-[10px] font-bold border-primary/30 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-200"
+            onClick={() => {
+              if (token0 && token1) {
+                onSelectAction?.(token0, token1, 'swap');
+              }
+            }}
+          >
+            <ArrowRightLeft className="h-3 w-3 mr-1 shrink-0" />
+            <span>Swap</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 w-20 px-1 text-[10px] font-bold border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 transition-all duration-200"
+            onClick={() => {
+              if (token0 && token1) {
+                onSelectAction?.(token0, token1, 'add');
+              }
+            }}
+          >
+            <Plus className="h-3 w-3 mr-1 shrink-0" />
+            <span>+ Liq</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 w-20 px-1 text-[10px] font-bold border-rose-500/30 hover:border-rose-500 hover:bg-rose-500/10 text-rose-400 transition-all duration-200"
+            onClick={() => {
+              if (token0 && token1) {
+                onSelectAction?.(token0, token1, 'remove');
+              }
+            }}
+          >
+            <Minus className="h-3 w-3 mr-1 shrink-0" />
+            <span>- Liq</span>
+          </Button>
+        </div>
       </td>
     </tr>
   );
@@ -639,6 +686,18 @@ const DEXPage: NextPage = () => {
   const [removeLpAmount, setRemoveLpAmount] = useState('');
   const [activeActionType, setActiveActionType] = useState<'swap' | 'add_liquidity' | 'remove_liquidity' | null>(null);
   const [activeTab, setActiveTab] = useState<'swap' | 'add' | 'remove'>('swap');
+
+  const handleSelectPoolAction = (token0Addr: `0x${string}`, token1Addr: `0x${string}`, tab: 'swap' | 'add' | 'remove') => {
+    setTokenA(token0Addr);
+    setTokenB(token1Addr);
+    setActiveTab(tab);
+    
+    // Scroll suave hacia el contenedor de operaciones
+    const element = document.getElementById('operaciones-pool-card');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   // Redirigir a swap si el par es conversión directa ETH-WETH
   useEffect(() => {
@@ -1476,7 +1535,7 @@ const DEXPage: NextPage = () => {
             {/* Fila superior con 3 elementos en pantallas grandes */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
-              <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <Card id="operaciones-pool-card" className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-emerald-500 to-primary"></div>
                 <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'swap' | 'add' | 'remove')} className="w-full">
                   <CardHeader className="pb-2">
@@ -2297,7 +2356,8 @@ const DEXPage: NextPage = () => {
                           <th className="pb-3">Total Liquidez</th>
                           <th className="pb-3">Precio y Ratio</th>
                           <th className="pb-3">Total LP</th>
-                          <th className="pb-3 pr-4 text-right">Tu Participación</th>
+                          <th className="pb-3 text-right">Tu Participación</th>
+                          <th className="pb-3 pr-4 text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/20 text-xs">
@@ -2308,7 +2368,8 @@ const DEXPage: NextPage = () => {
                           <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
-                          <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                          <td className="py-4 text-right"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                          <td className="py-4 pr-4 text-right"><div className="h-7 w-48 bg-muted rounded ml-auto" /></td>
                         </tr>
                         <tr className="animate-pulse bg-muted/5">
                           <td className="py-4 pl-4"><div className="h-4 w-28 bg-muted rounded" /></td>
@@ -2317,7 +2378,8 @@ const DEXPage: NextPage = () => {
                           <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-24 bg-muted rounded" /></td>
                           <td className="py-4"><div className="h-4 w-16 bg-muted rounded" /></td>
-                          <td className="py-4 pr-4"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                          <td className="py-4 text-right"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                          <td className="py-4 pr-4 text-right"><div className="h-7 w-48 bg-muted rounded ml-auto" /></td>
                         </tr>
                       </tbody>
                     </table>
@@ -2332,7 +2394,7 @@ const DEXPage: NextPage = () => {
                   </div>
                 ) : (
                   <div className="w-full overflow-x-auto">
-                    <table className="w-full border-collapse text-left min-w-[900px]">
+                    <table className="w-full border-collapse text-left min-w-[1000px]">
                       <thead>
                         <tr className="border-b border-border/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                           <th className="pb-3 pl-4">Par / Contrato</th>
@@ -2341,7 +2403,8 @@ const DEXPage: NextPage = () => {
                           <th className="pb-3">Total Liquidez</th>
                           <th className="pb-3">Precio y Ratio</th>
                           <th className="pb-3">Total LP</th>
-                          <th className="pb-3 pr-4 text-right">Tu Participación</th>
+                          <th className="pb-3 text-right">Tu Participación</th>
+                          <th className="pb-3 pr-4 text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/20 text-xs">
@@ -2351,6 +2414,7 @@ const DEXPage: NextPage = () => {
                             poolAddress={poolAddr}
                             userAddress={address}
                             refreshTrigger={refreshTrigger}
+                            onSelectAction={handleSelectPoolAction}
                           />
                         ))}
                       </tbody>
