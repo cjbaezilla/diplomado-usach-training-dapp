@@ -427,20 +427,13 @@ const DEXPage: NextPage = () => {
   const [unwrapAmountOnSuccess, setUnwrapAmountOnSuccess] = useState<bigint | null>(null);
   const [isWethAutoProcessing, setIsWethAutoProcessing] = useState(false);
 
-  // Estados de formularios locales
-  const [activeDexTab, setActiveDexTab] = useState<'swap' | 'liquidez'>('swap');
-  const [activeLiquidityTab, setActiveLiquidityTab] = useState<'add' | 'remove'>('add');
+
 
   // Input de Swap
   const [swapAmountIn, setSwapAmountIn] = useState('');
   const [estimatedOut, setEstimatedOut] = useState('0.00');
 
-  // Input de Agregar Liquidez
-  const [liqAmount0, setLiqAmount0] = useState('');
-  const [liqAmount1, setLiqAmount1] = useState('');
 
-  // Input de Remover Liquidez
-  const [removeLpAmount, setRemoveLpAmount] = useState('');
 
   // Estados de creación de Pool
   const [newPoolToken0, setNewPoolToken0] = useState<`0x${string}` | undefined>(undefined);
@@ -499,57 +492,7 @@ const DEXPage: NextPage = () => {
     }
   }, [swapAmountIn, poolReserve0, poolReserve1, tokenA, tokenB, poolToken0, currentPoolAddress, metadataA, metadataB, isWethDirectSwap]);
 
-  // Auto-cálculo óptimo de token1 cuando se cambia token0 en Liquidez
-  const handleLiq0Change = (val: string) => {
-    setLiqAmount0(val);
-    if (!tokenA || !tokenB || !currentPoolAddress) return;
-    try {
-      const amt0 = parseUnits(val, metadataA.decimals);
-      if (amt0 <= 0n) {
-        setLiqAmount1('');
-        return;
-      }
 
-      // Validar si es token0 en el pool real
-      const isA0 = tokenA.toLowerCase() === poolToken0?.toLowerCase();
-      const res0 = isA0 ? poolReserve0 : poolReserve1;
-      const res1 = isA0 ? poolReserve1 : poolReserve0;
-
-      if (res0 === 0n || res1 === 0n) {
-        // Pool vacío, depósito inicial libre
-        return;
-      }
-
-      const amt1 = calcularCantidad1Optima(amt0, res0, res1);
-      setLiqAmount1(formatUnits(amt1, metadataB.decimals));
-    } catch {
-      setLiqAmount1('');
-    }
-  };
-
-  // Auto-cálculo óptimo de token0 cuando se cambia token1 en Liquidez
-  const handleLiq1Change = (val: string) => {
-    setLiqAmount1(val);
-    if (!tokenA || !tokenB || !currentPoolAddress) return;
-    try {
-      const amt1 = parseUnits(val, metadataB.decimals);
-      if (amt1 <= 0n) {
-        setLiqAmount0('');
-        return;
-      }
-
-      const isA0 = tokenA.toLowerCase() === poolToken0?.toLowerCase();
-      const res0 = isA0 ? poolReserve0 : poolReserve1;
-      const res1 = isA0 ? poolReserve1 : poolReserve0;
-
-      if (res0 === 0n || res1 === 0n) return;
-
-      const amt0 = calcularCantidad1Optima(amt1, res1, res0);
-      setLiqAmount0(formatUnits(amt0, metadataA.decimals));
-    } catch {
-      setLiqAmount0('');
-    }
-  };
 
   // Notificaciones flotantes con temporizador
   useEffect(() => {
@@ -584,30 +527,18 @@ const DEXPage: NextPage = () => {
   // Transacción de pool completada con éxito
   useEffect(() => {
     if (isActionSuccess && actionTxHash) {
-      let desc = 'Transacción en Pool';
-      if (activeDexTab === 'swap') {
-        desc = `Intercambio de tokens`;
-        setSwapAmountIn('');
-      } else if (activeDexTab === 'liquidez') {
-        if (activeLiquidityTab === 'add') {
-          desc = `Aporte de liquidez`;
-          setLiqAmount0('');
-          setLiqAmount1('');
-        } else {
-          desc = `Retiro de liquidez`;
-          setRemoveLpAmount('');
-        }
-      }
+      const desc = 'Intercambio de tokens';
+      setSwapAmountIn('');
 
       setNotification({
         type: 'success',
-        message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`
+        message: `¡Transacción de intercambio de tokens completada con éxito!`
       });
 
       setTransactions((prev) => [
         {
           id: `tx-${Date.now()}`,
-          type: activeDexTab === 'swap' ? 'swap' : (activeLiquidityTab === 'add' ? 'add_liquidity' : 'remove_liquidity'),
+          type: 'swap',
           description: desc,
           hash: actionTxHash,
           timestamp: 'Justo ahora',
@@ -766,57 +697,7 @@ const DEXPage: NextPage = () => {
     }
   };
 
-  // Ejecutar Aporte de Liquidez
-  const handleAddLiquidity = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPoolAddress || !liqAmount0 || !liqAmount1) return;
-    try {
-      // Validar orden de tokens en el contrato real
-      const isA0 = tokenA?.toLowerCase() === poolToken0?.toLowerCase();
-      const val0 = isA0 ? liqAmount0 : liqAmount1;
-      const val1 = isA0 ? liqAmount1 : liqAmount0;
 
-      const amt0 = parseUnits(val0, metadataA.decimals);
-      const amt1 = parseUnits(val1, metadataB.decimals);
-
-      // Si tokenA o tokenB es ETH, verificamos si es necesario envolver WETH
-      if (tokenA === ETH_ADDRESS || tokenB === ETH_ADDRESS) {
-        const isEthA = tokenA === ETH_ADDRESS;
-        const ethAmount = isEthA ? amt0 : amt1;
-        const missingWeth = ethAmount > wethBalance ? ethAmount - wethBalance : 0n;
-
-        if (missingWeth > 0n) {
-          setNotification({
-            type: 'success',
-            message: 'Iniciando conversión de ETH a WETH para poder aportar liquidez...'
-          });
-          setLastWethAction('wrap');
-          wethDeposit(missingWeth);
-          return;
-        }
-      }
-
-      actionAgregarLiquidez(amt0, amt1);
-    } catch {
-      setNotification({ type: 'error', message: 'Montos de liquidez no válidos.' });
-    }
-  };
-
-  // Ejecutar Retiro de Liquidez
-  const handleRemoveLiquidity = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPoolAddress || !removeLpAmount) return;
-    try {
-      const amt = parseUnits(removeLpAmount, 18);
-      if (amt > lpTokenBalance) {
-        setNotification({ type: 'error', message: 'Saldo LP insuficiente.' });
-        return;
-      }
-      actionRemoverLiquidez(amt);
-    } catch {
-      setNotification({ type: 'error', message: 'Monto LP no válido.' });
-    }
-  };
 
   // Crear piscina de liquidez
   const handleCreatePool = (e: React.FormEvent) => {
@@ -851,23 +732,7 @@ const DEXPage: NextPage = () => {
   const needsSwapApproval = isInputEth ? false : swapAmountBigInt > currentSwapAllowance;
   const hasEnoughSwapBalance = currentSwapBalance >= swapAmountBigInt;
 
-  // Comprobación de requerimientos de aprobación para Liquidez
-  const isA0 = tokenA?.toLowerCase() === poolToken0?.toLowerCase();
-  const amtLiqA = liqAmount0 ? parseUnits(liqAmount0, metadataA.decimals) : 0n;
-  const amtLiqB = liqAmount1 ? parseUnits(liqAmount1, metadataB.decimals) : 0n;
-  
-  const needsLiqApproveA = tokenA === ETH_ADDRESS ? false : amtLiqA > allowanceA;
-  const needsLiqApproveB = tokenB === ETH_ADDRESS ? false : amtLiqB > allowanceB;
-  
-  const hasEnoughLiqBalanceA = resolvedBalanceA >= amtLiqA;
-  const hasEnoughLiqBalanceB = resolvedBalanceB >= amtLiqB;
 
-  const missingWethForLiq = (tokenA === ETH_ADDRESS && amtLiqA > wethBalance) 
-    ? amtLiqA - wethBalance 
-    : (tokenB === ETH_ADDRESS && amtLiqB > wethBalance) 
-      ? amtLiqB - wethBalance 
-      : 0n;
-  const isWethWrapNeededForLiq = missingWethForLiq > 0n;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
@@ -1050,31 +915,11 @@ const DEXPage: NextPage = () => {
                   <div>
                     <CardTitle className="text-xl font-bold flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-primary" />
-                      Intercambio e Inversión
+                      Intercambio de Tokens (Swap)
                     </CardTitle>
                     <CardDescription>
-                      Opera con las piscinas de liquidez seleccionadas en tiempo real.
+                      Realiza intercambios de tokens de forma inmediata a través del Pool.
                     </CardDescription>
-                  </div>
-                  <div className="flex bg-muted/65 p-1 rounded-lg border border-border/20">
-                    <button
-                      onClick={() => setActiveDexTab('swap')}
-                      className={cn(
-                        "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                        activeDexTab === 'swap' ? "bg-background text-primary shadow" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      Swap
-                    </button>
-                    <button
-                      onClick={() => setActiveDexTab('liquidez')}
-                      className={cn(
-                        "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                        activeDexTab === 'liquidez' ? "bg-background text-primary shadow" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      Liquidez
-                    </button>
                   </div>
                 </CardHeader>
 
@@ -1109,11 +954,8 @@ const DEXPage: NextPage = () => {
 
                     </div>
                   ) : (
-                    /* Piscina Existente - Mostrar Swap o Liquidez */
-                    <div>
-                      {activeDexTab === 'swap' ? (
-                        /* PESTAÑA SWAP */
-                        <form onSubmit={handleSwap} className="space-y-5">
+                    /* Piscina Existente - Mostrar Swap */
+                    <form onSubmit={handleSwap} className="space-y-5">
                           <div className="space-y-4">
                             
                             {/* Input Token Entrada */}
@@ -1265,262 +1107,6 @@ const DEXPage: NextPage = () => {
                             </Button>
                           )}
                         </form>
-                      ) : (
-                        /* PESTAÑA LIQUIDEZ (ADD/REMOVE) */
-                        isWethDirectSwap ? (
-                          <div className="text-center py-8 border border-dashed border-border/40 rounded-xl space-y-3">
-                            <Info className="h-5 w-5 text-primary mx-auto" />
-                            <div className="space-y-1">
-                              <h4 className="font-semibold text-sm">No se requiere aportar liquidez</h4>
-                              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                                La relación entre ETH Nativo y WETH es siempre 1:1 y directa. No necesitas proveer liquidez en una piscina para este par.
-                              </p>
-                            </div>
-                            <Button
-                              onClick={() => setActiveDexTab('swap')}
-                              className="text-xs font-semibold"
-                            >
-                              Ir a Intercambiar (Swap)
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="space-y-6">
-                            <div className="flex justify-between items-center border-b border-border/20 pb-3 flex-wrap gap-2">
-                               <div className="flex gap-2">
-                                 <button
-                                   onClick={() => setActiveLiquidityTab('add')}
-                                   className={cn(
-                                     "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                                     activeLiquidityTab === 'add' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
-                                   )}
-                                 >
-                                   Aportar Liquidez
-                                 </button>
-                                 <button
-                                   onClick={() => setActiveLiquidityTab('remove')}
-                                   className={cn(
-                                     "px-3 py-1 text-xs font-semibold rounded-md transition-all",
-                                     activeLiquidityTab === 'remove' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground"
-                                   )}
-                                 >
-                                   Retirar Liquidez
-                                 </button>
-                               </div>
-                               <span className="text-xs font-bold text-muted-foreground bg-muted/30 px-2.5 py-1 rounded-lg border border-border/20">
-                                 Par: {metadataA.symbol} / {metadataB.symbol}
-                               </span>
-                             </div>
-
-                            {activeLiquidityTab === 'add' ? (
-                              /* APORTAR LIQUIDEZ */
-                              <form onSubmit={handleAddLiquidity} className="space-y-5">
-                                <div className="space-y-4">
-                                  
-                                  {/* Input Token 0 */}
-                                  <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                                    <div className="flex justify-between items-center text-xs">
-                                      <Label className="text-muted-foreground font-medium">Depositar {metadataA.symbol}:</Label>
-                                      <span className="font-mono text-[10.5px] text-muted-foreground">
-                                        Saldo: {parseFloat(formatUnits(balanceA, metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <Input
-                                        type="number"
-                                        placeholder="0.0"
-                                        value={liqAmount0}
-                                        onChange={(e) => handleLiq0Change(e.target.value)}
-                                        className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                        required
-                                        min="0"
-                                        step="any"
-                                      />
-                                      <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                        <TokenIcon address={tokenA} className="h-5 w-5" />
-                                        <span className="text-xs font-bold">{metadataA.symbol}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Icono de Suma */}
-                                  <div className="flex justify-center -my-2.5">
-                                    <div className="bg-primary/10 border border-primary/20 text-primary p-1.5 rounded-full shadow-inner">
-                                      <Plus className="h-3.5 w-3.5" />
-                                    </div>
-                                  </div>
-
-                                  {/* Input Token 1 */}
-                                  <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                                    <div className="flex justify-between items-center text-xs">
-                                      <Label className="text-muted-foreground font-medium">Depositar {metadataB.symbol}:</Label>
-                                      <span className="font-mono text-[10.5px] text-muted-foreground">
-                                        Saldo: {parseFloat(formatUnits(balanceB, metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <Input
-                                        type="number"
-                                        placeholder="0.0"
-                                        value={liqAmount1}
-                                        onChange={(e) => handleLiq1Change(e.target.value)}
-                                        className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                        required
-                                        min="0"
-                                        step="any"
-                                      />
-                                      <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
-                                        <TokenIcon address={tokenB} className="h-5 w-5" />
-                                        <span className="text-xs font-bold">{metadataB.symbol}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                </div>
-
-                                {/* Validar fondos de liquidez */}
-                                {((liqAmount0 && !hasEnoughLiqBalanceA) || (liqAmount1 && !hasEnoughLiqBalanceB)) && (
-                                  <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
-                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                    <span>Fondos insuficientes para aportar en la proporción requerida.</span>
-                                  </div>
-                                )}
-
-                                {/* Aprobaciones individuales o Botón de Aportar */}
-                                {isWethWrapNeededForLiq && (hasEnoughLiqBalanceA && hasEnoughLiqBalanceB) ? (
-                                  <Button
-                                    type="button"
-                                    onClick={handleAddLiquidity}
-                                    disabled={isWethPending}
-                                    className="w-full font-bold shadow-md bg-amber-600 hover:bg-amber-700 text-white"
-                                  >
-                                    {isWethPending ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                        Convirtiendo ETH a WETH...
-                                      </>
-                                    ) : (
-                                      <>
-                                        1. Envolver {parseFloat(formatUnits(missingWethForLiq, 18)).toFixed(4)} ETH a WETH
-                                      </>
-                                    )}
-                                  </Button>
-                                ) : needsLiqApproveA && hasEnoughLiqBalanceA ? (
-                                  <Button
-                                    type="button"
-                                    onClick={() => handleApprove(tokenA, liqAmount0, metadataA.decimals)}
-                                    disabled={isPendingApproveA}
-                                    className="w-full font-bold shadow-md"
-                                  >
-                                    {isPendingApproveA ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                        Aprobando {metadataA.symbol}...
-                                      </>
-                                    ) : (
-                                      <>
-                                        Aprobar {metadataA.symbol}
-                                      </>
-                                    )}
-                                  </Button>
-                                ) : needsLiqApproveB && hasEnoughLiqBalanceB ? (
-                                  <Button
-                                    type="button"
-                                    onClick={() => handleApprove(tokenB, liqAmount1, metadataB.decimals)}
-                                    disabled={isPendingApproveB}
-                                    className="w-full font-bold shadow-md"
-                                  >
-                                    {isPendingApproveB ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                        Aprobando {metadataB.symbol}...
-                                      </>
-                                    ) : (
-                                      <>
-                                        Aprobar {metadataB.symbol}
-                                      </>
-                                    )}
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    type="submit"
-                                    disabled={isActionPending || !liqAmount0 || !liqAmount1 || !hasEnoughLiqBalanceA || !hasEnoughLiqBalanceB}
-                                    className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
-                                  >
-                                    {isActionPending ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                        Aportando Liquidez...
-                                      </>
-                                    ) : (
-                                      <>
-                                        Depositar Fondos (Aportar)
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
-                              </form>
-                            ) : (
-                              /* RETIRAR LIQUIDEZ */
-                              <form onSubmit={handleRemoveLiquidity} className="space-y-5">
-                                <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
-                                  <div className="flex justify-between items-center text-xs">
-                                    <Label className="text-muted-foreground font-medium">Cantidad de LP Tokens a quemar:</Label>
-                                    <span className="font-mono text-[10.5px] text-muted-foreground">
-                                      Saldo LP: {parseFloat(formatUnits(lpTokenBalance, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <Input
-                                      type="number"
-                                      placeholder="0.0"
-                                      value={removeLpAmount}
-                                      onChange={(e) => setRemoveLpAmount(e.target.value)}
-                                      className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                      required
-                                      min="0"
-                                      step="any"
-                                    />
-                                    <Button 
-                                      type="button" 
-                                      size="sm" 
-                                      variant="outline" 
-                                      className="text-[10px] h-7 px-2 shrink-0 border-border/50"
-                                      onClick={() => setRemoveLpAmount(formatUnits(lpTokenBalance, 18))}
-                                    >
-                                      Máx
-                                    </Button>
-                                  </div>
-                                </div>
-
-                                {removeLpAmount && parseUnits(removeLpAmount, 18) > lpTokenBalance && (
-                                  <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 p-2.5 rounded-lg">
-                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                    <span>Supera el saldo disponible de LP tokens en esta piscina.</span>
-                                  </div>
-                                )}
-
-                                <Button
-                                  type="submit"
-                                  disabled={isActionPending || !removeLpAmount || parseUnits(removeLpAmount, 18) > lpTokenBalance || parseFloat(removeLpAmount) <= 0}
-                                  className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
-                                >
-                                  {isActionPending ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                      Retirando Liquidez...
-                                    </>
-                                  ) : (
-                                    <>
-                                      Retirar Fondos (Quemar LP)
-                                    </>
-                                  )}
-                                </Button>
-                              </form>
-                            )}
-                          </div>
-                        )
-                      )}
-                    </div>
                   )}
                 </CardContent>
               </Card>
