@@ -40,13 +40,15 @@ Por favor, respeta estas versiones específicas de librerías e integraciones. N
 
 ## 3. Mapa de Estructura de Directorios
 
-A continuación se muestra el mapa de directorios. Familiarízate con la distribución antes de crear nuevos archivos.
+A continuación se muestra el mapa de directorios actual de la aplicación. Familiarízate con la distribución antes de proponer cambios o crear archivos.
 
 ```
 ├── .env                      # Variables de entorno locales (direcciones de contratos)
 ├── .env.example              # Plantilla de configuración de variables de entorno
 ├── .eslintrc.json            # Reglas de ESLint (Next.js core-web-vitals)
 ├── .gitignore                # Exclusiones de Git
+├── AGENTS.md                 # Guía y reglas del sistema para agentes de desarrollo IA (este archivo)
+├── README.md                 # Documentación principal de la dApp
 ├── components.json           # Configuración del CLI de shadcn/ui
 ├── next-env.d.ts             # Declaraciones de TypeScript para Next.js
 ├── next.config.js            # Archivo de configuración de Next.js
@@ -55,32 +57,65 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
 ├── tsconfig.json             # Configuración del compilador de TypeScript (alias de rutas)
 └── src/
     ├── components/
-    │   ├── EthPriceTicker.tsx # Componente para mostrar precio de ETH desde Binance
-    │   └── ui/               # Primitivas reutilizables de shadcn/ui (ej. button.tsx)
+    │   ├── CreatedTokens.tsx     # Panel de tokens creados desde la fábrica
+    │   ├── EthPriceTicker.tsx    # Componente para mostrar precio de ETH en tiempo real (Binance API)
+    │   ├── FaucetInfo.tsx        # Panel con información y grifo de tokens de prueba
+    │   ├── Footer.tsx            # Pie de página académico unificado con créditos profesionales
+    │   ├── Navbar.tsx            # Barra de navegación con soporte responsive e integración de RainbowKit
+    │   ├── PageHeader.tsx        # Cabecera académica común con breadcrumbs y acciones contextuales
+    │   ├── RecentIdentities.tsx  # Actividad reciente: últimas identidades de estudiantes registradas
+    │   ├── RecentPools.tsx       # Actividad reciente: últimos pools de liquidez del DEX creados
+    │   ├── StudentSearch.tsx     # Buscador de perfiles de estudiantes por dirección o nombre
+    │   ├── TokenIcon.tsx         # Icono representativo para los tokens de la plataforma
+    │   ├── UserAvatar.tsx        # Avatar visual identificatorio para estudiantes
+    │   ├── WalletGuide.tsx       # Guía instructiva para conectar y configurar billeteras Web3
+    │   └── ui/                   # Primitivas reutilizables de shadcn/ui
+    │       ├── badge.tsx
+    │       ├── button.tsx
+    │       ├── card.tsx
+    │       ├── dialog.tsx
+    │       ├── input.tsx
+    │       ├── label.tsx
+    │       ├── progress.tsx
+    │       └── tabs.tsx
     ├── contracts/
-    │   ├── abis/             # ABIs de contratos inteligentes extraídos como constantes 'as const'
-    │   │   ├── baseERC20.ts
+    │   ├── abis/                 # ABIs de contratos inteligentes como constantes 'as const'
     │   │   ├── baseERC1155.ts
+    │   │   ├── baseERC20.ts
+    │   │   ├── dexFactory.ts
+    │   │   ├── dexPool.ts
     │   │   ├── studentIdentity.ts
-    │   │   └── tokenFactory.ts
-    │   └── index.ts          # Configuración y exportación unificada de contratos con sus direcciones
+    │   │   ├── tokenFactory.ts
+    │   │   └── weth.ts
+    │   └── index.ts              # Configuración y exportación centralizada de contratos y direcciones
     ├── hooks/
-    │   ├── useBaseERC20.ts       # Hooks para interactuar con tokens ERC20
-    │   ├── useBaseERC1155.ts     # Hooks para interactuar con tokens ERC1155
+    │   ├── useBaseERC1155.ts     # Hooks para interactuar con tokens ERC1155 (Reliquias)
+    │   ├── useBaseERC20.ts       # Hooks para interactuar con tokens ERC20 estándar
+    │   ├── useDEXFactory.ts      # Hooks para interactuar con la fábrica del DEX (creación y listado de pools)
+    │   ├── useDEXPool.ts         # Hooks para interactuar con piscinas individuales del DEX (swap, liquidez)
     │   ├── useEthPrice.ts        # Hook para obtener el precio de ETH/USDT desde la API de Binance
-    │   ├── useHydrated.ts        # Hook de utilidad para prevenir problemas de hidratación en SSR
+    │   ├── useHydrated.ts        # Hook para mitigar problemas de hidratación en SSR
     │   ├── useStudentIdentity.ts # Hooks de lectura y escritura para StudentIdentity.sol
-    │   └── useTokenFactory.ts    # Hooks de lectura y escritura para TokenFactory.sol
+    │   ├── useTokenFactory.ts    # Hooks de lectura y escritura para TokenFactory.sol
+    │   └── useWETH.ts            # Hooks para interactuar con WETH (depósitos, retiros)
     ├── lib/
-    │   └── utils.ts          # Ayudantes principales (utilidad cn para tailwind-merge)
+    │   └── utils.ts              # Utilidad cn para fusión limpia de Tailwind classes
     ├── pages/
-    │   ├── _app.tsx          # Punto de entrada de la aplicación (envuelve los Providers e importa CSS global)
-    │   └── index.tsx         # Página de inicio/aterrizaje de la aplicación
+    │   ├── _app.tsx              # Envoltura de Providers (Wagmi, RainbowKit, React Query) e importaciones globales
+    │   ├── index.tsx             # Página principal / panel de inicio
+    │   ├── aprender.tsx          # Portal de aprendizaje con menú interactivo tipo árbol de categorías
+    │   ├── dex.tsx               # Intercambio Descentralizado (DEX): swap de tokens y provisión de liquidez
+    │   ├── erc20.tsx             # Simulador y fábrica de tokens ERC-20
+    │   ├── identity.tsx          # Gestión y registro del Perfil Estudiantil
+    │   ├── relics.tsx            # Portal de Reliquias ERC-1155
+    │   └── estudiante/
+    │       └── [address].tsx     # Perfil público de estudiante (balances, pools, reliquias)
     ├── styles/
-    │   ├── globals.css       # Importación de Tailwind v4 y tokens de variables del sistema de diseño
-    │   └── Home.module.css   # Estilos de módulo específicos para la página de inicio
-    └── wagmi.ts              # Configuración de Wagmi, RainbowKit y cadenas (Chains)
+    │   ├── globals.css           # Estilos globales, Tailwind v4 y variables OKLCH del tema
+    │   └── Home.module.css       # Estilos específicos opcionales para la página de inicio
+    └── wagmi.ts                  # Configuración de Wagmi y RainbowKit (hardhat, localhost)
 ```
+
 
 ---
 
@@ -140,13 +175,15 @@ A continuación se muestra el mapa de directorios. Familiarízate con la distrib
 - **Definiciones 'as const' de ABIs**:
   - Los ABIs se exportan en `@/contracts/abis/` usando el modificador de TypeScript `as const`. Esto permite que Wagmi y Viem infieran de manera exacta los tipos de los argumentos y retornos de las funciones, proporcionando autocompletado nativo y previniendo errores de desarrollo.
 - **Hooks Reutilizables**:
-  - Prefiere siempre utilizar los hooks de alto nivel predefinidos en la dApp para realizar consultas y mutaciones (escrituras) en lugar de instanciar `useReadContract` o `useWriteContract` directamente:
+  - Prefiere siempre utilizar los hooks de alto nivel predefinidos en la dApp para realizar consultas y mutaciones (escrituras) en lugar de instanciar `useReadContract` or `useWriteContract` directamente:
     - Para `StudentIdentity.sol`: Usa `useStudentProfile`, `useAllStudents` y `useStudentIdentityActions` desde `@/hooks/useStudentIdentity`.
     - Para `TokenFactory.sol`: Usa `useAllTokens`, `useTokensByOwner` y `useTokenFactoryActions` desde `@/hooks/useTokenFactory`.
     - Para `BaseERC20.sol`: Usa `useBaseERC20` (metadatos y acciones de transferencia, aprobación, acuñación y quema) y `useERC20Balance` (lectura de balances) desde `@/hooks/useBaseERC20`.
     - Para `BaseERC1155.sol`: Usa `useBaseERC1155` (acciones de transferencia, aprobación, acuñación y quema), `useERC1155Balance` (lectura de balances de tokens específicos) y `useERC1155Uri` (lectura de URIs de metadatos) desde `@/hooks/useBaseERC1155`.
-- **Cadenas Soportadas**: Mainnet, Polygon, Optimism, Arbitrum, Base y Sepolia (Sepolia se habilita condicionalmente si `process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'`).
-- **Red Local (Hardhat / Localhost)**: Integrado por defecto con el soporte a la red local para pruebas y despliegue rápido.
+    - Para `DEXFactory.sol` y `DEXPool.sol`: Usa `useAllDEXPools` y `useDEXFactoryActions` desde `@/hooks/useDEXFactory` para gestión de piscinas, y `useDEXPool` (swap, agregar/remover liquidez, balances y estimaciones) desde `@/hooks/useDEXPool`.
+    - Para `WETH.sol`: Usa `useWETH` (acciones de depósito, retiro y aprobación de WETH) desde `@/hooks/useWETH`.
+- **Cadenas Soportadas**: Redes locales de desarrollo (`Hardhat` y `Localhost`) configuradas directamente en `src/wagmi.ts`.
+- **Red Local (Hardhat / Localhost)**: Soporte principal habilitado para facilitar el desarrollo, pruebas y despliegue rápido.
 
 ### F. Restricción de Ancho Máximo (max-w) en Diseños (Layouts)
 - **Diseño Completamente Fluido**: Está estrictamente prohibido utilizar clases de limitación de ancho máximo (como `max-w-` de Tailwind CSS o la propiedad `max-width` de CSS) en los contenedores principales, secciones de contenido general o layouts de página.
