@@ -11,6 +11,8 @@ import { WalletGuide } from '@/components/WalletGuide';
 import { useHydrated } from '@/hooks/useHydrated';
 import { StudentSearch } from '@/components/StudentSearch';
 import { CreatedTokens } from '@/components/CreatedTokens';
+import { RecentIdentities } from '@/components/RecentIdentities';
+import { RecentPools } from '@/components/RecentPools';
 import { Footer } from '@/components/Footer';
 
 const Home: NextPage = () => {
@@ -149,10 +151,16 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        {/* Comunidad y Tokens Creados */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start pt-8 border-t border-border/30">
-          <StudentSearch />
+        {/* Resumen de Actividad: Identidades, Tokens y Pools */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full items-stretch pt-8 border-t border-border/30">
+          <RecentIdentities />
           <CreatedTokens />
+          <RecentPools />
+        </div>
+
+        {/* Buscador de Estudiantes de ancho completo */}
+        <div className="w-full pt-8 border-t border-border/30">
+          <StudentSearch />
         </div>
 
         {/* Secciones informativas lado a lado */}
