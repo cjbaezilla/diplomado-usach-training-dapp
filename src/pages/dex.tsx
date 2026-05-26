@@ -220,7 +220,7 @@ function TokenOptionItem({ tokenAddress, userAddress }: { tokenAddress: `0x${str
 
   return (
     <option value={tokenAddress} className="bg-card text-foreground text-xs">
-      {isEth ? 'ETH Nativo' : metadata.symbol || tokenAddress.substring(0, 6)} - {isEth ? 'Ether' : metadata.name} (Saldo: {formattedBalance})
+      {isEth ? 'ETH Nativo' : metadata.symbol || tokenAddress.substring(0, 6)} - {isEth ? 'Ether' : metadata.name}
     </option>
   );
 }
