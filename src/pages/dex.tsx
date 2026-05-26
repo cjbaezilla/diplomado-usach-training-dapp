@@ -45,7 +45,8 @@ import {
   Layers,
   ArrowDownUp,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ExternalLink
 } from 'lucide-react';
 import { useAllTokens } from '@/hooks/useTokenFactory';
 import { useBaseERC20, useERC20Balance, useERC20Allowance } from '@/hooks/useBaseERC20';
@@ -1825,10 +1826,18 @@ const DEXPage: NextPage = () => {
                 </div>
               </CardContent>
             </div>
-            <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
+            <CardFooter className="bg-muted/10 border-t border-border/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
               <span className="text-[10.5px] text-muted-foreground">
                 * Implementa el cálculo con mitigación de reentrada mediante ReentrancyGuard.
               </span>
+              <a
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts/blob/main/contracts/DEXPool.sol"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10.5px] text-indigo-500 hover:text-indigo-600 hover:underline flex items-center gap-1 font-semibold shrink-0"
+              >
+                Ver en GitHub <ExternalLink className="h-3 w-3" />
+              </a>
             </CardFooter>
           </Card>
         </div>

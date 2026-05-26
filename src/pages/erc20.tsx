@@ -37,6 +37,7 @@ import {
   BookOpen,
   HelpCircle,
   Activity,
+  ExternalLink,
 } from 'lucide-react';
 import { useAllTokens, useTokenFactoryActions } from '@/hooks/useTokenFactory';
 import { useBaseERC20, useERC20Balance } from '@/hooks/useBaseERC20';
@@ -636,10 +637,18 @@ const ERC20Page: NextPage = () => {
                 </div>
               </CardContent>
             </div>
-            <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
+            <CardFooter className="bg-muted/10 border-t border-border/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
               <span className="text-[10.5px] text-muted-foreground">
                 * Este código es un ejemplo básico. La fábrica utiliza un contrato similar.
               </span>
+              <a
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts/blob/main/contracts/BaseERC20.sol"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10.5px] text-emerald-500 hover:text-emerald-600 hover:underline flex items-center gap-1 font-semibold shrink-0"
+              >
+                Ver en GitHub <ExternalLink className="h-3 w-3" />
+              </a>
             </CardFooter>
           </Card>
 
