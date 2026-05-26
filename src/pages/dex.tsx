@@ -947,6 +947,17 @@ const DEXPage: NextPage = () => {
     if (!removeLpAmount || !currentPoolAddress) return;
     try {
       const amtLP = parseUnits(removeLpAmount, 18);
+
+      // Si alguno de los tokens es ETH nativo, calculamos cuánto WETH recibiremos
+      // y configuramos el auto-unwrap para cuando se complete el retiro de liquidez.
+      if (tokenA === ETH_ADDRESS) {
+        const estWethToReceive = parseUnits(estimatedReceiveA, 18);
+        setUnwrapAmountOnSuccess(estWethToReceive);
+      } else if (tokenB === ETH_ADDRESS) {
+        const estWethToReceive = parseUnits(estimatedReceiveB, 18);
+        setUnwrapAmountOnSuccess(estWethToReceive);
+      }
+
       setActiveActionType('remove_liquidity');
       actionRemoverLiquidez(amtLP);
     } catch {
@@ -984,14 +995,6 @@ const DEXPage: NextPage = () => {
 
 
 
-  if (!isHydrated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   // Comprobación de requerimientos de aprobación para Swap
   const currentSwapAllowance = allowanceA;
   const currentSwapBalance = resolvedBalanceA;
@@ -1007,17 +1010,35 @@ const DEXPage: NextPage = () => {
   // Comprobaciones para Añadir Liquidez
   const addAmountBigIntA = addAmountA ? parseUnits(addAmountA, metadataA.decimals) : 0n;
   const addAmountBigIntB = addAmountB ? parseUnits(addAmountB, metadataB.decimals) : 0n;
-  const needsAddApproveA = tokenA !== ETH_ADDRESS && addAmountBigIntA > allowanceA;
-  const needsAddApproveB = tokenB !== ETH_ADDRESS && addAmountBigIntB > allowanceB;
-  const hasEnoughAddBalanceA = resolvedBalanceA >= addAmountBigIntA;
-  const hasEnoughAddBalanceB = resolvedBalanceB >= addAmountBigIntB;
+  const needsAddApproveA = addAmountBigIntA > allowanceA;
+  const needsAddApproveB = addAmountBigIntB > allowanceB;
+  const hasEnoughAddBalanceA = tokenA === ETH_ADDRESS 
+    ? (ethBalance + wethBalance) >= addAmountBigIntA 
+    : resolvedBalanceA >= addAmountBigIntA;
+  const hasEnoughAddBalanceB = tokenB === ETH_ADDRESS 
+    ? (ethBalance + wethBalance) >= addAmountBigIntB 
+    : resolvedBalanceB >= addAmountBigIntB;
   const isEthSelectedForLiquidity = tokenA === ETH_ADDRESS || tokenB === ETH_ADDRESS;
+
+  const wethNeededForAdd = useMemo(() => {
+    if (!tokenA || !tokenB) return 0n;
+    if (tokenA === ETH_ADDRESS) return addAmountBigIntA;
+    if (tokenB === ETH_ADDRESS) return addAmountBigIntB;
+    return 0n;
+  }, [tokenA, tokenB, addAmountBigIntA, addAmountBigIntB]);
 
   // Comprobaciones para Retirar Liquidez
   const removeLpBigInt = removeLpAmount ? parseUnits(removeLpAmount, 18) : 0n;
   const hasEnoughLpBalance = lpTokenBalance >= removeLpBigInt;
 
 
+  if (!isHydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
@@ -1596,16 +1617,6 @@ const DEXPage: NextPage = () => {
                               </div>
                             )}
 
-                            {/* Advertencia de ETH nativo */}
-                            {isEthSelectedForLiquidity && (
-                              <div className="flex items-start gap-1.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
-                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                <span>
-                                  Las piscinas de liquidez solo aceptan tokens ERC20. Por favor, selecciona <strong>WETH</strong> en lugar de ETH para añadir liquidez. Puedes envolver tu ETH a WETH en la pestaña de Swap.
-                                </span>
-                              </div>
-                            )}
-
                             <div className="space-y-4">
                               {/* Token A Input */}
                               <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
@@ -1622,7 +1633,7 @@ const DEXPage: NextPage = () => {
                                     value={addAmountA}
                                     onChange={(e) => handleAddAmountAChange(e.target.value)}
                                     className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                    disabled={isEthSelectedForLiquidity || !poolExists}
+                                    disabled={!poolExists}
                                     required
                                     min="0"
                                     step="any"
@@ -1666,7 +1677,7 @@ const DEXPage: NextPage = () => {
                                     value={addAmountB}
                                     onChange={(e) => handleAddAmountBChange(e.target.value)}
                                     className="border-none bg-transparent shadow-none text-lg font-mono flex-1 p-0 focus-visible:ring-0 focus-visible:border-none focus-visible:outline-none"
-                                    disabled={isEthSelectedForLiquidity || !poolExists}
+                                    disabled={!poolExists}
                                     required
                                     min="0"
                                     step="any"
@@ -1723,18 +1734,35 @@ const DEXPage: NextPage = () => {
                             )}
 
                             {/* Botones de acción */}
-                            {isEthSelectedForLiquidity ? (
-                              <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
-                                Añadir Liquidez (Selecciona WETH)
-                              </Button>
-                            ) : !poolExists ? (
+                            {!poolExists ? (
                               <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
                                 Piscina No Creada
+                              </Button>
+                            ) : wethNeededForAdd > wethBalance ? (
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  setLastWethAction('wrap');
+                                  wethDeposit(wethNeededForAdd - wethBalance);
+                                }}
+                                disabled={isWethPending}
+                                className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-amber-600 hover:bg-amber-700 text-white"
+                              >
+                                {isWethPending ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    Convirtiendo ETH a WETH...
+                                  </>
+                                ) : (
+                                  <>
+                                    1. Envolver {parseFloat(formatUnits(wethNeededForAdd - wethBalance, 18)).toFixed(4)} ETH a WETH
+                                  </>
+                                )}
                               </Button>
                             ) : needsAddApproveA && hasEnoughAddBalanceA ? (
                               <Button
                                 type="button"
-                                onClick={() => handleApprove(tokenA!, addAmountA, metadataA.decimals)}
+                                onClick={() => handleApprove(resolvedTokenA!, addAmountA, metadataA.decimals)}
                                 disabled={isPendingApproveA}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
                               >
@@ -1750,7 +1778,7 @@ const DEXPage: NextPage = () => {
                             ) : needsAddApproveB && hasEnoughAddBalanceB ? (
                               <Button
                                 type="button"
-                                onClick={() => handleApprove(tokenB!, addAmountB, metadataB.decimals)}
+                                onClick={() => handleApprove(resolvedTokenB!, addAmountB, metadataB.decimals)}
                                 disabled={isPendingApproveB}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
                               >
@@ -1792,16 +1820,7 @@ const DEXPage: NextPage = () => {
                               </div>
                             )}
 
-                            {isEthSelectedForLiquidity && (
-                              <div className="flex items-start gap-1.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
-                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                <span>
-                                  Las piscinas de liquidez solo aceptan tokens ERC20. Por favor, selecciona <strong>WETH</strong> en lugar de ETH para gestionar tu liquidez.
-                                </span>
-                              </div>
-                            )}
-
-                            {poolExists && !isEthSelectedForLiquidity && (
+                            {poolExists && (
                               <div className="space-y-4">
                                 {/* Entrada de LP */}
                                 <div className="bg-muted/30 p-3 rounded-xl border border-border/20 space-y-2">
@@ -1881,11 +1900,7 @@ const DEXPage: NextPage = () => {
                             )}
 
                             {/* Botón de acción */}
-                            {isEthSelectedForLiquidity ? (
-                              <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
-                                Retirar Liquidez (Selecciona WETH)
-                              </Button>
-                            ) : !poolExists ? (
+                            {!poolExists ? (
                               <Button type="button" disabled className="w-full font-bold shadow-md opacity-60 cursor-not-allowed">
                                 Piscina No Creada
                               </Button>
