@@ -212,6 +212,10 @@ export function Navbar() {
               <Home className="h-3.5 w-3.5" />
               Inicio
             </Link>
+            <Link href="/desafios" className={getNavLinkClass('/desafios')}>
+              <Trophy className="h-3.5 w-3.5" />
+              Desafíos
+            </Link>
             <Link href="/erc20" className={getNavLinkClass('/erc20')}>
               <Coins className="h-3.5 w-3.5" />
               Tokens ERC20
@@ -223,10 +227,6 @@ export function Navbar() {
             <Link href="/identity" className={getNavLinkClass('/identity')}>
               <User className="h-3.5 w-3.5" />
               Identidad
-            </Link>
-            <Link href="/desafios" className={getNavLinkClass('/desafios')}>
-              <Trophy className="h-3.5 w-3.5" />
-              Desafíos
             </Link>
             <Link href="/relics" className={getNavLinkClass('/relics')}>
               <Award className="h-3.5 w-3.5" />
@@ -328,6 +328,14 @@ export function Navbar() {
                 Inicio
               </Link>
               <Link
+                href="/desafios"
+                className={getMobileNavLinkClass('/desafios')}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Trophy className="h-4 w-4" />
+                Desafíos
+              </Link>
+              <Link
                 href="/erc20"
                 className={getMobileNavLinkClass('/erc20')}
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -350,14 +358,6 @@ export function Navbar() {
               >
                 <User className="h-4 w-4" />
                 Identidad
-              </Link>
-              <Link
-                href="/desafios"
-                className={getMobileNavLinkClass('/desafios')}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Trophy className="h-4 w-4" />
-                Desafíos
               </Link>
               <Link
                 href="/relics"
