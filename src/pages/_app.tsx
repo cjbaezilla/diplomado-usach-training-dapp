@@ -7,6 +7,7 @@ import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 
 import { config } from '../wagmi';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const client = new QueryClient();
 
@@ -21,7 +22,9 @@ function MyApp({ Component, pageProps }: AppProps) {
             accentColorForeground: '#0f172a',
           })}
         >
-          <Component {...pageProps} />
+          <TooltipProvider>
+            <Component {...pageProps} />
+          </TooltipProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CreatorCellProps {
   address: `0x${string}`;
@@ -488,7 +489,28 @@ const TokenRankingPage: NextPage = () => {
                     <th className="py-3 pl-6 w-[80px]">Rango</th>
                     <th className="py-3 px-4 min-w-[200px]">Token</th>
                     <th className="py-3 px-4 min-w-[150px]">Creador</th>
-                    <th className="py-3 px-3 min-w-[100px]">Valor Unitario</th>
+                    <th className="py-3 px-3 min-w-[140px]">
+                      <div className="flex items-center gap-1.5">
+                        <span>Valor Unitario</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" className="cursor-help text-muted-foreground hover:text-foreground transition-colors p-0.5 focus:outline-none" aria-label="Información sobre cálculo del valor unitario">
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="p-3 w-72 flex flex-col gap-2">
+                            <span className="font-bold text-xs text-primary">Cálculo del Valor</span>
+                            <span className="text-[11px] text-muted-foreground leading-relaxed">
+                              El valor unitario estimado se calcula usando la proporción de reservas en la piscina de liquidez del DEX:
+                            </span>
+                            <div className="text-[10px] font-mono bg-muted/50 p-2 rounded border border-border/40 text-foreground flex flex-col gap-1">
+                              <div>1. Tasa = Reservas WETH / Reservas Token</div>
+                              <div>2. Valor USD = Tasa × Precio de ETH</div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </th>
                     <th className="py-3 px-4 text-right min-w-[160px]">Liquidez Bloqueada</th>
                     <th className="py-3 px-6 min-w-[220px]">Tasa de Cambio</th>
                     <th className="py-3 pr-6 text-right w-[120px]">Acciones</th>
@@ -558,12 +580,27 @@ const TokenRankingPage: NextPage = () => {
                         {/* Valor Unitario (USD) */}
                         <td className="py-2.5 px-3">
                           {token.poolAddress ? (
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] text-muted-foreground">1 {token.symbol} ≈</span>
-                                <UsdValue wethAmount={token.ratioTokenToWeth} className="text-xs font-extrabold text-emerald-500" />
-                              </div>
-                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex flex-col gap-0.5 cursor-help">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[10px] text-muted-foreground">1 {token.symbol} ≈</span>
+                                    <UsdValue wethAmount={token.ratioTokenToWeth} className="text-xs font-extrabold text-emerald-500" />
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="p-3 w-72 flex flex-col gap-1.5">
+                                <span className="font-bold text-xs text-foreground">Detalle del Valor</span>
+                                <span className="text-[11px] text-muted-foreground">
+                                  Precio basado en la liquidez de la piscina {token.symbol}/WETH:
+                                </span>
+                                <div className="text-[10px] font-mono bg-muted/50 p-2 rounded border border-border/40 text-foreground flex flex-col gap-1">
+                                  <div>• 1 {token.symbol} = {formatRatio(token.ratioTokenToWeth)} WETH</div>
+                                  <div>• Reservas {token.symbol}: {parseFloat(formattedTokenReserve).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
+                                  <div>• Reservas WETH: {parseFloat(formattedWeth).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
                             <span className="text-muted-foreground font-medium italic">-</span>
                           )}
