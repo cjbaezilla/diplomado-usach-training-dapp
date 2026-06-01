@@ -1932,9 +1932,9 @@ const DEXPage: NextPage = () => {
           <div className="space-y-8">
             
             {/* Fila superior con 3 elementos en pantallas grandes */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               
-              <Card id="operaciones-pool-card" className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <Card id="operaciones-pool-card" className="lg:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-emerald-500 to-primary"></div>
                 <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'swap' | 'add' | 'remove')} className="w-full">
                   <CardHeader className="pb-2">
@@ -2573,7 +2573,7 @@ const DEXPage: NextPage = () => {
               </Card>
 
               {/* Crear Nueva Piscina (Pool) */}
-              <Card id="create-pool-card" className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <Card id="create-pool-card" className="lg:col-span-1 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 to-primary"></div>
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -2635,7 +2635,7 @@ const DEXPage: NextPage = () => {
               </Card>
 
               {/* Registro de transacciones de la sesión */}
-              <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <Card className="lg:col-span-1 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-500"></div>
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
