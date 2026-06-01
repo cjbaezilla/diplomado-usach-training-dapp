@@ -10,7 +10,7 @@ La plataforma proporciona una base interactiva para que estudiantes y desarrolla
 
 ## 🚀 Características Clave
 
-*   **Conexión de Billeteras Web3**: Integración fluida con [RainbowKit v2](https://rainbowkit.com) y [Wagmi v2](https://wagmi.sh) para conectar billeteras como MetaMask, Coinbase Wallet, Rainbow y WalletConnect en redes de desarrollo locales (Hardhat y Localhost).
+*   **Conexión de Billeteras Web3**: Integración fluida con [RainbowKit v2](https://rainbowkit.com) y [Wagmi v2](https://wagmi.sh) para conectar billeteras como MetaMask, Coinbase Wallet, Rainbow y WalletConnect en la red de prueba Sepolia.
 *   **Indicador de Precio de ETH en Tiempo Real**: Componente y hook reutilizable conectado a la API de Binance (`ETHUSDT`) con actualización automática cada 15 segundos y detección visual de tendencias de precio (subida/bajada).
 *   **Registro de Identidad Estudiantil**: Registro descentralizado del perfil académico on-chain de los estudiantes, vinculando direcciones de billeteras con metadatos como nombre completo, código, universidad y estado de verificación.
 *   **Simulador de Fábrica y Portal ERC-20**:
@@ -139,7 +139,7 @@ Crea un archivo de configuración local `.env` a partir de la plantilla provista
 cp .env.example .env
 ```
 
-Ajusta los valores del archivo `.env` según tu red de desarrollo o despliegue. Por defecto, incluye las direcciones pre-configuradas para la red local (localhost) de Hardhat.
+Ajusta los valores del archivo `.env` según tu red de desarrollo o despliegue. Por defecto, incluye las direcciones pre-configuradas para la red de prueba Sepolia.
 
 ### 3. Iniciar el Servidor de Desarrollo
 

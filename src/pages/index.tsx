@@ -142,7 +142,7 @@ const Home: NextPage = () => {
                     </div>
 
                     <div className="text-[10px] text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border/40">
-                      💡 Asegúrate de estar conectado a tu red local (Hardhat) o a la red de prueba Sepolia configurada para el curso.
+                      💡 Asegúrate de estar conectado a la red de prueba Sepolia configurada para el curso.
                     </div>
                   </div>
                 )}
