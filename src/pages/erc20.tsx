@@ -20,6 +20,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
+import {
   Coins,
   Rocket,
   Send,
@@ -92,15 +98,15 @@ function TokenRow({ tokenAddress, userAddress, onSelect, isSelected }: TokenRowP
 
   const formattedBalance = balance
     ? (Number(balance) / 10 ** metadata.decimals).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6,
-      })
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    })
     : '0.00';
 
   const formattedTotalSupply = metadata.totalSupply
     ? (Number(metadata.totalSupply) / 10 ** metadata.decimals).toLocaleString(undefined, {
-        maximumFractionDigits: 2,
-      })
+      maximumFractionDigits: 2,
+    })
     : '0';
 
   return (
@@ -156,8 +162,8 @@ function TokenOption({ tokenAddress, userAddress }: TokenOptionProps) {
 
   const formattedBalance = balance
     ? (Number(balance) / 10 ** metadata.decimals).toLocaleString(undefined, {
-        maximumFractionDigits: 6,
-      })
+      maximumFractionDigits: 6,
+    })
     : '0';
 
   return (
@@ -168,22 +174,33 @@ function TokenOption({ tokenAddress, userAddress }: TokenOptionProps) {
 }
 
 const solidityCode = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.35;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Pausable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
-contract MiToken is ERC20, Ownable {
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint256 initialSupply
-    ) ERC20(name, symbol) Ownable(msg.sender) {
-        _mint(msg.sender, initialSupply);
+contract BaseERC20 is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit {
+    
+    constructor(string memory name, string memory symbol, address initialOwner) ERC20(name, symbol) Ownable(initialOwner) ERC20Permit(name) {}
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
+    }
+
+    // The following functions are overrides required by Solidity.
+    function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Pausable) {
+        super._update(from, to, value);
     }
 }`;
 
@@ -489,7 +506,7 @@ const ERC20Page: NextPage = () => {
 
       {/* Contenido Principal - Ocupa ancho completo sin max-w */}
       <main className="flex-1 w-full p-4 sm:p-8 space-y-8">
-        
+
         {/* Encabezado Principal Homologado */}
         <PageHeader
           title="Estándar y Despliegue de Tokens ERC-20"
@@ -512,92 +529,257 @@ const ERC20Page: NextPage = () => {
           }
         />
 
-        {/* Sección Superior: Grid Educativo y de Despliegue (3 Columnas, tercera más pequeña) */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-          
-          {/* Columna 1: ¿Qué es ERC-20 y su Estructura? */}
-          <Card className="xl:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+        {/* Sección Superior: Grid Educativo de Fórmulas, Teoría y Código Solidity (10 Columnas) */}
+        <div className="grid grid-cols-1 xl:grid-cols-10 gap-8">
+
+          {/* Columna Izquierda: Teoría y Estructura ERC-20 con Tabs (6 Columnas) */}
+          <Card className="xl:col-span-6 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-teal-500"></div>
             <div>
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  1. Estructura y Estándar
+                  Mecánica y Teoría del Estándar ERC-20
                 </CardTitle>
                 <CardDescription>
-                  Concepto fundamental de los tokens fungibles de Ethereum.
+                  Aprende la arquitectura técnica y el funcionamiento de los tokens fungibles en la EVM.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm text-muted-foreground">
-                <p>
-                  El estándar <strong className="text-foreground font-semibold">ERC-20</strong> es una interfaz común que asegura que los tokens en redes EVM se comporten de forma predecible.
-                </p>
-                
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Propiedades del Contrato</h4>
-                  <ul className="grid grid-cols-2 gap-2 text-xs">
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">name()</span>
-                      Nombre del token (ej. Bitcoin).
-                    </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">symbol()</span>
-                      Abreviación (ej. BTC).
-                    </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">decimals()</span>
-                      Divisibilidad (ej. 18).
-                    </li>
-                    <li className="bg-muted/40 p-2 rounded border border-border/20">
-                      <span className="block font-bold text-foreground">totalSupply()</span>
-                      Suministro total emitido.
-                    </li>
-                  </ul>
-                </div>
 
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Funciones Clave</h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-start gap-1">
-                      <span className="font-mono text-primary font-bold shrink-0">transfer()</span>
-                      <span>Envía saldo directamente desde tu cuenta a otra dirección.</span>
-                    </div>
-                    <div className="flex items-start gap-1">
-                      <span className="font-mono text-primary font-bold shrink-0">approve()</span>
-                      <span>Otorga a una aplicación (ej. DEX) permiso de gasto sobre tus tokens.</span>
-                    </div>
-                    <div className="flex items-start gap-1">
-                      <span className="font-mono text-primary font-bold shrink-0">transferFrom()</span>
-                      <span>Realiza una transferencia delegada usando el cupo aprobado previamente.</span>
-                    </div>
-                  </div>
-                </div>
+              <CardContent className="space-y-4">
+                <Tabs defaultValue="fundamentos" className="w-full">
+                  <TabsList className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto gap-1 bg-muted/50 p-1 rounded-lg border border-border/10">
+                    <TabsTrigger value="fundamentos" className="text-xs py-1.5 font-semibold">
+                      Fundamentos
+                    </TabsTrigger>
+                    <TabsTrigger value="arquitectura" className="text-xs py-1.5 font-semibold">
+                      Arquitectura y EVM
+                    </TabsTrigger>
+                    <TabsTrigger value="funciones" className="text-xs py-1.5 font-semibold">
+                      Funciones Clave
+                    </TabsTrigger>
+                    <TabsTrigger value="eventos" className="text-xs py-1.5 font-semibold">
+                      Eventos y Logs
+                    </TabsTrigger>
+                    <TabsTrigger value="seguridad" className="text-xs py-1.5 font-semibold">
+                      Gasto Seguro
+                    </TabsTrigger>
+                    <TabsTrigger value="extensiones" className="text-xs py-1.5 font-semibold">
+                      Extensiones
+                    </TabsTrigger>
+                  </TabsList>
 
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Eventos Principales</h4>
-                  <div className="space-y-1 text-xs">
-                    <p><code className="text-emerald-500 font-mono font-bold">Transfer(from, to, value)</code>: Emitido en cada movimiento de tokens.</p>
-                    <p><code className="text-emerald-500 font-mono font-bold">Approval(owner, spender, value)</code>: Emitido al actualizar límites autorizados.</p>
-                  </div>
-                </div>
+                  {/* Fundamentos */}
+                  <TabsContent value="fundamentos" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      El estándar <strong className="text-foreground font-semibold">ERC-20</strong> (formalizado bajo el EIP-20 en 2015) sentó las bases de la economía de tokens en Ethereum. Define las reglas matemáticas e interfaces de programación necesarias para la implementación de <strong className="text-foreground font-semibold">tokens fungibles</strong>. La fungibilidad implica que cada unidad de token posee idénticas propiedades de valor y utilidad que otra (por ejemplo, un token ERC-20 de balance equivale exactamente a cualquier otro del mismo contrato, al igual que los átomos de carbono o las monedas de curso legal).
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 font-normal">
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <BookOpen className="h-3.5 w-3.5 text-primary" /> Composabilidad DeFi
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          Es la capacidad de los contratos inteligentes para interactuar de forma modular. Al unificar la interfaz (API), las plataformas de finanzas descentralizadas (DEXs, Lending, Yield Farming) pueden integrar cualquier token sin reescribir su lógica.
+                        </p>
+                      </div>
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <Coins className="h-3.5 w-3.5 text-emerald-500" /> vs. NFT (ERC-721)
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          A diferencia de los tokens no fungibles (NFT), donde cada activo es único y posee un identificador de token (<code>tokenId</code>) exclusivo, en el ERC-20 los saldos se agregan aritméticamente en cuentas sin distinción de origen.
+                        </p>
+                      </div>
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <Activity className="h-3.5 w-3.5 text-indigo-500" /> Multicapa (ERC-1155)
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          Los tokens semi-fungibles (como el ERC-1155) fusionan las ventajas del ERC-20 y ERC-721 dentro de un único contrato desplegado, permitiendo gestionar colecciones de elementos fungibles y no fungibles con máxima eficiencia de gas.
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Arquitectura y EVM */}
+                  <TabsContent value="arquitectura" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      En el nivel físico del protocolo Ethereum, un contrato inteligente ERC-20 mantiene la propiedad y balances en el estado global (State Tree). El contrato declara variables clave que residen en posiciones numeradas de 32 bytes de almacenamiento en disco conocidas como <strong className="text-foreground font-semibold">Storage Slots</strong> de la EVM:
+                    </p>
+                    <div className="space-y-3 font-normal">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-emerald-400 font-bold shrink-0">_balances</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed font-light">
+                          Declarado como <code>mapping(address =&gt; uint256)</code>. Para obtener el saldo del usuario `A`, la EVM calcula el hash keccak256 de la dirección `A` concatenada con la posición del slot asignada para resolver la clave directa. Modificar este saldo mediante transferencias implica la instrucción <code>SSTORE</code> (que cuesta hasta 20,000 unidades de gas si cambia de cero a un valor distinto).
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-primary font-bold shrink-0">_allowances</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed font-light">
+                          Representa una tabla bidimensional <code>mapping(address =&gt; mapping(address =&gt; uint256))</code>. Almacena las autorizaciones de gasto otorgadas. Permite a un propietario habilitar a un tercero (por ejemplo, un router DEX) para debitar tokens. Las lecturas en esta estructura consumen gas de ejecución (<code>SLOAD</code> - 2,100 gas en frío).
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2.5 border-b border-border/10 text-xs">
+                        <span className="font-mono text-purple-400 font-bold shrink-0">_totalSupply</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed font-light">
+                          Una variable de tipo entero <code>uint256</code> que define la cantidad acumulada de tokens flotantes en circulación. Su valor teórico debe coincidir exactamente con la sumatoria aritmética de todos los saldos de los usuarios que poseen tokens.
+                        </span>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Funciones Clave */}
+                  <TabsContent value="funciones" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      La especificación EIP-20 formaliza la API obligatoria que debe exponer el contrato inteligente. Estas funciones se dividen según su impacto en el estado de la blockchain:
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 font-normal">
+                      <div className="bg-muted/15 p-4 rounded-xl border border-border/10 space-y-2">
+                        <span className="font-mono text-primary font-bold text-xs block border-b border-border/10 pb-1">Lectura de Estado (Gratuitas / View)</span>
+                        <div className="space-y-2 text-[11px] leading-relaxed text-muted-foreground font-light font-sans">
+                          <p>
+                            <code className="text-foreground font-bold font-mono">totalSupply() public view returns (uint256)</code><br />
+                            Retorna el volumen de circulante emitido en el ecosistema.
+                          </p>
+                          <p>
+                            <code className="text-foreground font-bold font-mono">balanceOf(address account) public view returns (uint256)</code><br />
+                            Consulta el saldo del mapeo interno del address solicitado.
+                          </p>
+                          <p>
+                            <code className="text-foreground font-bold font-mono">allowance(address owner, address spender) public view returns (uint256)</code><br />
+                            Consulta el cupo disponible asignado al gastador (spender).
+                          </p>
+                          <p>
+                            <code className="text-foreground font-bold font-mono">decimals() public view returns (uint8)</code><br />
+                            Establece el factor de escala visual para el frontend (generalmente 18 decimales, emulando la relación entre Wei y Ether).
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-muted/15 p-4 rounded-xl border border-border/10 space-y-2">
+                        <span className="font-mono text-emerald-400 font-bold text-xs block border-b border-border/10 pb-1">Mutación de Estado (Transacciones / Gas)</span>
+                        <div className="space-y-2 text-[11px] leading-relaxed text-muted-foreground font-light font-sans">
+                          <p>
+                            <code className="text-foreground font-bold font-mono">transfer(address recipient, uint256 amount) public returns (bool)</code><br />
+                            Desplaza `amount` desde el emisor al destinatario. Requiere revertir si el emisor no dispone de saldo suficiente.
+                          </p>
+                          <p>
+                            <code className="text-foreground font-bold font-mono">approve(address spender, uint256 amount) public returns (bool)</code><br />
+                            Define y sobrescribe la cantidad límite autorizada de gasto delegado.
+                          </p>
+                          <p>
+                            <code className="text-foreground font-bold font-mono">transferFrom(address sender, address recipient, uint256 amount) public returns (bool)</code><br />
+                            Cobra el cobro delegado de la cuenta `sender` a `recipient`. Requiere que el cupo verificado del emisor sea mayor o igual al monto.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Eventos y Logs */}
+                  <TabsContent value="eventos" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      Los <strong className="text-foreground font-semibold">Eventos</strong> son el mecanismo nativo mediante el cual los contratos inteligentes notifican a las aplicaciones cliente sobre sucesos ocurridos en el motor de ejecución de la EVM. Al emitirse un evento, los datos son almacenados en la estructura de <strong className="text-foreground font-semibold">Logs de la transacción</strong> (no en el almacenamiento principal, abaratando gas):
+                    </p>
+                    <div className="space-y-3 font-normal">
+                      <div className="bg-muted/15 p-3 rounded-lg border border-border/10 font-mono text-[10px] text-foreground/90 space-y-1.5">
+                        <p className="font-bold text-emerald-400">event Transfer(address indexed from, address indexed to, uint256 value)</p>
+                        <p className="text-muted-foreground font-sans text-[11px] font-light">Se emite obligatoriamente en cada movimiento de tokens, incluyendo la acuñación inicial (origen <code>0x0</code>) y la quema (destino <code>0x0</code>).</p>
+
+                        <p className="font-bold text-primary mt-2">event Approval(address indexed owner, address indexed spender, uint256 value)</p>
+                        <p className="text-muted-foreground font-sans text-[11px] font-light">Se emite al modificarse con éxito el cupo permitido para un spender.</p>
+                      </div>
+
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <Activity className="h-3.5 w-3.5 text-primary" /> Criptografía y Logs: El Concepto de "Indexed"
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          En Solidity, el modificador <code className="text-foreground font-mono">indexed</code> sobre los parámetros (hasta un máximo de 3) indica a la EVM que aloje estos valores en la estructura de <strong>Topics (Temas)</strong> del log, que son indexados usando filtros criptográficos Bloom. Esto permite que servicios externos (tales como nodos RPC de Ethereum, proveedores o indexadores descentralizados como <strong>The Graph</strong>) filtren y recuperen instantáneamente el historial de transacciones de un usuario específico sin necesidad de buscar bloque por bloque ni leer variables internas.
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Gasto Seguro */}
+                  <TabsContent value="seguridad" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      La adopción y expansión del estándar ERC-20 ha revelado ciertas deficiencias e implicancias de seguridad críticas que todo desarrollador de Solidity debe comprender y mitigar:
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 font-normal">
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <AlertCircle className="h-3.5 w-3.5 text-red-500" /> Ataque de Aprobación
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          Si un usuario cambia su aprobación de 50 a 100 mediante <code>approve()</code>, un spender malicioso puede realizar front-running (pagando más gas) para ejecutar <code>transferFrom(50)</code> justo antes de que se mine la transacción, y luego gastar los 100 aprobados, retirando 150 en total.
+                        </p>
+                      </div>
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Aprobación Segura
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          Para mitigar la carrera, las librerías modernas de OpenZeppelin implementan los métodos auxiliares no estándar <code>increaseAllowance()</code> y <code>decreaseAllowance()</code>, los cuales operan de forma incremental sumando/restando sobre el saldo autorizado, evitando sobrescrituras concurrentes peligrosas.
+                        </p>
+                      </div>
+                      <div className="bg-muted/20 p-4 rounded-xl border border-border/10 space-y-2">
+                        <h5 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <Flame className="h-3.5 w-3.5 text-amber-500" /> Pérdida de Tokens
+                        </h5>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground font-light">
+                          Si envías tokens ERC-20 directamente a un contrato que no está programado para gestionarlos mediante <code>transfer()</code>, los tokens quedarán atrapados permanentemente. Esta debilidad motivó estándares alternativos como ERC-223 o ERC-777.
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Extensiones */}
+                  <TabsContent value="extensiones" className="space-y-4 mt-4 text-sm text-muted-foreground font-light leading-relaxed">
+                    <p>
+                      Para responder a demandas complejas de gobernanza y experiencia de usuario, la comunidad Ethereum ha desarrollado extensiones complementarias estandarizadas:
+                    </p>
+                    <div className="space-y-3 font-normal">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2 border-b border-border/10 text-xs">
+                        <span className="font-mono text-emerald-400 font-bold shrink-0">ERC20Permit (EIP-2612)</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed font-light">
+                          Habilita el mecanismo de <strong>Aprobaciones sin Gas</strong>. En lugar de enviar una transacción on-chain para ejecutar <code>approve()</code>, el usuario firma un mensaje estructurado (según el estándar criptográfico EIP-712) off-chain. Dicha firma es transmitida por un tercero (relayer) al contrato del token a través de la función <code>permit()</code>, que la verifica criptográficamente y aprueba el cupo en un único paso integrado en la compra, mejorando radicalmente la UX.
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2 border-b border-border/10 text-xs">
+                        <span className="font-mono text-primary font-bold shrink-0">ERC20Votes</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed font-light">
+                          Agrega una lógica de histórico de saldos mediante <strong>Checkpoints</strong> (puntos de control). Permite delegar el poder de voto proporcional al balance de tokens a cualquier dirección sin mover los tokens físicos, previniendo la manipulación y la doble contabilidad en votaciones de gobernanza de Organizaciones Autónomas Descentralizadas (DAOs).
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2 border-b border-border/10 text-xs">
+                        <span className="font-mono text-purple-400 font-bold shrink-0">ERC20Capped & Burnable</span>
+                        <span className="text-muted-foreground sm:col-span-2 leading-relaxed font-light">
+                          <code>Capped</code> añade un límite rígido insuperable sobre la creación de tokens (evitando emisiones arbitrarias maliciosas), mientras que <code>Burnable</code> expone funciones de quema pública estandarizadas que permiten al portador destruir sus propios saldos para reducir el suministro circulante.
+                        </span>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </div>
+
             <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
               <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <HelpCircle className="h-3.5 w-3.5 text-primary" /> ERC: Ethereum Request for Comments #20
+                <HelpCircle className="h-3.5 w-3.5 text-primary" /> Usa las pestañas para explorar cada sección del estándar en detalle.
               </span>
             </CardFooter>
           </Card>
 
-          {/* Columna 2: Ejemplo de Código Solidity */}
-          <Card className="xl:col-span-2 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+          {/* Columna Derecha: Código Smart Contract (Solidity) (4 Columnas) */}
+          <Card className="xl:col-span-4 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 to-emerald-500"></div>
             <div>
               <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
                 <div>
                   <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
                     <Code className="h-5 w-5 text-emerald-500" />
-                    2. Contrato Inteligente
+                    Código Smart Contract (Solidity)
                   </CardTitle>
                   <CardDescription>
                     Código base en Solidity utilizando OpenZeppelin.
@@ -616,28 +798,36 @@ const ERC20Page: NextPage = () => {
               <CardContent className="p-4 pt-0">
                 <div className="relative rounded-lg overflow-hidden border border-zinc-800/80 bg-zinc-950 shadow-inner group/code">
                   <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-[10px] text-zinc-400 font-mono">
-                    <span>MiToken.sol</span>
+                    <span>BaseERC20.sol</span>
                     <span className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      solc 0.8.20
+                      solc 0.8.35
                     </span>
                   </div>
                   <pre className="text-[10px] sm:text-[11px] font-mono p-4 overflow-x-auto leading-relaxed text-zinc-300 max-h-[340px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <code>
                       <span className="text-zinc-500">// SPDX-License-Identifier: MIT</span>{"\n"}
-                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.20</span>;{"\n\n"}
-                      <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/ERC20.sol"</span>;{"\n"}
-                      <span className="text-pink-500">import</span> <span className="text-emerald-400">"@openzeppelin/contracts/access/Ownable.sol"</span>;{"\n\n"}
-                      <span className="text-blue-500">contract</span> <span className="text-yellow-400 font-bold">MiToken</span> <span className="text-pink-500">is</span> <span className="text-yellow-400">ERC20</span>, <span className="text-yellow-400">Ownable</span> {"{"}{"\n"}
-                      {"    "}<span className="text-blue-500">constructor</span>({"\n"}
-                      {"        "}<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> name,{"\n"}
-                      {"        "}<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> symbol,{"\n"}
-                      {"        "}<span className="text-blue-400">uint256</span> initialSupply{"\n"}
-                      {"    "}) <span className="text-yellow-400">ERC20</span>(name, symbol) <span className="text-yellow-400">Ownable</span>(<span className="text-violet-400">msg.sender</span>) {"{"}{"\n"}
-                      {"        "}<span className="text-purple-400">_mint</span>(<span className="text-violet-400">msg.sender</span>, initialSupply);{"\n"}
+                      <span className="text-pink-500">pragma</span> <span className="text-amber-500">solidity</span> <span className="text-blue-400">^0.8.35</span>;{"\n\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">Ownable</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/access/Ownable.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC20</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/ERC20.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC20Burnable</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC20Pausable</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol"</span>;{"\n"}
+                      <span className="text-pink-500">import</span> {"{"}<span className="text-blue-400">ERC20Permit</span>{"}"} <span className="text-pink-500">from</span> <span className="text-emerald-400">"@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol"</span>;{"\n\n"}
+                      <span className="text-blue-500">contract</span> <span className="text-yellow-400 font-bold">BaseERC20</span> <span className="text-pink-500">is</span> <span className="text-yellow-400">ERC20</span>, <span className="text-yellow-400">ERC20Burnable</span>, <span className="text-yellow-400">ERC20Pausable</span>, <span className="text-yellow-400">Ownable</span>, <span className="text-yellow-400">ERC20Permit</span> {"{"}{"\n"}
+                      {"    "}{"\n"}
+                      {"    "}<span className="text-blue-500">constructor</span>(<span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> name, <span className="text-blue-400">string</span> <span className="text-pink-500">memory</span> symbol, <span className="text-blue-400">address</span> initialOwner) <span className="text-yellow-400">ERC20</span>(name, symbol) <span className="text-yellow-400">Ownable</span>(initialOwner) <span className="text-yellow-400">ERC20Permit</span>(name) {"{}"}{"\n\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">pause</span>() <span className="text-pink-500">public</span> <span className="text-amber-500">onlyOwner</span> {"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">_pause</span>();{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">unpause</span>() <span className="text-pink-500">public</span> <span className="text-amber-500">onlyOwner</span> {"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">_unpause</span>();{"\n"}
                       {"    "}{"}"}{"\n\n"}
                       {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">mint</span>(<span className="text-blue-400">address</span> to, <span className="text-blue-400">uint256</span> amount) <span className="text-pink-500">public</span> <span className="text-amber-500">onlyOwner</span> {"{"}{"\n"}
                       {"        "}<span className="text-purple-400">_mint</span>(to, amount);{"\n"}
+                      {"    "}{"}"}{"\n\n"}
+                      {"    "}<span className="text-zinc-500">// The following functions are overrides required by Solidity.</span>{"\n"}
+                      {"    "}<span className="text-blue-500">function</span> <span className="text-teal-400">_update</span>(<span className="text-blue-400">address</span> from, <span className="text-blue-400">address</span> to, <span className="text-blue-400">uint256</span> value) <span className="text-pink-500">internal</span> <span className="text-pink-500">override</span>(<span className="text-yellow-400">ERC20</span>, <span className="text-yellow-400">ERC20Pausable</span>) {"{"}{"\n"}
+                      {"        "}<span className="text-purple-400">super</span>.<span className="text-teal-400">_update</span>(from, to, value);{"\n"}
                       {"    "}{"}"}{"\n"}
                       {"}"}
                     </code>
@@ -660,346 +850,326 @@ const ERC20Page: NextPage = () => {
             </CardFooter>
           </Card>
 
-          {/* Columna 3: Crear y Desplegar Token */}
-          <Card className="xl:col-span-1 border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 to-primary"></div>
-            <div>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
-                  <Rocket className="h-5 w-5 text-primary" />
-                  3. Desplegar Token ERC-20
-                </CardTitle>
-                <CardDescription>
-                  Crea y compila tu token real en la blockchain seleccionada.
-                </CardDescription>
-              </CardHeader>
-              
-              {!isConnected || !address ? (
-                /* Estado Desconectado en Columna 3 */
-                <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-4 flex-1">
-                  <div className="rounded-full bg-primary/10 p-3 text-primary border border-primary/20 shadow-inner">
-                    <Wallet className="h-7 w-7" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-sm text-foreground">Conecta tu Billetera</h4>
-                    <p className="text-xs text-muted-foreground max-w-[240px] mx-auto">
-                      Se requiere una billetera Web3 conectada para firmar la transacción de despliegue en la blockchain.
-                    </p>
-                  </div>
-                  <div className="pt-2">
-                    <ConnectButton />
-                  </div>
-                </CardContent>
-              ) : (
-                /* Estado Conectado: Formulario de Despliegue */
-                <form onSubmit={handleDeploy} className="flex-1 flex flex-col justify-between">
-                  <CardContent className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="token-name" className="text-xs font-semibold text-foreground">Nombre del Token</Label>
-                      <Input
-                        id="token-name"
-                        type="text"
-                        placeholder="Ej. USACH Training Token"
-                        value={deployName}
-                        onChange={(e) => setDeployName(e.target.value)}
-                        disabled={isDeploying}
-                        className="bg-background/80 border-border/80 focus:ring-primary focus:border-primary text-sm"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="token-symbol" className="text-xs font-semibold text-foreground">Símbolo (Symbol)</Label>
-                      <Input
-                        id="token-symbol"
-                        type="text"
-                        placeholder="Ej. UTT"
-                        value={deploySymbol}
-                        onChange={(e) => setDeploySymbol(e.target.value)}
-                        disabled={isDeploying}
-                        className="bg-background/80 border-border/80 focus:ring-primary focus:border-primary text-sm font-mono"
-                        maxLength={8}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border/30 shadow-inner">
-                      <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>
-                        El suministro inicial por defecto es 0. Podrás acuñar (mint) tokens desde el panel inferior una vez desplegado.
-                      </span>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="flex justify-between items-center gap-4 bg-muted/10 border-t border-border/20 p-4 w-full mt-auto">
-                    <span className="text-[10px] text-muted-foreground">
-                      * Requiere gas.
-                    </span>
-                    <Button type="submit" disabled={isDeploying} className="shadow-md font-bold px-4 py-2 hover:scale-[1.02] transition-transform">
-                      {isDeploying ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                          Desplegando...
-                        </>
-                      ) : (
-                        <>
-                          <Rocket className="h-4 w-4 mr-1.5" />
-                          Desplegar
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </form>
-              )}
-            </div>
-            
-            {!isConnected || !address ? (
-              <CardFooter className="bg-muted/10 border-t border-border/20 p-4">
-                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Activity className="h-3.5 w-3.5 text-amber-500 animate-pulse" /> Listo para conectar
-                </span>
-              </CardFooter>
-            ) : null}
-          </Card>
-
         </div>
 
-        {/* Sección Inferior: Dashboard de Interacción (2 Columnas) */}
+        {/* Base de Interacción y Operaciones */}
         {!isConnected || !address ? (
           /* Estado Desconectado - Panel de Acciones Bloqueado */
-          <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border/60 rounded-2xl bg-card/25 text-center space-y-3">
-            <div className="rounded-full bg-muted p-3 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border/60 rounded-2xl bg-card/25 text-center space-y-4">
+            <div className="rounded-full bg-primary/10 p-4 text-primary border border-primary/20 shadow-inner">
               <Coins className="h-8 w-8" />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <h3 className="text-lg font-bold tracking-tight text-foreground">Dashboard de Interacción</h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-                Conecta tu billetera para interactuar con los tokens ERC-20 ya desplegados, enviar transferencias, acuñar nuevos saldos o quemar excedentes.
+                Conecta tu billetera para interactuar con los tokens ERC-20, realizar transferencias, acuñar nuevos saldos o quemar excedentes.
               </p>
+            </div>
+            <div className="pt-2">
+              <ConnectButton />
             </div>
           </div>
         ) : (
           /* Estado Conectado - Dashboard de Interacción Activo */
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            {/* Acciones de Token */}
-            <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-emerald-500"></div>
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2 font-bold text-foreground">
-                  <ArrowRightLeft className="h-5 w-5 text-primary" />
-                  Acciones del Token
-                </CardTitle>
-                <CardDescription>
-                  Interactúa con el token seleccionado a través de transacciones reales en el cliente.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="select-token" className="text-xs font-semibold text-foreground">Seleccionar Token Activo</Label>
-                    {selectedTokenAddr && (
-                      <TokenIcon address={selectedTokenAddr} className="h-6 w-6 border border-primary/20" />
-                    )}
-                  </div>
-                  <select
-                    id="select-token"
-                    value={selectedTokenAddr || ''}
-                    onChange={(e) => setSelectedTokenAddr(e.target.value as `0x${string}`)}
-                    disabled={isActionPending || allTokenAddresses.length === 0}
-                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
-                  >
-                    {allTokenAddresses.length === 0 ? (
-                      <option value="" disabled className="bg-card text-foreground">No hay tokens disponibles</option>
-                    ) : (
-                      allTokenAddresses.map((addr) => (
-                        <TokenOption key={addr} tokenAddress={addr} userAddress={address} />
-                      ))
-                    )}
-                  </select>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
-                {selectedTokenAddr && (
-                  <div className="space-y-4">
-                    {/* Tabs de Acciones con glassmorphism */}
-                    <div className="flex border border-border/40 mb-4 bg-muted/30 p-1.5 rounded-xl backdrop-blur-sm">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('transfer')}
-                        className={cn(
-                          "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
-                          activeTab === 'transfer'
-                            ? "bg-background text-primary shadow-md scale-[1.01]"
-                            : "text-muted-foreground hover:text-foreground"
+            {/* Columna Izquierda: Despliegue y Acciones */}
+            <div className="lg:col-span-2 space-y-8">
+
+              {/* Tarjeta de Despliegue de Token */}
+              <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 to-primary"></div>
+                <div>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl flex items-center gap-2 text-foreground font-bold">
+                      <Rocket className="h-5 w-5 text-primary" />
+                      Desplegar Token ERC-20
+                    </CardTitle>
+                    <CardDescription>
+                      Crea y compila tu token real en la blockchain seleccionada.
+                    </CardDescription>
+                  </CardHeader>
+
+                  <form onSubmit={handleDeploy} className="flex-1 flex flex-col justify-between">
+                    <CardContent className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="token-name" className="text-xs font-semibold text-foreground">Nombre del Token</Label>
+                        <Input
+                          id="token-name"
+                          type="text"
+                          placeholder="Ej. USACH Training Token"
+                          value={deployName}
+                          onChange={(e) => setDeployName(e.target.value)}
+                          disabled={isDeploying}
+                          className="bg-background/80 border-border/80 focus:ring-primary focus:border-primary text-sm"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="token-symbol" className="text-xs font-semibold text-foreground">Símbolo (Symbol)</Label>
+                        <Input
+                          id="token-symbol"
+                          type="text"
+                          placeholder="Ej. UTT"
+                          value={deploySymbol}
+                          onChange={(e) => setDeploySymbol(e.target.value)}
+                          disabled={isDeploying}
+                          className="bg-background/80 border-border/80 focus:ring-primary focus:border-primary text-sm font-mono"
+                          maxLength={8}
+                          required
+                        />
+                      </div>
+
+                      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border/30 shadow-inner">
+                        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <span>
+                          El suministro inicial por defecto es 0. Podrás acuñar (mint) tokens desde el panel inferior una vez desplegado.
+                        </span>
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="flex justify-between items-center gap-4 bg-muted/10 border-t border-border/20 p-4 w-full mt-auto">
+                      <span className="text-[10px] text-muted-foreground">
+                        * Requiere gas.
+                      </span>
+                      <Button type="submit" disabled={isDeploying} className="shadow-md font-bold px-4 py-2 hover:scale-[1.02] transition-transform">
+                        {isDeploying ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                            Desplegando...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="h-4 w-4 mr-1.5" />
+                            Desplegar
+                          </>
                         )}
-                      >
-                        <Send className="h-3.5 w-3.5" /> Transferir
-                      </button>
-                      {isOwner && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('mint')}
-                            className={cn(
-                              "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
-                              activeTab === 'mint'
-                                ? "bg-background text-primary shadow-md scale-[1.01]"
-                                : "text-muted-foreground hover:text-foreground"
-                            )}
-                          >
-                            <PlusCircle className="h-3.5 w-3.5" /> Acuñar (Mint)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('burn')}
-                            className={cn(
-                              "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
-                              activeTab === 'burn'
-                                ? "bg-background text-primary shadow-md scale-[1.01]"
-                                : "text-muted-foreground hover:text-foreground"
-                            )}
-                          >
-                            <Flame className="h-3.5 w-3.5" /> Quemar (Burn)
-                          </button>
-                        </>
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </div>
+              </Card>
+
+              {/* Acciones de Token */}
+              <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-emerald-500"></div>
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2 font-bold text-foreground">
+                    <ArrowRightLeft className="h-5 w-5 text-primary" />
+                    Acciones del Token
+                  </CardTitle>
+                  <CardDescription>
+                    Interactúa con el token seleccionado a través de transacciones reales en el cliente.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="select-token" className="text-xs font-semibold text-foreground">Seleccionar Token Activo</Label>
+                      {selectedTokenAddr && (
+                        <TokenIcon address={selectedTokenAddr} className="h-6 w-6 border border-primary/20" />
                       )}
                     </div>
-
-                    {/* Formulario Dinámico según Tab */}
-                    {activeTab === 'transfer' && (
-                      <form onSubmit={handleTransfer} className="space-y-4 animate-in fade-in duration-200">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="recipient" className="text-xs font-semibold text-foreground">Dirección de Destino</Label>
-                          <Input
-                            id="recipient"
-                            type="text"
-                            placeholder="0x..."
-                            value={transferRecipient}
-                            onChange={(e) => setTransferRecipient(e.target.value)}
-                            disabled={isActionPending}
-                            className="bg-background/80 border-border/80 text-sm font-mono"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="amount" className="text-xs font-semibold text-foreground">Cantidad a Transferir</Label>
-                          <Input
-                            id="amount"
-                            type="number"
-                            placeholder="0.00"
-                            value={transferAmount}
-                            onChange={(e) => setTransferAmount(e.target.value)}
-                            disabled={isActionPending}
-                            min="0.000001"
-                            step="any"
-                            className="bg-background/80 border-border/80 text-sm"
-                            required
-                          />
-                        </div>
-                        <Button type="submit" disabled={isActionPending} className="w-full shadow-md mt-2 font-bold py-2">
-                          {isActionPending ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                              Procesando transferencia...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="h-4 w-4 mr-1.5" />
-                              Transferir Tokens
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    )}
-
-                    {activeTab === 'mint' && (
-                      <form onSubmit={handleMint} className="space-y-4 animate-in fade-in duration-200">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="mint-recipient" className="text-xs font-semibold text-foreground">Dirección del Receptor</Label>
-                          <Input
-                            id="mint-recipient"
-                            type="text"
-                            placeholder="0x..."
-                            value={mintRecipient}
-                            onChange={(e) => setMintRecipient(e.target.value)}
-                            disabled={isActionPending}
-                            className="bg-background/80 border-border/80 text-sm font-mono"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="mint-amount" className="text-xs font-semibold text-foreground">Cantidad a Acuñar</Label>
-                          <Input
-                            id="mint-amount"
-                            type="number"
-                            placeholder="0.00"
-                            value={mintAmount}
-                            onChange={(e) => setMintAmount(e.target.value)}
-                            disabled={isActionPending}
-                            min="0.000001"
-                            step="any"
-                            className="bg-background/80 border-border/80 text-sm"
-                            required
-                          />
-                        </div>
-                        <Button type="submit" disabled={isActionPending} className="w-full shadow-md mt-2 font-bold py-2">
-                          {isActionPending ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                              Acuñando tokens...
-                            </>
-                          ) : (
-                            <>
-                              <PlusCircle className="h-4 w-4 mr-1.5" />
-                              Acuñar Tokens
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    )}
-
-                    {activeTab === 'burn' && (
-                      <form onSubmit={handleBurn} className="space-y-4 animate-in fade-in duration-200">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="burn-amount" className="text-xs font-semibold text-foreground">Cantidad a Quemar</Label>
-                          <Input
-                            id="burn-amount"
-                            type="number"
-                            placeholder="0.00"
-                            value={burnAmount}
-                            onChange={(e) => setBurnAmount(e.target.value)}
-                            disabled={isActionPending}
-                            min="0.000001"
-                            step="any"
-                            className="bg-background/80 border-border/80 text-sm"
-                            required
-                          />
-                          <p className="text-[10px] text-muted-foreground mt-1.5 bg-destructive/5 p-2 rounded border border-destructive/10">
-                            * Atención: Los tokens se destruirán permanentemente de tu cuenta activa.
-                          </p>
-                        </div>
-                        <Button type="submit" disabled={isActionPending} variant="destructive" className="w-full shadow-md mt-2 font-bold py-2">
-                          {isActionPending ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                              Quemando tokens...
-                            </>
-                          ) : (
-                            <>
-                              <Flame className="h-4 w-4 mr-1.5" />
-                              Quemar Tokens
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    )}
+                    <select
+                      id="select-token"
+                      value={selectedTokenAddr || ''}
+                      onChange={(e) => setSelectedTokenAddr(e.target.value as `0x${string}`)}
+                      disabled={isActionPending || allTokenAddresses.length === 0}
+                      className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
+                    >
+                      {allTokenAddresses.length === 0 ? (
+                        <option value="" disabled className="bg-card text-foreground">No hay tokens disponibles</option>
+                      ) : (
+                        allTokenAddresses.map((addr) => (
+                          <TokenOption key={addr} tokenAddress={addr} userAddress={address} />
+                        ))
+                      )}
+                    </select>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+
+                  {selectedTokenAddr && (
+                    <div className="space-y-4">
+                      {/* Tabs de Acciones con glassmorphism */}
+                      <div className="flex border border-border/40 mb-4 bg-muted/30 p-1.5 rounded-xl backdrop-blur-sm">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('transfer')}
+                          className={cn(
+                            "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
+                            activeTab === 'transfer'
+                              ? "bg-background text-primary shadow-md scale-[1.01]"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          <Send className="h-3.5 w-3.5" /> Transferir
+                        </button>
+                        {isOwner && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('mint')}
+                              className={cn(
+                                "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
+                                activeTab === 'mint'
+                                  ? "bg-background text-primary shadow-md scale-[1.01]"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <PlusCircle className="h-3.5 w-3.5" /> Acuñar (Mint)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('burn')}
+                              className={cn(
+                                "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
+                                activeTab === 'burn'
+                                  ? "bg-background text-primary shadow-md scale-[1.01]"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <Flame className="h-3.5 w-3.5" /> Quemar (Burn)
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Formulario Dinámico según Tab */}
+                      {activeTab === 'transfer' && (
+                        <form onSubmit={handleTransfer} className="space-y-4 animate-in fade-in duration-200">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="recipient" className="text-xs font-semibold text-foreground">Dirección de Destino</Label>
+                            <Input
+                              id="recipient"
+                              type="text"
+                              placeholder="0x..."
+                              value={transferRecipient}
+                              onChange={(e) => setTransferRecipient(e.target.value)}
+                              disabled={isActionPending}
+                              className="bg-background/80 border-border/80 text-sm font-mono"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="amount" className="text-xs font-semibold text-foreground">Cantidad a Transferir</Label>
+                            <Input
+                              id="amount"
+                              type="number"
+                              placeholder="0.00"
+                              value={transferAmount}
+                              onChange={(e) => setTransferAmount(e.target.value)}
+                              disabled={isActionPending}
+                              min="0.000001"
+                              step="any"
+                              className="bg-background/80 border-border/80 text-sm"
+                              required
+                            />
+                          </div>
+                          <Button type="submit" disabled={isActionPending} className="w-full shadow-md mt-2 font-bold py-2">
+                            {isActionPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                Procesando transferencia...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-1.5" />
+                                Transferir Tokens
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+
+                      {activeTab === 'mint' && (
+                        <form onSubmit={handleMint} className="space-y-4 animate-in fade-in duration-200">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="mint-recipient" className="text-xs font-semibold text-foreground">Dirección del Receptor</Label>
+                            <Input
+                              id="mint-recipient"
+                              type="text"
+                              placeholder="0x..."
+                              value={mintRecipient}
+                              onChange={(e) => setMintRecipient(e.target.value)}
+                              disabled={isActionPending}
+                              className="bg-background/80 border-border/80 text-sm font-mono"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="mint-amount" className="text-xs font-semibold text-foreground">Cantidad a Acuñar</Label>
+                            <Input
+                              id="mint-amount"
+                              type="number"
+                              placeholder="0.00"
+                              value={mintAmount}
+                              onChange={(e) => setMintAmount(e.target.value)}
+                              disabled={isActionPending}
+                              min="0.000001"
+                              step="any"
+                              className="bg-background/80 border-border/80 text-sm"
+                              required
+                            />
+                          </div>
+                          <Button type="submit" disabled={isActionPending} className="w-full shadow-md mt-2 font-bold py-2">
+                            {isActionPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                Acuñando tokens...
+                              </>
+                            ) : (
+                              <>
+                                <PlusCircle className="h-4 w-4 mr-1.5" />
+                                Acuñar Tokens
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+
+                      {activeTab === 'burn' && (
+                        <form onSubmit={handleBurn} className="space-y-4 animate-in fade-in duration-200">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="burn-amount" className="text-xs font-semibold text-foreground">Cantidad a Quemar</Label>
+                            <Input
+                              id="burn-amount"
+                              type="number"
+                              placeholder="0.00"
+                              value={burnAmount}
+                              onChange={(e) => setBurnAmount(e.target.value)}
+                              disabled={isActionPending}
+                              min="0.000001"
+                              step="any"
+                              className="bg-background/80 border-border/80 text-sm"
+                              required
+                            />
+                            <p className="text-[10px] text-muted-foreground mt-1.5 bg-destructive/5 p-2 rounded border border-destructive/10">
+                              * Atención: Los tokens se destruirán permanentemente de tu cuenta activa.
+                            </p>
+                          </div>
+                          <Button type="submit" disabled={isActionPending} variant="destructive" className="w-full shadow-md mt-2 font-bold py-2">
+                            {isActionPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                Quemando tokens...
+                              </>
+                            ) : (
+                              <>
+                                <Flame className="h-4 w-4 mr-1.5" />
+                                Quemar Tokens
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Balances de Tokens & Historial */}
-            <div className="space-y-8">
-              
+            <div className="lg:col-span-3 space-y-8">
+
               {/* Tabla de Balances */}
               <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <CardHeader className="pb-3">
