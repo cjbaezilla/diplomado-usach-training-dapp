@@ -663,7 +663,8 @@ const ETH_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 const DEXPage: NextPage = () => {
   const isHydrated = useHydrated();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chain } = useAccount();
+  const explorerUrl = chain?.blockExplorers?.default?.url || 'https://sepolia.etherscan.io';
 
   // Tokens creados de fábrica y tokens locales del DEX
   const { tokens: tokenFactoryAddresses, isLoading: isLoadingTokens } = useAllTokens();
@@ -809,7 +810,8 @@ const DEXPage: NextPage = () => {
     if (rawMetadataA.isSuccess && rawMetadataA.txHash) {
       setNotification({
         type: 'success',
-        message: `¡Aprobación de ${metadataA.symbol} completada con éxito!`
+        message: `¡Aprobación de ${metadataA.symbol} completada con éxito!`,
+        txHash: rawMetadataA.txHash
       });
       refetchAllowanceA();
     }
@@ -819,7 +821,8 @@ const DEXPage: NextPage = () => {
     if (rawMetadataB.isSuccess && rawMetadataB.txHash) {
       setNotification({
         type: 'success',
-        message: `¡Aprobación de ${metadataB.symbol} completada con éxito!`
+        message: `¡Aprobación de ${metadataB.symbol} completada con éxito!`,
+        txHash: rawMetadataB.txHash
       });
       refetchAllowanceB();
     }
@@ -979,7 +982,7 @@ const DEXPage: NextPage = () => {
   // Transacciones locales de la dApp
   const [transactions, setTransactions] = useState<DEXTransaction[]>([]);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string; txHash?: string } | null>(null);
 
   // Selección automática de primeros tokens si existen
   useEffect(() => {
@@ -1045,7 +1048,8 @@ const DEXPage: NextPage = () => {
       setLastProcessedFactoryHash(factoryTxHash);
       setNotification({
         type: 'success',
-        message: '¡Piscina de liquidez creada con éxito!'
+        message: '¡Piscina de liquidez creada con éxito!',
+        txHash: factoryTxHash
       });
       setTransactions((prev) => [
         {
@@ -1087,7 +1091,8 @@ const DEXPage: NextPage = () => {
 
       setNotification({
         type: 'success',
-        message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`
+        message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`,
+        txHash: actionTxHash
       });
 
       setTransactions((prev) => [
@@ -1153,7 +1158,8 @@ const DEXPage: NextPage = () => {
       const desc = lastWethAction === 'wrap' ? 'Envolver ETH' : 'Desenvolver WETH';
       setNotification({
         type: 'success',
-        message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`
+        message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`,
+        txHash: wethTxHash
       });
       setTransactions((prev) => [
         {
@@ -1463,6 +1469,17 @@ const DEXPage: NextPage = () => {
               <p className="text-xs text-muted-foreground mt-1 max-w-[280px] break-all">
                 {notification.message}
               </p>
+              {notification.txHash && (
+                <a
+                  href={`${explorerUrl}/tx/${notification.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary hover:underline font-semibold"
+                >
+                  Ver transacción
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -2657,9 +2674,15 @@ const DEXPage: NextPage = () => {
                         <div key={tx.id} className="flex justify-between items-center p-3 rounded-lg border border-border/20 bg-muted/10 text-xs">
                           <div>
                             <span className="font-semibold text-foreground block">{tx.description}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px] block">
+                            <a
+                              href={`${explorerUrl}/tx/${tx.hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-muted-foreground hover:text-primary hover:underline font-mono truncate max-w-[200px] inline-flex items-center gap-1 mt-0.5"
+                            >
                               Hash: {tx.hash.substring(0, 12)}...
-                            </span>
+                              <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                            </a>
                           </div>
                           <div className="text-right">
                             <span className="text-[10px] text-muted-foreground block">{tx.timestamp}</span>
