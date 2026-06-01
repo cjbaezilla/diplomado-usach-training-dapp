@@ -28,7 +28,7 @@ import {
   Layers, 
   TrendingDown, 
   Search,
-  RefreshCw,
+  HelpCircle,
   Info,
   Loader2
 } from 'lucide-react';
@@ -321,16 +321,16 @@ const TokenRankingPage: NextPage = () => {
             { label: 'Ranking de Liquidez' }
           ]}
           actions={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefreshAll}
-              disabled={isLoadingAny}
-              className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${isLoadingAny ? 'animate-spin' : ''}`} />
-              <span>Sincronizar Datos</span>
-            </Button>
+            <Link href="/aprender">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                Aprender
+              </Button>
+            </Link>
           }
         />
 
