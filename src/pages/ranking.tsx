@@ -488,9 +488,9 @@ const TokenRankingPage: NextPage = () => {
                     <th className="py-3 pl-6 w-[80px]">Rango</th>
                     <th className="py-3 px-4 min-w-[200px]">Token</th>
                     <th className="py-3 px-4 min-w-[150px]">Creador</th>
+                    <th className="py-3 px-3 min-w-[100px]">Valor Unitario</th>
                     <th className="py-3 px-4 text-right min-w-[160px]">Liquidez Bloqueada</th>
                     <th className="py-3 px-6 min-w-[220px]">Tasa de Cambio</th>
-                    <th className="py-3 px-6 min-w-[150px]">Valor Unitario</th>
                     <th className="py-3 pr-6 text-right w-[120px]">Acciones</th>
                   </tr>
                 </thead>
@@ -509,7 +509,7 @@ const TokenRankingPage: NextPage = () => {
                     return (
                       <tr key={token.address} className="hover:bg-muted/10 transition-colors border-b border-border/10">
                         {/* Rango */}
-                        <td className="py-4 pl-6">
+                        <td className="py-2.5 pl-6">
                           <div className="flex items-center justify-start">
                             {isTop3 ? (
                               <div className={`flex items-center justify-center h-6 w-6 rounded-full border font-bold text-xs ${trophyColors[index]}`} title={`Top ${index + 1}`}>
@@ -522,7 +522,7 @@ const TokenRankingPage: NextPage = () => {
                         </td>
 
                         {/* Token */}
-                        <td className="py-4 px-4">
+                        <td className="py-2.5 px-4">
                           <div className="flex items-center gap-3">
                             <TokenIcon address={token.address} className="h-8 w-8" />
                             <div className="min-w-0">
@@ -551,12 +551,26 @@ const TokenRankingPage: NextPage = () => {
                         </td>
 
                         {/* Creador */}
-                        <td className="py-4 px-4">
+                        <td className="py-2.5 px-4">
                           <CreatorCell address={token.owner} />
                         </td>
 
+                        {/* Valor Unitario (USD) */}
+                        <td className="py-2.5 px-3">
+                          {token.poolAddress ? (
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-muted-foreground">1 {token.symbol} ≈</span>
+                                <UsdValue wethAmount={token.ratioTokenToWeth} className="text-xs font-extrabold text-emerald-500" />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground font-medium italic">-</span>
+                          )}
+                        </td>
+
                         {/* Liquidez Bloqueada */}
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-2.5 px-4 text-right">
                           {token.wethReserve > 0n ? (
                             <div className="flex flex-col items-end">
                               <span className="font-mono font-bold text-foreground">
@@ -570,7 +584,7 @@ const TokenRankingPage: NextPage = () => {
                         </td>
 
                         {/* Tasa de Cambio */}
-                        <td className="py-4 px-6">
+                        <td className="py-2.5 px-6">
                           {token.poolAddress ? (
                             <div className="flex flex-col gap-1 font-mono text-[11px]">
                               <div className="text-foreground">
@@ -589,22 +603,8 @@ const TokenRankingPage: NextPage = () => {
                           )}
                         </td>
 
-                        {/* Valor Unitario (USD) */}
-                        <td className="py-4 px-6">
-                          {token.poolAddress ? (
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] text-muted-foreground">1 {token.symbol} ≈</span>
-                                <UsdValue wethAmount={token.ratioTokenToWeth} className="text-xs font-extrabold text-emerald-500" />
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground font-medium italic">-</span>
-                          )}
-                        </td>
-
                         {/* Acciones */}
-                        <td className="py-4 pr-6 text-right">
+                        <td className="py-2.5 pr-6 text-right">
                           {token.poolAddress ? (
                             <Link href={`/dex?tokenA=${token.address}&tokenB=${WETH_CONTRACT.address}`}>
                               <Button
