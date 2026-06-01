@@ -206,7 +206,8 @@ contract BaseERC20 is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit 
 
 const ERC20Page: NextPage = () => {
   const isHydrated = useHydrated();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chain } = useAccount();
+  const explorerUrl = chain?.blockExplorers?.default?.url || 'https://sepolia.etherscan.io';
 
   // Estados de carga de fábrica de tokens
   const { tokens: allTokenAddresses, isLoading: isLoadingAllTokens, refetch: refetchAllTokens } = useAllTokens();
@@ -265,6 +266,7 @@ const ERC20Page: NextPage = () => {
   const [notification, setNotification] = useState<{
     type: 'success' | 'error';
     message: string;
+    txHash?: string;
   } | null>(null);
 
   // Copiado de código
@@ -284,6 +286,7 @@ const ERC20Page: NextPage = () => {
       setNotification({
         type: 'success',
         message: `¡Token creado exitosamente! Hash: ${deployHash.substring(0, 10)}...`,
+        txHash: deployHash,
       });
 
       setTransactions((prev) => [
@@ -339,6 +342,7 @@ const ERC20Page: NextPage = () => {
       setNotification({
         type: 'success',
         message: `${actionLabel} completada exitosamente.`,
+        txHash: actionTxHash,
       });
 
       setTransactions((prev) => [
@@ -499,6 +503,17 @@ const ERC20Page: NextPage = () => {
               <p className="text-xs text-muted-foreground mt-1 max-w-[280px] break-all">
                 {notification.message}
               </p>
+              {notification.txHash && (
+                <a
+                  href={`${explorerUrl}/tx/${notification.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary hover:underline font-semibold"
+                >
+                  Ver transacción
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -1274,9 +1289,15 @@ const ERC20Page: NextPage = () => {
                                   Destinatario: <span className="font-mono">{tx.to}</span>
                                 </div>
                               )}
-                              <div className="text-xs text-muted-foreground font-mono mt-1 break-all bg-muted/30 px-2 py-0.5 rounded border border-border/20 max-w-fit">
+                              <a
+                                href={`${explorerUrl}/tx/${tx.hash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-muted-foreground hover:text-primary hover:underline font-mono mt-1 break-all bg-muted/30 px-2 py-0.5 rounded border border-border/20 max-w-fit inline-flex items-center gap-1"
+                              >
                                 Hash: {tx.hash}
-                              </div>
+                                <ExternalLink className="h-3 w-3 shrink-0" />
+                              </a>
                             </div>
                           </div>
                           <div className="text-right shrink-0">

@@ -208,7 +208,8 @@ contract StudentIdentity {
 const IdentityPage: NextPage = () => {
   const router = useRouter();
   const isHydrated = useHydrated();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chain } = useAccount();
+  const explorerUrl = chain?.blockExplorers?.default?.url || 'https://sepolia.etherscan.io';
 
   // Hooks para consultar el perfil del usuario conectado
   const {
@@ -242,6 +243,7 @@ const IdentityPage: NextPage = () => {
   const [notification, setNotification] = useState<{
     type: 'success' | 'error';
     message: string;
+    txHash?: string;
   } | null>(null);
 
   const [copied, setCopied] = useState(false);
@@ -278,6 +280,7 @@ const IdentityPage: NextPage = () => {
       setNotification({
         type: 'success',
         message: '¡Perfil actualizado en la blockchain exitosamente!',
+        txHash: actionTxHash,
       });
       refetchMyProfile();
       refetchDirectory();
@@ -365,6 +368,17 @@ const IdentityPage: NextPage = () => {
               <p className="text-xs text-muted-foreground mt-1 max-w-[280px] break-all">
                 {notification.message}
               </p>
+              {notification.txHash && (
+                <a
+                  href={`${explorerUrl}/tx/${notification.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary hover:underline font-semibold"
+                >
+                  Ver transacción
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              )}
             </div>
           </div>
         </div>
