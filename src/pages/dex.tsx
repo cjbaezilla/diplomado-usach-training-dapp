@@ -85,6 +85,28 @@ const calcularCantidad1Optima = (cantidad0Deseada: bigint, reserva0: bigint, res
   return (cantidad0Deseada * reserva1) / reserva0;
 };
 
+// Formatea una relación de precios (ratio) ajustando dinámicamente la precisión para valores extremadamente pequeños (evitando que se muestren como 0)
+const formatPriceRatio = (val: number): string => {
+  if (val === 0) return '0';
+  if (val < 0.000001) {
+    const exponent = Math.floor(Math.log10(val));
+    const decimalsNeeded = Math.min(Math.max(Math.abs(exponent) + 4, 6), 18);
+    return val.toLocaleString(undefined, { maximumFractionDigits: decimalsNeeded });
+  }
+  return val.toLocaleString(undefined, { maximumFractionDigits: 6 });
+};
+
+// Formatea un precio en USD garantizando que precios muy bajos no se redondeen a cero y manteniendo los decimales estándar para montos comunes
+const formatUsdPrice = (val: number): string => {
+  if (val === 0) return '0.00';
+  if (val < 0.01) {
+    const exponent = Math.floor(Math.log10(val));
+    const decimalsNeeded = Math.min(Math.max(Math.abs(exponent) + 4, 4), 18);
+    return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: decimalsNeeded });
+  }
+  return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+};
+
 // Componente para una fila de piscina de liquidez
 interface PoolRowProps {
   poolAddress: `0x${string}`;
@@ -276,21 +298,21 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger, onSelectAction }: P
         <div className="flex flex-col text-xs font-mono">
           <div className="flex flex-col">
             <span className="text-foreground font-medium">
-              1 {metadata0.symbol} = {ratio.toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadata1.symbol}
+              1 {metadata0.symbol} = {formatPriceRatio(ratio)} {metadata1.symbol}
             </span>
             {price0Usd > 0 && (
               <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                (~${price0Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USD)
+                (~${formatUsdPrice(price0Usd)} USD)
               </span>
             )}
           </div>
           <div className="flex flex-col mt-2">
             <span className="text-muted-foreground">
-              1 {metadata1.symbol} = {ratio > 0 ? (1 / ratio).toLocaleString(undefined, { maximumFractionDigits: 6 }) : 0} {metadata0.symbol}
+              1 {metadata1.symbol} = {ratio > 0 ? formatPriceRatio(1 / ratio) : '0'} {metadata0.symbol}
             </span>
             {price1Usd > 0 && (
               <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                (~${price1Usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USD)
+                (~${formatUsdPrice(price1Usd)} USD)
               </span>
             )}
           </div>
@@ -2268,13 +2290,13 @@ const DEXPage: NextPage = () => {
                                 <div className="flex justify-between">
                                   <span>1 {metadataA.symbol} =</span>
                                   <span className="font-mono text-foreground font-semibold">
-                                    {(Number(reserveB) / 10**metadataB.decimals / (Number(reserveA) / 10**metadataA.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataB.symbol}
+                                    {formatPriceRatio(Number(reserveB) / 10**metadataB.decimals / (Number(reserveA) / 10**metadataA.decimals))} {metadataB.symbol}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>1 {metadataB.symbol} =</span>
                                   <span className="font-mono text-foreground font-semibold">
-                                    {(Number(reserveA) / 10**metadataA.decimals / (Number(reserveB) / 10**metadataB.decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 })} {metadataA.symbol}
+                                    {formatPriceRatio(Number(reserveA) / 10**metadataA.decimals / (Number(reserveB) / 10**metadataB.decimals))} {metadataA.symbol}
                                   </span>
                                 </div>
                               </div>
