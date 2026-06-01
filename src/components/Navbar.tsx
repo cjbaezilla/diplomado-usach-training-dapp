@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Coins, User, Award, ArrowRightLeft, Menu, X, Home, HelpCircle, Trophy } from 'lucide-react';
+import { Coins, User, Award, ArrowRightLeft, Menu, X, Home, HelpCircle, Trophy, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAccount } from 'wagmi';
 import { useHydrated } from '@/hooks/useHydrated';
@@ -25,6 +25,20 @@ function CustomConnectButton() {
 
   const isActive = (path: string) => router.pathname === path;
 
+  // Botón reutilizable del Ranking de Tokens
+  const rankingButton = (
+    <Link
+      href="/ranking"
+      title="Ranking de Tokens"
+      className={cn(
+        "flex items-center justify-center h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-primary hover:border-primary/50 transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shrink-0",
+        isActive('/ranking') && "text-primary border-primary bg-primary/5"
+      )}
+    >
+      <TrendingUp className="h-4 w-4" />
+    </Link>
+  );
+
   return (
     <ConnectButton.Custom>
       {({
@@ -46,39 +60,48 @@ function CustomConnectButton() {
 
         if (!ready) {
           return (
-            <div
-              aria-hidden={true}
-              style={{
-                opacity: 0,
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
-              className="h-8 w-28 bg-slate-800 rounded-lg animate-pulse"
-            />
+            <div className="flex items-center gap-2">
+              {rankingButton}
+              <div
+                aria-hidden={true}
+                style={{
+                  opacity: 0,
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
+                className="h-8 w-28 bg-slate-800 rounded-lg animate-pulse"
+              />
+            </div>
           );
         }
 
         if (!connected) {
           return (
-            <button
-              onClick={openConnectModal}
-              type="button"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3.5 py-1.5 rounded-lg text-xs tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-md shadow-primary/10 border border-primary/20"
-            >
-              Conectar
-            </button>
+            <div className="flex items-center gap-2">
+              {rankingButton}
+              <button
+                onClick={openConnectModal}
+                type="button"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3.5 py-1.5 rounded-lg text-xs tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-md shadow-primary/10 border border-primary/20"
+              >
+                Conectar
+              </button>
+            </div>
           );
         }
 
         if (chain.unsupported) {
           return (
-            <button
-              onClick={openChainModal}
-              type="button"
-              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-3.5 py-1.5 rounded-lg text-xs tracking-wider uppercase transition-all duration-200 active:scale-95 border border-red-500/30"
-            >
-              Red no soportada
-            </button>
+            <div className="flex items-center gap-2">
+              {rankingButton}
+              <button
+                onClick={openChainModal}
+                type="button"
+                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-3.5 py-1.5 rounded-lg text-xs tracking-wider uppercase transition-all duration-200 active:scale-95 border border-red-500/30"
+              >
+                Red no soportada
+              </button>
+            </div>
           );
         }
 
@@ -86,6 +109,9 @@ function CustomConnectButton() {
 
         return (
           <div className="flex items-center gap-2">
+            {/* Enlace "Ranking" siempre visible */}
+            {rankingButton}
+
             {/* Enlace "Mi Perfil" al lado izquierdo del selector de red */}
             {isHydrated && address && (
               <Link
