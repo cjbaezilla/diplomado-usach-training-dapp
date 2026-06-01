@@ -110,6 +110,7 @@ export function useDEXPoolActions(poolAddress?: `0x${string}`) {
       ...contract,
       functionName: 'agregarLiquidez',
       args: [cantidad0Deseada, cantidad1Deseada],
+      gas: 500000n, // Límite de gas explícito y seguro para evitar fallos de estimación en Sepolia
     });
   };
 
@@ -119,6 +120,7 @@ export function useDEXPoolActions(poolAddress?: `0x${string}`) {
       ...contract,
       functionName: 'removerLiquidez',
       args: [cantidadLP],
+      gas: 300000n, // Límite de gas explícito y seguro para evitar fallos de estimación en Sepolia
     });
   };
 
@@ -128,6 +130,7 @@ export function useDEXPoolActions(poolAddress?: `0x${string}`) {
       ...contract,
       functionName: 'swap',
       args: [tokenEntrada, cantidadEntrada],
+      gas: 300000n, // Límite de gas explícito y seguro para evitar fallos de estimación en Sepolia
     });
   };
 
