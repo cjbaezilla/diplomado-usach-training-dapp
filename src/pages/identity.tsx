@@ -28,7 +28,7 @@ import {
   Info,
   ExternalLink,
   UserPlus,
-  RefreshCw,
+  UserCheck,
   Copy,
   Check,
   Code,
@@ -589,16 +589,17 @@ const IdentityPage: NextPage = () => {
                       <Button
                         type="submit"
                         disabled={isActionPending}
-                        className="shadow-md font-bold px-4 py-2 hover:scale-[1.02] transition-transform text-xs"
+                        size="lg"
+                        className="shadow-md font-bold px-6 py-2.5 hover:scale-[1.02] transition-transform text-sm"
                       >
                         {isActionPending ? (
                           <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             Guardando en Blockchain...
                           </>
                         ) : (
                           <>
-                            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                            <UserCheck className="h-4 w-4 mr-2" />
                             {myProfile?.isRegistered ? 'Actualizar Perfil' : 'Registrar Perfil'}
                           </>
                         )}
