@@ -2,6 +2,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount, useBalance, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
@@ -662,6 +663,7 @@ const WETH_ADDRESS = (process.env.NEXT_PUBLIC_WETH_ADDRESS || '0x2279B7A0a67DB37
 const ETH_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 const DEXPage: NextPage = () => {
+  const router = useRouter();
   const isHydrated = useHydrated();
   const { isConnected, address, chain } = useAccount();
   const explorerUrl = chain?.blockExplorers?.default?.url || 'https://sepolia.etherscan.io';
@@ -984,13 +986,28 @@ const DEXPage: NextPage = () => {
   const [copiedCode, setCopiedCode] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string; txHash?: string } | null>(null);
 
-  // Selección automática de primeros tokens si existen
+  // Selección automática e inicialización desde URL params
+  const [isUrlParamsLoaded, setIsUrlParamsLoaded] = useState(false);
+
   useEffect(() => {
-    if (selectableTokens.length >= 2 && !tokenA && !tokenB) {
-      setTokenA(selectableTokens[0]);
-      setTokenB(selectableTokens[1]);
+    if (!router.isReady) return;
+    if (isUrlParamsLoaded) return;
+
+    const queryTokenA = router.query.tokenA as string | undefined;
+    const queryTokenB = router.query.tokenB as string | undefined;
+
+    if (queryTokenA && queryTokenB && queryTokenA.startsWith('0x') && queryTokenB.startsWith('0x')) {
+      setTokenA(queryTokenA as `0x${string}`);
+      setTokenB(queryTokenB as `0x${string}`);
+      setIsUrlParamsLoaded(true);
+    } else if (selectableTokens.length >= 2) {
+      if (!tokenA && !tokenB) {
+        setTokenA(selectableTokens[0]);
+        setTokenB(selectableTokens[1]);
+      }
+      setIsUrlParamsLoaded(true);
     }
-  }, [selectableTokens, tokenA, tokenB]);
+  }, [router.isReady, router.query, selectableTokens, isUrlParamsLoaded, tokenA, tokenB]);
 
 
   // Manejar el cambio automático de inputs al calcular Swap
