@@ -880,6 +880,10 @@ const DEXPage: NextPage = () => {
     return isTokenA0 ? poolReserve1 : poolReserve0;
   }, [isTokenA0, poolReserve0, poolReserve1]);
 
+  const poolHasNoLiquidity = useMemo(() => {
+    return poolExists && !isWethDirectSwap && (poolReserve0 === 0n || poolReserve1 === 0n);
+  }, [poolExists, isWethDirectSwap, poolReserve0, poolReserve1]);
+
   // Manejadores para auto-calcular montos de liquidez con proporción óptima
   const handleAddAmountAChange = (val: string) => {
     setAddAmountA(val);
@@ -2029,6 +2033,27 @@ const DEXPage: NextPage = () => {
                               </div>
                             )}
 
+                            {/* Mensaje de piscina sin liquidez */}
+                            {poolHasNoLiquidity && (
+                              <div className="flex flex-col gap-2.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+                                <div className="flex items-start gap-1.5">
+                                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                  <span>No hay liquidez disponible para el par {metadataA.symbol} / {metadataB.symbol}. Para poder realizar intercambios en este par, primero se debe aportar liquidez a la piscina.</span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-[10px] h-7 px-3 self-start border-amber-500/30 hover:bg-amber-500/20 text-amber-500 hover:text-amber-400 font-bold font-sans"
+                                  onClick={() => {
+                                    setActiveTab('add');
+                                  }}
+                                >
+                                  Añadir Liquidez
+                                </Button>
+                              </div>
+                            )}
+
                             {/* Botón de Acción de Swap */}
                             {!poolExists && !isWethDirectSwap ? (
                               <Button
@@ -2037,6 +2062,14 @@ const DEXPage: NextPage = () => {
                                 className="w-full font-bold shadow-md opacity-60 cursor-not-allowed"
                               >
                                 Intercambio no disponible (Sin Piscina)
+                              </Button>
+                            ) : poolHasNoLiquidity ? (
+                              <Button
+                                type="button"
+                                disabled
+                                className="w-full font-bold shadow-md opacity-60 cursor-not-allowed"
+                              >
+                                Intercambio no disponible (Sin Liquidez)
                               </Button>
                             ) : (tokenA === ETH_ADDRESS && swapAmountBigInt > wethBalance) ? (
                               <Button
