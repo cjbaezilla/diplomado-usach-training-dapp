@@ -890,9 +890,9 @@ const DEXPage: NextPage = () => {
 
   // Mapear el orden de los tokens y reservas de la piscina activa
   const isTokenA0 = useMemo(() => {
-    if (!tokenA || !poolToken0) return true;
-    return tokenA.toLowerCase() === poolToken0.toLowerCase();
-  }, [tokenA, poolToken0]);
+    if (!resolvedTokenA || !poolToken0) return true;
+    return resolvedTokenA.toLowerCase() === poolToken0.toLowerCase();
+  }, [resolvedTokenA, poolToken0]);
 
   const reserveA = useMemo(() => {
     return isTokenA0 ? poolReserve0 : poolReserve1;
@@ -1018,7 +1018,7 @@ const DEXPage: NextPage = () => {
       }
 
       // Ordenar las reservas de acuerdo a token0 y token1 del pool
-      const isToken0 = tokenA.toLowerCase() === poolToken0?.toLowerCase();
+      const isToken0 = resolvedTokenA?.toLowerCase() === poolToken0?.toLowerCase();
       const resIn = isToken0 ? poolReserve0 : poolReserve1;
       const resOut = isToken0 ? poolReserve1 : poolReserve0;
 
@@ -1027,7 +1027,7 @@ const DEXPage: NextPage = () => {
     } catch {
       setEstimatedOut('0.00');
     }
-  }, [swapAmountIn, poolReserve0, poolReserve1, tokenA, tokenB, poolToken0, currentPoolAddress, metadataA, metadataB, isWethDirectSwap]);
+  }, [swapAmountIn, poolReserve0, poolReserve1, resolvedTokenA, resolvedTokenB, poolToken0, currentPoolAddress, metadataA, metadataB, isWethDirectSwap]);
 
 
 
