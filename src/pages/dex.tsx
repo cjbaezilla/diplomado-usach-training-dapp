@@ -1145,12 +1145,28 @@ const DEXPage: NextPage = () => {
         ...prev,
       ]);
       setLastWethAction(null);
+      
+      // Limpiar input de swap después de un wrap/unwrap directo exitoso
+      if (isWethDirectSwap) {
+        setSwapAmountIn('');
+      }
+
       refetchWethBalances();
       refetchBalanceA();
       refetchBalanceB();
       setRefreshTrigger((prev) => prev + 1);
     }
-  }, [isWethSuccess, wethTxHash, lastProcessedWethHash, lastWethAction, refetchWethBalances, refetchBalanceA, refetchBalanceB]);
+  }, [
+    isWethSuccess,
+    wethTxHash,
+    lastProcessedWethHash,
+    lastWethAction,
+    isWethDirectSwap,
+    setSwapAmountIn,
+    refetchWethBalances,
+    refetchBalanceA,
+    refetchBalanceB
+  ]);
 
   // Escuchar errores de transacciones
   useEffect(() => {
@@ -2075,7 +2091,7 @@ const DEXPage: NextPage = () => {
                               <Button
                                 type="button"
                                 onClick={handleSwap}
-                                disabled={isWethPending}
+                                disabled={isWethPending || isActionPending}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-amber-600 hover:bg-amber-700 text-white"
                               >
                                 {isWethPending ? (
@@ -2093,7 +2109,7 @@ const DEXPage: NextPage = () => {
                               <Button
                                 type="button"
                                 onClick={() => handleApprove(true, swapAmountIn, currentSwapDecimals)}
-                                disabled={isPendingApproveA}
+                                disabled={isPendingApproveA || isActionPending || isWethPending}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
                               >
                                 {isPendingApproveA ? (
@@ -2110,13 +2126,17 @@ const DEXPage: NextPage = () => {
                             ) : (
                               <Button
                                 type="submit"
-                                disabled={isActionPending || !swapAmountIn || !hasEnoughSwapBalance || parseFloat(swapAmountIn) <= 0}
+                                disabled={isActionPending || isWethPending || !swapAmountIn || !hasEnoughSwapBalance || parseFloat(swapAmountIn) <= 0}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform"
                               >
-                                {isActionPending ? (
+                                {isActionPending || isWethPending ? (
                                   <>
                                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                    Procesando Intercambio...
+                                    {isWethPending ? (
+                                      tokenA === ETH_ADDRESS ? "Envolviendo ETH..." : "Desenvolviendo WETH..."
+                                    ) : (
+                                      "Procesando Intercambio..."
+                                    )}
                                   </>
                                 ) : (
                                   <>
@@ -2286,7 +2306,7 @@ const DEXPage: NextPage = () => {
                                   setLastWethAction('wrap');
                                   wethDeposit(wethNeededForAdd - wethBalance);
                                 }}
-                                disabled={isWethPending}
+                                disabled={isWethPending || isActionPending}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-amber-600 hover:bg-amber-700 text-white"
                               >
                                 {isWethPending ? (
@@ -2304,7 +2324,7 @@ const DEXPage: NextPage = () => {
                               <Button
                                 type="button"
                                 onClick={() => handleApprove(true, addAmountA, metadataA.decimals)}
-                                disabled={isPendingApproveA}
+                                disabled={isPendingApproveA || isActionPending || isWethPending}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
                               >
                                 {isPendingApproveA ? (
@@ -2320,7 +2340,7 @@ const DEXPage: NextPage = () => {
                               <Button
                                 type="button"
                                 onClick={() => handleApprove(false, addAmountB, metadataB.decimals)}
-                                disabled={isPendingApproveB}
+                                disabled={isPendingApproveB || isActionPending || isWethPending}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-primary text-primary-foreground"
                               >
                                 {isPendingApproveB ? (
@@ -2335,7 +2355,7 @@ const DEXPage: NextPage = () => {
                             ) : (
                               <Button
                                 type="submit"
-                                disabled={isActionPending || !addAmountA || !addAmountB || !hasEnoughAddBalanceA || !hasEnoughAddBalanceB}
+                                disabled={isActionPending || isWethPending || !addAmountA || !addAmountB || !hasEnoughAddBalanceA || !hasEnoughAddBalanceB}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-emerald-600 hover:bg-emerald-700 text-white"
                               >
                                 {isActionPending ? (
@@ -2448,7 +2468,7 @@ const DEXPage: NextPage = () => {
                             ) : (
                               <Button
                                 type="submit"
-                                disabled={isActionPending || !removeLpAmount || !hasEnoughLpBalance || parseFloat(removeLpAmount) <= 0}
+                                disabled={isActionPending || isWethPending || !removeLpAmount || !hasEnoughLpBalance || parseFloat(removeLpAmount) <= 0}
                                 className="w-full font-bold shadow-md hover:scale-[1.01] transition-transform bg-destructive hover:bg-destructive/90 text-white"
                               >
                                 {isActionPending ? (
@@ -2513,7 +2533,7 @@ const DEXPage: NextPage = () => {
                     <span className="text-[10px] text-muted-foreground">* Requiere gas</span>
                     <Button
                       type="submit"
-                      disabled={isFactoryPending || !newPoolToken0 || !newPoolToken1}
+                      disabled={isFactoryPending || isActionPending || isWethPending || !newPoolToken0 || !newPoolToken1}
                       className="font-bold shadow-md hover:scale-[1.01] transition-transform text-xs"
                     >
                       {isFactoryPending ? (
