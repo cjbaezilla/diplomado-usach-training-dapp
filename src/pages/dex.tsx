@@ -1346,6 +1346,27 @@ const DEXPage: NextPage = () => {
     setRemoveLpAmount(formatUnits(amt, 18));
   };
 
+  // Funciones para establecer montos máximos de balance del usuario
+  const handleSwapMax = () => {
+    if (!currentSwapBalance) return;
+    setSwapAmountIn(formatUnits(currentSwapBalance, currentSwapDecimals));
+  };
+
+  const handleAddAmountAMax = () => {
+    if (!resolvedBalanceA) return;
+    handleAddAmountAChange(formatUnits(resolvedBalanceA, metadataA.decimals));
+  };
+
+  const handleAddAmountBMax = () => {
+    if (!resolvedBalanceB) return;
+    handleAddAmountBChange(formatUnits(resolvedBalanceB, metadataB.decimals));
+  };
+
+  const handleRemoveLpMax = () => {
+    if (!lpTokenBalance) return;
+    setRemoveLpAmount(formatUnits(lpTokenBalance, 18));
+  };
+
 
 
   // Crear piscina de liquidez
@@ -1977,6 +1998,16 @@ const DEXPage: NextPage = () => {
                                     min="0"
                                     step="any"
                                   />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 px-1.5 text-[10px] font-bold border-primary/30 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-200 shrink-0 uppercase animate-fade-in"
+                                    onClick={handleSwapMax}
+                                    disabled={!currentSwapBalance || currentSwapBalance === 0n}
+                                  >
+                                    MAX
+                                  </Button>
                                   <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
                                     <TokenIcon address={tokenA || ''} className="h-5 w-5" />
                                     <select
@@ -2221,6 +2252,16 @@ const DEXPage: NextPage = () => {
                                     min="0"
                                     step="any"
                                   />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 px-1.5 text-[10px] font-bold border-primary/30 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-200 shrink-0 uppercase animate-fade-in"
+                                    onClick={handleAddAmountAMax}
+                                    disabled={!poolExists || !resolvedBalanceA || resolvedBalanceA === 0n}
+                                  >
+                                    MAX
+                                  </Button>
                                   <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
                                     <TokenIcon address={tokenA || ''} className="h-5 w-5" />
                                     <select
@@ -2265,6 +2306,16 @@ const DEXPage: NextPage = () => {
                                     min="0"
                                     step="any"
                                   />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 px-1.5 text-[10px] font-bold border-primary/30 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-200 shrink-0 uppercase animate-fade-in"
+                                    onClick={handleAddAmountBMax}
+                                    disabled={!poolExists || !resolvedBalanceB || resolvedBalanceB === 0n}
+                                  >
+                                    MAX
+                                  </Button>
                                   <div className="flex items-center gap-1.5 bg-card/60 px-3 py-1.5 rounded-lg border border-border/40 shrink-0">
                                     <TokenIcon address={tokenB || ''} className="h-5 w-5" />
                                     <select
@@ -2424,6 +2475,16 @@ const DEXPage: NextPage = () => {
                                       min="0"
                                       step="any"
                                     />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 px-1.5 text-[10px] font-bold border-primary/30 hover:border-primary hover:bg-primary/10 text-primary transition-all duration-200 shrink-0 uppercase animate-fade-in"
+                                      onClick={handleRemoveLpMax}
+                                      disabled={!lpTokenBalance || lpTokenBalance === 0n}
+                                    >
+                                      MAX
+                                    </Button>
                                     <span className="text-xs font-bold text-muted-foreground bg-card/60 px-2.5 py-1.5 rounded-lg border border-border/40 shrink-0">
                                       LP Tokens
                                     </span>
