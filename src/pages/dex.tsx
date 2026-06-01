@@ -59,7 +59,7 @@ import { useEthPrice } from '@/hooks/useEthPrice';
 import { EthPriceTicker } from '@/components/EthPriceTicker';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Footer } from '@/components/Footer';
-import { DEX_FACTORY_CONTRACT } from '@/contracts';
+import { DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 
 // Representación de transacción local
 interface DEXTransaction {
@@ -119,7 +119,7 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger, onSelectAction }: P
               { type: 'uint256', name: 'cantidadPools', indexed: false }
             ]
           },
-          fromBlock: 0n,
+          fromBlock: DEPLOYMENT_BLOCK,
         });
 
         const matchingLog = logs.find(

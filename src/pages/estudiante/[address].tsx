@@ -18,7 +18,7 @@ import { useBaseERC20, useERC20Balance } from '@/hooks/useBaseERC20';
 import { useAllDEXPools, useDEXFactoryActions } from '@/hooks/useDEXFactory';
 import { useDEXPool, useDEXPoolBalance } from '@/hooks/useDEXPool';
 import { useHydrated } from '@/hooks/useHydrated';
-import { BASE_ERC1155_CONTRACT, DEX_FACTORY_CONTRACT } from '@/contracts';
+import { BASE_ERC1155_CONTRACT, DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -227,7 +227,7 @@ function StudentPoolRow({ poolAddress, studentAddress, onPoolActive }: StudentPo
               { type: 'uint256', name: 'cantidadPools', indexed: false }
             ]
           },
-          fromBlock: 0n,
+          fromBlock: DEPLOYMENT_BLOCK,
         });
 
         const matchingLog = logs.find(

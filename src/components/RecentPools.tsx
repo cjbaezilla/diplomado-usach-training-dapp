@@ -5,7 +5,7 @@ import { useAllDEXPools } from '@/hooks/useDEXFactory';
 import { useDEXPool } from '@/hooks/useDEXPool';
 import { useBaseERC20 } from '@/hooks/useBaseERC20';
 import { useStudentProfile } from '@/hooks/useStudentIdentity';
-import { DEX_FACTORY_CONTRACT } from '@/contracts';
+import { DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { TokenIcon } from '@/components/TokenIcon';
 import { UserAvatar } from '@/components/UserAvatar';
 import {
@@ -49,7 +49,7 @@ function RecentPoolItem({ poolAddress }: RecentPoolItemProps) {
               { type: 'uint256', name: 'cantidadPools', indexed: false }
             ]
           },
-          fromBlock: 0n,
+          fromBlock: DEPLOYMENT_BLOCK,
         });
 
         const matchingLog = logs.find(

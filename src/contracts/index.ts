@@ -13,6 +13,9 @@ const DEFAULT_BASE_ERC1155_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
 const DEFAULT_DEX_FACTORY_ADDRESS = '0x0165878A594ca255338adfa4d48449f69242Eb8F';
 const DEFAULT_WETH_ADDRESS = '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6';
 
+// Bloque de despliegue en Sepolia (para optimizar la búsqueda de eventos y evitar límites de RPC)
+export const DEPLOYMENT_BLOCK = 10968530n;
+
 export const STUDENT_IDENTITY_CONTRACT = {
   address: (process.env.NEXT_PUBLIC_STUDENT_IDENTITY_ADDRESS || DEFAULT_STUDENT_IDENTITY_ADDRESS) as `0x${string}`,
   abi: studentIdentityAbi,
