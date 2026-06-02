@@ -1035,7 +1035,7 @@ const DesafiosPage: NextPage = () => {
                     </div>
 
                     {/* 1. Vitrina de la Reliquia */}
-                    <div className="flex flex-col items-center text-center gap-2.5 pt-0.5 pb-2">
+                    <div className="flex flex-col items-start text-left gap-2.5 pt-0.5 pb-2">
                       {/* Visual del NFT */}
                       {getChallengeState(selectedChallenge.id) === 'locked' ? (
                         /* NFT Bloqueado */
@@ -1093,11 +1093,11 @@ const DesafiosPage: NextPage = () => {
                       {/* Lore y Buff de la Reliquia */}
                       {getChallengeState(selectedChallenge.id) !== 'locked' ? (
                         <div className="space-y-3 w-full">
-                          <div className="space-y-1">
-                            <h4 className="font-extrabold text-sm text-foreground px-2 whitespace-normal break-words" title={selectedChallenge.relicName}>
+                          <div className="space-y-1 text-left">
+                            <h4 className="font-extrabold text-sm text-foreground px-0 whitespace-normal break-words" title={selectedChallenge.relicName}>
                               {selectedChallenge.relicName}
                             </h4>
-                            <p className="text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/15 py-1 px-2.5 rounded-lg mx-auto w-fit flex items-center gap-1 shadow-sm">
+                            <p className="text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/15 py-1 px-2.5 rounded-lg w-fit flex items-center gap-1 shadow-sm">
                               <Sparkle className="h-3 w-3 text-emerald-400" />
                               Buff: {selectedChallenge.relicBuff}
                             </p>
@@ -1192,11 +1192,11 @@ const DesafiosPage: NextPage = () => {
                         </div>
                       ) : (
                         <div className="space-y-4 w-full">
-                          <div className="space-y-1.5">
+                          <div className="space-y-1.5 text-left">
                             <h4 className="font-extrabold text-xs text-muted-foreground/75 italic">
                               Insignia Encriptada
                             </h4>
-                            <p className="text-[10px] text-muted-foreground/60 max-w-[200px] leading-normal mx-auto">
+                            <p className="text-[10px] text-muted-foreground/60 max-w-[200px] leading-normal">
                               El efecto pasivo y la representación de la insignia se revelarán al forjar este nivel.
                             </p>
                           </div>
