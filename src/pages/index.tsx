@@ -14,6 +14,7 @@ import { CreatedTokens } from '@/components/CreatedTokens';
 import { RecentIdentities } from '@/components/RecentIdentities';
 import { RecentPools } from '@/components/RecentPools';
 import { RecentRelics } from '@/components/RecentRelics';
+import { RecentChallenges } from '@/components/RecentChallenges';
 import { Footer } from '@/components/Footer';
 
 const Home: NextPage = () => {
@@ -159,10 +160,11 @@ const Home: NextPage = () => {
           <RecentPools />
         </div>
 
-        {/* Buscador de Estudiantes y Últimas Reliquias en cuadrícula */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full pt-8 border-t border-border/30 items-stretch">
+        {/* Buscador de Estudiantes, Últimas Reliquias y Desafíos Completados en cuadrícula */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full pt-8 border-t border-border/30 items-stretch">
           <StudentSearch />
           <RecentRelics />
+          <RecentChallenges />
         </div>
 
         {/* Secciones informativas lado a lado */}
