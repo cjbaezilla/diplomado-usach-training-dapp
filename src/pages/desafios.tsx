@@ -47,7 +47,9 @@ import {
   History,
   LockKeyhole,
   Sparkle,
-  ArrowUpRight
+  ArrowUpRight,
+  Copy,
+  Check
 } from 'lucide-react';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useChallengeMinter } from '@/hooks/useChallengeMinter';
@@ -69,6 +71,19 @@ interface Challenge {
   actionUrl: string;
   description: string;
   hints: string[];
+}
+
+interface Attribute {
+  trait_type: string;
+  value: string | number;
+}
+
+interface RelicMetadata {
+  name: string;
+  description: string;
+  image: string;
+  external_url: string;
+  attributes: Attribute[];
 }
 
 const DesafiosPage: NextPage = () => {
@@ -174,6 +189,98 @@ const DesafiosPage: NextPage = () => {
     if (selectedChallengeId >= challenges.length) return null;
     return challenges[selectedChallengeId];
   }, [challenges, selectedChallengeId]);
+
+  // Metadatos específicos de la reliquia seleccionada cargados dinámicamente
+  const [relicMetadata, setRelicMetadata] = useState<RelicMetadata | null>(null);
+
+  // Estado para copiar la dirección del contrato NFT
+  const [copiedContract, setCopiedContract] = useState(false);
+
+  // Cargar metadatos del NFT al seleccionar un desafío
+  useEffect(() => {
+    if (selectedChallenge) {
+      fetch(`/nft/usach/relics/${selectedChallenge.rewardRelicNft}.json`)
+        .then((res) => {
+          if (!res.ok) throw new Error('Error al cargar metadatos');
+          return res.json();
+        })
+        .then((data) => setRelicMetadata(data))
+        .catch((err) => {
+          console.error('Error al cargar metadatos de la reliquia:', err);
+          setRelicMetadata(null);
+        });
+    } else {
+      setRelicMetadata(null);
+    }
+  }, [selectedChallenge]);
+
+  // Copiar dirección de contrato al portapapeles
+  const handleCopyContract = () => {
+    navigator.clipboard.writeText(BASE_ERC1155_CONTRACT.address);
+    setCopiedContract(true);
+    setTimeout(() => setCopiedContract(false), 2000);
+  };
+
+  // Helper para obtener atributos específicos de la reliquia
+  const getTraitValue = (metadata: RelicMetadata | null, type: string) => {
+    if (!metadata || !metadata.attributes) return '';
+    const attr = metadata.attributes.find((a) => a.trait_type === type);
+    return attr ? attr.value : '';
+  };
+
+  // Traducir factor de cumplimiento a español legible
+  const getAccomplishmentLabel = (factor: string) => {
+    switch (factor) {
+      case 'CONEXION_BILLETERA':
+        return 'Conexión de Billetera';
+      case 'REGISTRO_IDENTIDAD':
+        return 'Registro de Identidad';
+      case 'CREACION_TOKEN_ERC20':
+        return 'Creación de Token ERC-20';
+      case 'MINTEO_TRANSFERENCIA_ERC20':
+        return 'Acuñación y Transferencia';
+      case 'SWAP_DEX':
+        return 'Intercambio (Swap) en DEX';
+      case 'PROVISION_LIQUIDEZ':
+        return 'Provisión de Liquidez';
+      case 'CREACION_POOL_DEX':
+        return 'Creación de Piscina DEX';
+      case 'INTERACCION_WETH':
+        return 'Envoltura de Ether (WETH)';
+      case 'VER_HISTORIAL_TRANSACCIONES':
+        return 'Consulta de Transacciones';
+      case 'INTERACCION_FAUCET':
+        return 'Reclamo de Faucet';
+      default:
+        return factor;
+    }
+  };
+
+  // Obtener estilos de color basados en la rareza (Clase de Item)
+  const getRarityColor = (rarity: string) => {
+    switch (rarity.toLowerCase()) {
+      case 'legendario':
+        return {
+          text: 'text-amber-500 dark:text-amber-400',
+          bg: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
+        };
+      case 'épico':
+        return {
+          text: 'text-purple-500 dark:text-purple-400',
+          bg: 'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300',
+        };
+      case 'raro':
+        return {
+          text: 'text-blue-500 dark:text-blue-400',
+          bg: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300',
+        };
+      default:
+        return {
+          text: 'text-slate-500 dark:text-slate-400',
+          bg: 'bg-slate-500/10 text-slate-600 dark:bg-slate-500/20 dark:text-slate-300',
+        };
+    }
+  };
 
   // Determinar si el desafío seleccionado es reclamable
   const isSelectedChallengeClaimable = useMemo(() => {
@@ -951,30 +1058,195 @@ const DesafiosPage: NextPage = () => {
 
                     {/* Lore y Buff de la Reliquia */}
                     {getChallengeState(selectedChallenge.id) !== 'locked' ? (
-                      <div className="space-y-1.5 w-full">
-                        <Badge variant="outline" className={`font-mono text-[9px] px-2 py-0.5 border ${
-                          getChallengeState(selectedChallenge.id) === 'completed' 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
-                          Reliquia #{selectedChallenge.rewardRelicNft}
-                        </Badge>
-                        <h4 className="font-extrabold text-xs text-foreground px-2 line-clamp-1" title={selectedChallenge.relicName}>
-                          {selectedChallenge.relicName}
-                        </h4>
-                        <p className="text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/15 py-1.5 px-3 rounded-lg mx-auto w-fit flex items-center gap-1 shadow-sm">
-                          <Sparkle className="h-3 w-3 text-emerald-400" />
-                          Buff: {selectedChallenge.relicBuff}
-                        </p>
+                      <div className="space-y-4 w-full">
+                        <div className="space-y-1.5">
+                          <Badge variant="outline" className={`font-mono text-[9px] px-2 py-0.5 border ${
+                            getChallengeState(selectedChallenge.id) === 'completed' 
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}>
+                            Reliquia #{selectedChallenge.rewardRelicNft}
+                          </Badge>
+                          <h4 className="font-extrabold text-xs text-foreground px-2 line-clamp-1" title={selectedChallenge.relicName}>
+                            {selectedChallenge.relicName}
+                          </h4>
+                          <p className="text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/15 py-1.5 px-3 rounded-lg mx-auto w-fit flex items-center gap-1 shadow-sm">
+                            <Sparkle className="h-3 w-3 text-emerald-400" />
+                            Buff: {selectedChallenge.relicBuff}
+                          </p>
+                        </div>
+
+                        {/* Cuadrícula de Atributos Históricos (Metadata) */}
+                        <div className="grid grid-cols-2 gap-2 w-full text-left pt-2">
+                          <div className="p-2.5 rounded-xl bg-card/60 border border-border/30 text-center flex flex-col justify-center shadow-sm">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Clase de Item</span>
+                            <span className={`text-[10px] font-black mt-0.5 ${
+                              getRarityColor(relicMetadata ? String(getTraitValue(relicMetadata, 'Clase de Item')) : 'Común').text
+                            }`}>
+                              {relicMetadata ? String(getTraitValue(relicMetadata, 'Clase de Item')) : 'Cargando...'}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/60 border border-border/30 text-center flex flex-col justify-center shadow-sm">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Año de Origen</span>
+                            <span className="text-[10px] font-bold text-foreground mt-0.5">
+                              {relicMetadata ? String(getTraitValue(relicMetadata, 'Año de Origen')) : 'Cargando...'}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/60 border border-border/30 text-center flex flex-col justify-center col-span-2 shadow-sm">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Taller de Origen</span>
+                            <span className="text-[10px] font-semibold text-foreground truncate mt-0.5" title={relicMetadata ? String(getTraitValue(relicMetadata, 'Taller de Origen')) : ''}>
+                              {relicMetadata ? String(getTraitValue(relicMetadata, 'Taller de Origen')) : 'Cargando...'}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/60 border border-border/30 text-center flex flex-col justify-center shadow-sm">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Cuna Histórica</span>
+                            <span className="text-[10px] font-semibold text-foreground truncate mt-0.5" title={relicMetadata ? String(getTraitValue(relicMetadata, 'Cuna Histórica')) : ''}>
+                              {relicMetadata ? String(getTraitValue(relicMetadata, 'Cuna Histórica')) : 'Cargando...'}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/60 border border-border/30 text-center flex flex-col justify-center shadow-sm">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Edición</span>
+                            <span className="text-[10px] font-bold text-primary mt-0.5">
+                              {relicMetadata ? String(getTraitValue(relicMetadata, 'Edición')) : 'Cargando...'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Ficha Técnica del Token */}
+                        <div className="space-y-2 w-full text-xs border-t border-border/10 pt-3.5 text-left">
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Contrato NFT:</span>
+                            <div className="flex items-center gap-1 bg-muted/30 px-1.5 py-0.5 rounded border border-border/30">
+                              <span className="font-mono text-[9px] text-foreground">
+                                {BASE_ERC1155_CONTRACT.address.slice(0, 6)}...{BASE_ERC1155_CONTRACT.address.slice(-4)}
+                              </span>
+                              <button 
+                                onClick={handleCopyContract} 
+                                className="p-0.5 hover:bg-muted-foreground/10 rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                title="Copiar dirección de contrato"
+                              >
+                                {copiedContract ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Estándar de Token:</span>
+                            <span className="font-semibold text-foreground bg-primary/5 px-2 py-0.5 rounded border border-primary/10 text-[9px]">
+                              ERC-1155 Multi-Token
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Requisito On-Chain:</span>
+                            <span className="font-semibold text-foreground text-[10px]">
+                              {getAccomplishmentLabel(selectedChallenge.accomplishmentFactor)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Recompensa de XP:</span>
+                            <span className="font-bold text-primary font-mono text-[10px]">
+                              +{selectedChallenge.xp} XP
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Tiempo Estimado:</span>
+                            <span className="font-medium text-foreground text-[10px]">
+                              {selectedChallenge.estimatedTime}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-1.5">
-                        <h4 className="font-extrabold text-xs text-muted-foreground/75 italic">
-                          Insignia Encriptada
-                        </h4>
-                        <p className="text-[10px] text-muted-foreground/60 max-w-[200px] leading-normal mx-auto">
-                          El efecto pasivo y la representación de la insignia se revelarán al forjar este nivel.
-                        </p>
+                      <div className="space-y-4 w-full">
+                        <div className="space-y-1.5">
+                          <h4 className="font-extrabold text-xs text-muted-foreground/75 italic">
+                            Insignia Encriptada
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground/60 max-w-[200px] leading-normal mx-auto">
+                            El efecto pasivo y la representación de la insignia se revelarán al forjar este nivel.
+                          </p>
+                        </div>
+
+                        {/* Cuadrícula de Atributos Bloqueada/Difuminada */}
+                        <div className="grid grid-cols-2 gap-2 w-full text-left pt-2 relative overflow-hidden select-none">
+                          <div className="p-2.5 rounded-xl bg-card/25 border border-border/10 text-center flex flex-col justify-center filter blur-[2px] opacity-40">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Clase de Item</span>
+                            <span className="text-[10px] font-black mt-0.5 text-muted-foreground">Bloqueado</span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/25 border border-border/10 text-center flex flex-col justify-center filter blur-[2px] opacity-40">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Año de Origen</span>
+                            <span className="text-[10px] font-bold text-muted-foreground mt-0.5">Bloqueado</span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/25 border border-border/10 text-center flex flex-col justify-center col-span-2 filter blur-[2px] opacity-40">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Taller de Origen</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">Bloqueado</span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/25 border border-border/10 text-center flex flex-col justify-center filter blur-[2px] opacity-40">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Cuna Histórica</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">Bloqueado</span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-card/25 border border-border/10 text-center flex flex-col justify-center filter blur-[2px] opacity-40">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Edición</span>
+                            <span className="text-[10px] font-bold text-muted-foreground mt-0.5">Bloqueado</span>
+                          </div>
+
+                          {/* Overlay decorativo de candado */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/5 backdrop-blur-[1.5px] rounded-xl pointer-events-none">
+                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card/95 border border-border/40 shadow-lg text-[9px] font-bold uppercase tracking-wider text-muted-foreground/90">
+                              <Lock className="h-3 w-3 text-muted-foreground/70" />
+                              Atributos Encriptados
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ficha Técnica Bloqueada */}
+                        <div className="space-y-2 w-full text-xs border-t border-border/10 pt-3.5 text-left relative overflow-hidden select-none">
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground filter blur-[1px] opacity-40">
+                            <span>Contrato NFT:</span>
+                            <span className="font-mono text-[9px] bg-muted/40 px-1.5 py-0.5 rounded border border-border/40">
+                              0x0000...0000
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground filter blur-[1px] opacity-40">
+                            <span>Estándar de Token:</span>
+                            <span className="font-semibold text-foreground bg-primary/5 px-2 py-0.5 rounded border border-primary/10 text-[9px]">
+                              ERC-1155 Multi-Token
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Requisito On-Chain:</span>
+                            <span className="font-semibold text-muted-foreground/80 text-[10px]">
+                              {getAccomplishmentLabel(selectedChallenge.accomplishmentFactor)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Recompensa de XP:</span>
+                            <span className="font-bold text-primary/70 font-mono text-[10px]">
+                              +{selectedChallenge.xp} XP
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                            <span>Tiempo Estimado:</span>
+                            <span className="font-medium text-muted-foreground/80 text-[10px]">
+                              {selectedChallenge.estimatedTime}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
