@@ -1025,7 +1025,7 @@ const DesafiosPage: NextPage = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-background/5 to-transparent pointer-events-none"></div>
 
                   {/* Grupo superior: Cabecera y Vitrina */}
-                  <div className="flex flex-col gap-4 relative z-10 w-full">
+                  <div className="flex flex-col gap-2 relative z-10 w-full">
                     {/* Cabecera de la Recompensa */}
                     <div className="flex items-center justify-between border-b border-border/10 pb-2">
                       <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
@@ -1035,7 +1035,7 @@ const DesafiosPage: NextPage = () => {
                     </div>
 
                     {/* 1. Vitrina de la Reliquia */}
-                    <div className="flex flex-col items-center text-center gap-2.5 py-2">
+                    <div className="flex flex-col items-center text-center gap-2.5 pt-0.5 pb-2">
                       {/* Visual del NFT */}
                       {getChallengeState(selectedChallenge.id) === 'locked' ? (
                         /* NFT Bloqueado */
