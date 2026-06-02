@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount, useReadContract, useBalance, usePublicClient } from 'wagmi';
-import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
+import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
 
@@ -149,6 +149,64 @@ export function useChallenges() {
   useEffect(() => {
     checkMintAndTransfer();
   }, [checkMintAndTransfer]);
+
+  // Estado y callback para validar el Desafío #06 (Intercambio en el Mercado Descentralizado (Swap))
+  const [isSwapCompleted, setIsSwapCompleted] = useState(false);
+
+  const checkSwap = useCallback(async () => {
+    if (!publicClient || !address) {
+      setIsSwapCompleted(false);
+      return;
+    }
+    try {
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount === 0) {
+        setIsSwapCompleted(false);
+        return;
+      }
+
+      const poolPromises = Array.from({ length: poolsCount }, (_, i) =>
+        publicClient.readContract({
+          ...DEX_FACTORY_CONTRACT,
+          functionName: 'todosLosPools',
+          args: [BigInt(i)],
+        }) as Promise<`0x${string}`>
+      );
+      const pools = await Promise.all(poolPromises);
+
+      const swapLogs = await publicClient.getLogs({
+        address: pools,
+        event: {
+          type: 'event',
+          name: 'Swap',
+          inputs: [
+            { type: 'address', name: 'usuario', indexed: true },
+            { type: 'address', name: 'tokenEntrada', indexed: true },
+            { type: 'uint256', name: 'cantidadEntrada' },
+            { type: 'uint256', name: 'cantidadSalida' }
+          ]
+        },
+        args: {
+          usuario: address
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      setIsSwapCompleted(swapLogs.length > 0);
+    } catch (err) {
+      console.error('Error al verificar desafío de swap:', err);
+      setIsSwapCompleted(false);
+    }
+  }, [publicClient, address]);
+
+  useEffect(() => {
+    checkSwap();
+  }, [checkSwap]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -278,9 +336,14 @@ export function useChallenges() {
     if (challenge.id === 4) {
       return isMintAndTransferCompleted || !!localCompleted[challenge.id];
     }
+
+    // Desafío 6 (index 5, id 5: Intercambio en el Mercado Descentralizado (Swap)) se completa si el usuario realizó un swap en el DEX, o si lo completó localmente
+    if (challenge.id === 5) {
+      return isSwapCompleted || !!localCompleted[challenge.id];
+    }
     
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -300,9 +363,10 @@ export function useChallenges() {
       refetchEthBalance(),
       refetchStudentProfile(),
       refetchCreatedTokens(),
-      checkMintAndTransfer()
+      checkMintAndTransfer(),
+      checkSwap()
     ]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap]);
 
   return {
     localCompleted,

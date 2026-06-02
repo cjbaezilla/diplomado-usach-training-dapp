@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { privateKeyToAccount } from 'viem/accounts';
 import { keccak256, encodePacked, createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
-import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
+import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -141,6 +141,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     } catch (contractError: any) {
       console.error('Error al verificar la acuñación y transferencia on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
+    }
+  }
+
+  // Validación estricta on-chain para el Desafío 6 (ID: 5 - Intercambio en el Mercado Descentralizado (Swap))
+  if (Number(id) === 5) {
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+      });
+
+      // 1. Obtener la cantidad de pools en la fábrica del DEX
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount === 0) {
+        return res.status(400).json({ error: 'No existen pools de liquidez creados en el DEX.' });
+      }
+
+      // 2. Obtener las direcciones de todos los pools
+      const poolPromises = Array.from({ length: poolsCount }, (_, i) =>
+        publicClient.readContract({
+          ...DEX_FACTORY_CONTRACT,
+          functionName: 'todosLosPools',
+          args: [BigInt(i)],
+        }) as Promise<`0x${string}`>
+      );
+      const pools = await Promise.all(poolPromises);
+
+      // 3. Buscar eventos de Swap asociados al usuario en cualquiera de los pools
+      const swapLogs = await publicClient.getLogs({
+        address: pools,
+        event: {
+          type: 'event',
+          name: 'Swap',
+          inputs: [
+            { type: 'address', name: 'usuario', indexed: true },
+            { type: 'address', name: 'tokenEntrada', indexed: true },
+            { type: 'uint256', name: 'cantidadEntrada' },
+            { type: 'uint256', name: 'cantidadSalida' }
+          ]
+        },
+        args: {
+          usuario: userAddress as `0x${string}`
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      if (swapLogs.length === 0) {
+        return res.status(400).json({ error: 'No se encontró ningún evento de intercambio (Swap) realizado por el usuario en los pools del DEX.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar el intercambio (Swap) on-chain:', contractError);
       return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
     }
   }
