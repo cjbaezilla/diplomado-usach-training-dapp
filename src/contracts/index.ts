@@ -5,6 +5,7 @@ import { baseERC20Abi } from './abis/baseERC20';
 import { dexFactoryAbi } from './abis/dexFactory';
 import { dexPoolAbi } from './abis/dexPool';
 import { wethABI } from './abis/weth';
+import { challengeMinterAbi } from './abis/challengeMinter';
 
 // Direcciones por defecto de la red local Hardhat (localhost)
 const DEFAULT_STUDENT_IDENTITY_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
@@ -12,6 +13,7 @@ const DEFAULT_TOKEN_FACTORY_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F051
 const DEFAULT_BASE_ERC1155_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
 const DEFAULT_DEX_FACTORY_ADDRESS = '0x0165878A594ca255338adfa4d48449f69242Eb8F';
 const DEFAULT_WETH_ADDRESS = '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6';
+const DEFAULT_CHALLENGE_MINTER_ADDRESS = '0xd898ecBD77E4A428e9EAC2B1E445c2628E033653';
 
 // Bloque de despliegue en Sepolia (para optimizar la búsqueda de eventos y evitar límites de RPC)
 export const DEPLOYMENT_BLOCK = 10968530n;
@@ -40,6 +42,12 @@ export const WETH_CONTRACT = {
   address: (process.env.NEXT_PUBLIC_WETH_ADDRESS || DEFAULT_WETH_ADDRESS) as `0x${string}`,
   abi: wethABI,
 } as const;
+
+export const CHALLENGE_MINTER_CONTRACT = {
+  address: (process.env.NEXT_PUBLIC_CHALLENGE_MINTER_ADDRESS || DEFAULT_CHALLENGE_MINTER_ADDRESS) as `0x${string}`,
+  abi: challengeMinterAbi,
+} as const;
+
 
 /**
  * Retorna la configuración para interactuar con un token ERC20 dinámico.

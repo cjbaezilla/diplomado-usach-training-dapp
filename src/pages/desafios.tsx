@@ -49,8 +49,8 @@ import {
   Sparkle,
   ArrowUpRight
 } from 'lucide-react';
-import { useBaseERC1155 } from '@/hooks/useBaseERC1155';
 import { useChallenges } from '@/hooks/useChallenges';
+import { useChallengeMinter } from '@/hooks/useChallengeMinter';
 import { BASE_ERC1155_CONTRACT } from '@/contracts';
 
 interface Challenge {
@@ -96,8 +96,8 @@ const DesafiosPage: NextPage = () => {
   // Notificaciones flotantes
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string; txHash?: string } | null>(null);
 
-  // Hook para minteo de reliquias
-  const { mint, isPending: isMintPending, isSuccess: isMintSuccess, error: mintError, txHash: mintHash } = useBaseERC1155(BASE_ERC1155_CONTRACT.address);
+  // Hook para reclamo de desafíos mediante ECDSA
+  const { claimChallenge, isPending: isMintPending, isSuccess: isMintSuccess, error: mintError, txHash: mintHash } = useChallengeMinter();
 
   // Cargar desafíos en el montaje
   useEffect(() => {
@@ -194,11 +194,42 @@ const DesafiosPage: NextPage = () => {
     return isCompleted(activeChallengeIndex);
   }, [activeChallengeIndex, challenges, isCompleted]);
 
-  // Handler para iniciar el reclamo de la reliquia
+  // Handler para iniciar el reclamo de la reliquia mediante firmas ECDSA
   const handleClaimReward = async (id: number) => {
     if (!address) return;
     setMintingId(id);
-    mint(address, BigInt(id), 1n, '0x');
+    
+    try {
+      // 1. Obtener la firma y el salt del backend local
+      const response = await fetch('/api/challenge/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userAddress: address,
+          id: id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al obtener la firma del servidor.');
+      }
+
+      const data = await response.json();
+      const { salt, signature } = data;
+
+      // 2. Ejecutar la transacción en la blockchain
+      claimChallenge(BigInt(id), salt, signature);
+    } catch (err: any) {
+      console.error('Error en el reclamo de la reliquia:', err);
+      setNotification({
+        type: 'error',
+        message: `Error al solicitar firma o transacción: ${err.message || 'Error desconocido'}`
+      });
+      setMintingId(null);
+    }
   };
 
   // Formateador pedagógico de descripción de markdown básico
