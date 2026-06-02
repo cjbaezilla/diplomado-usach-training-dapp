@@ -764,8 +764,8 @@ const DesafiosPage: NextPage = () => {
           /* ================= LAYOUT DE DASHBOARD INTERACTIVO ================= */
           <div className="w-full flex-1 flex flex-col lg:flex-row gap-6 items-stretch animate-in fade-in-50 duration-500">
             {/* Panel lateral izquierdo: Selector de Desafíos */}
-            <div className="w-full lg:w-80 xl:w-96 shrink-0 flex flex-col gap-4">
-              <div className="bg-card/45 backdrop-blur-md rounded-2xl border border-border/80 p-4 flex flex-col gap-3 h-full">
+            <div className="w-full lg:w-80 xl:w-96 shrink-0 flex flex-col gap-4 lg:self-start">
+              <div className="bg-card/45 backdrop-blur-md rounded-2xl border border-border/80 p-4 flex flex-col gap-3 h-fit">
                 <div className="flex items-center justify-between border-b border-border/10 pb-2">
                   <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
                     <Trophy className="h-4 w-4 text-primary" />
@@ -953,7 +953,7 @@ const DesafiosPage: NextPage = () => {
                     <div className="mt-4 flex-1 flex flex-col justify-between">
                       {/* Contenido de la pestaña Teoría */}
                       <TabsContent value="teoria" className="focus-visible:outline-none flex-1">
-                        <div className="prose prose-sm dark:prose-invert max-h-[380px] overflow-y-auto pr-2 scrollbar-thin">
+                        <div className="prose prose-sm dark:prose-invert">
                           {renderDescription(selectedChallenge.description)}
                         </div>
                       </TabsContent>
