@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount, useReadContract, useBalance } from 'wagmi';
-import { BASE_ERC1155_CONTRACT } from '@/contracts';
+import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
 
@@ -36,6 +36,21 @@ export function useChallenges() {
       enabled: isHydrated && !!address,
     },
   });
+  
+  // Consultar perfil de estudiante para validar Desafío #03 (Registro Identidad)
+  const { data: studentProfileData, refetch: refetchStudentProfile } = useReadContract({
+    ...STUDENT_IDENTITY_CONTRACT,
+    functionName: 'getProfile',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isHydrated && !!address,
+    },
+  });
+
+  const isStudentRegistered = useMemo(() => {
+    if (!studentProfileData) return false;
+    return (studentProfileData as any)[6] === true;
+  }, [studentProfileData]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -151,8 +166,13 @@ export function useChallenges() {
       return !!(ethBalanceData && ethBalanceData.value > 0n) || !!localCompleted[challenge.id];
     }
     
+    // Desafío 3 (index 2, id 2: Registro Identidad) se completa únicamente si el perfil está registrado on-chain
+    if (challenge.id === 2) {
+      return isStudentRegistered;
+    }
+    
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -165,10 +185,10 @@ export function useChallenges() {
     trackChallengeCompletion(id);
   }, []);
 
-  // Función unificada para refrescar tanto balances de tokens como balance de ETH
+  // Función unificada para refrescar tanto balances de tokens como balance de ETH e identidad
   const refetchAll = useCallback(async () => {
-    await Promise.all([refetchBalances(), refetchEthBalance()]);
-  }, [refetchBalances, refetchEthBalance]);
+    await Promise.all([refetchBalances(), refetchEthBalance(), refetchStudentProfile()]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile]);
 
   return {
     localCompleted,

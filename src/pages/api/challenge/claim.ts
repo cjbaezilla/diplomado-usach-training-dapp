@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { privateKeyToAccount } from 'viem/accounts';
-import { keccak256, encodePacked } from 'viem';
+import { keccak256, encodePacked, createPublicClient, http } from 'viem';
+import { sepolia } from 'viem/chains';
+import { STUDENT_IDENTITY_CONTRACT } from '@/contracts';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -11,6 +13,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (!userAddress || id === undefined) {
     return res.status(400).json({ error: 'Faltan parámetros requeridos: userAddress, id.' });
+  }
+
+  // Validación estricta on-chain para el Desafío 3 (ID: 2 - Registro de Identidad)
+  if (Number(id) === 2) {
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+      });
+
+      const profile = await publicClient.readContract({
+        ...STUDENT_IDENTITY_CONTRACT,
+        functionName: 'getProfile',
+        args: [userAddress as `0x${string}`],
+      });
+
+      const isRegistered = profile[6];
+      if (!isRegistered) {
+        return res.status(400).json({ error: 'La dirección del usuario no tiene un registro de identidad activo en la blockchain.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar el registro de identidad on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar el contrato inteligente.'}` });
+    }
   }
 
   try {
