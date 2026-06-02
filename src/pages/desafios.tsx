@@ -68,11 +68,11 @@ interface Challenge {
   category: string;
   difficulty: string;
   difficultyColor?: string;
-  xp: number;
+  xp?: number;
   estimatedTime: string;
   rewardRelicNft: number;
-  relicName: string;
-  relicBuff: string;
+  relicName?: string;
+  relicBuff?: string;
   accomplishmentFactor: string;
   actionLabel: string;
   actionUrl: string;
@@ -109,8 +109,11 @@ const DesafiosPage: NextPage = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoadingChallenges, setIsLoadingChallenges] = useState(true);
 
-  // ID del desafío seleccionado en el panel interactivo
-  const [selectedChallengeId, setSelectedChallengeId] = useState<number>(0);
+  // Mapa de metadatos de reliquias cargadas por ID (rewardRelicNft)
+  const [relicsMetadataMap, setRelicsMetadataMap] = useState<Record<number, RelicMetadata>>({});
+
+  // Índice del desafío seleccionado en el panel interactivo
+  const [selectedChallengeIndex, setSelectedChallengeIndex] = useState<number>(0);
 
   // ID de la reliquia que se está minteando
   const [mintingId, setMintingId] = useState<number | null>(null);
@@ -121,7 +124,7 @@ const DesafiosPage: NextPage = () => {
   // Hook para reclamo de desafíos mediante ECDSA
   const { claimChallenge, isPending: isMintPending, isSuccess: isMintSuccess, error: mintError, txHash: mintHash } = useChallengeMinter();
 
-  // Cargar desafíos en el montaje
+  // Cargar desafíos y metadatos de reliquias en el montaje
   useEffect(() => {
     fetch('/desafios.json')
       .then((res) => res.json())
@@ -133,12 +136,33 @@ const DesafiosPage: NextPage = () => {
         console.error('Error al cargar desafios.json:', err);
         setIsLoadingChallenges(false);
       });
+
+    // Cargar metadatos de las 10 reliquias de forma paralela
+    const fetchAllRelicsMetadata = async () => {
+      try {
+        const promises = Array.from({ length: 10 }, (_, i) =>
+          fetch(`/nft/usach/relics/${i}.json`).then((res) => {
+            if (!res.ok) throw new Error(`Error al cargar metadatos de reliquia ${i}`);
+            return res.json().then((data) => ({ id: i, data }));
+          })
+        );
+        const results = await Promise.all(promises);
+        const map: Record<number, RelicMetadata> = {};
+        results.forEach((r) => {
+          map[r.id] = r.data;
+        });
+        setRelicsMetadataMap(map);
+      } catch (err) {
+        console.error('Error al cargar metadatos de las reliquias:', err);
+      }
+    };
+    fetchAllRelicsMetadata();
   }, []);
 
   // Inicializar o ajustar el desafío seleccionado al cargar el progreso
   useEffect(() => {
     if (activeChallengeIndex !== undefined && activeChallengeIndex !== null) {
-      setSelectedChallengeId(Math.min(activeChallengeIndex, 9));
+      setSelectedChallengeIndex(Math.min(activeChallengeIndex, 9));
     }
   }, [activeChallengeIndex]);
 
@@ -177,12 +201,12 @@ const DesafiosPage: NextPage = () => {
     }
   }, [notification]);
 
-  // Función para determinar el estado de un desafío específico
-  const getChallengeState = (id: number) => {
+  // Función para determinar el estado de un desafío específico (por índice)
+  const getChallengeState = (index: number) => {
     if (!isConnected) return 'locked';
-    const hasRelic = hasNft(id);
-    const isClaimable = isCompleted(id) && !hasRelic;
-    const isActive = id === activeChallengeIndex;
+    const hasRelic = hasNft(index);
+    const isClaimable = isCompleted(index) && !hasRelic;
+    const isActive = index === activeChallengeIndex;
     
     if (hasRelic) return 'completed';
     if (isClaimable) return 'claimable';
@@ -193,36 +217,21 @@ const DesafiosPage: NextPage = () => {
   // Desafío seleccionado actual a mostrar en pantalla
   const selectedChallenge = useMemo(() => {
     if (challenges.length === 0) return null;
-    if (selectedChallengeId >= challenges.length) return null;
-    return challenges[selectedChallengeId];
-  }, [challenges, selectedChallengeId]);
+    if (selectedChallengeIndex >= challenges.length) return null;
+    return challenges[selectedChallengeIndex];
+  }, [challenges, selectedChallengeIndex]);
 
   // Metadatos específicos de la reliquia seleccionada cargados dinámicamente
-  const [relicMetadata, setRelicMetadata] = useState<RelicMetadata | null>(null);
+  const relicMetadata = useMemo(() => {
+    if (!selectedChallenge) return null;
+    return relicsMetadataMap[selectedChallenge.rewardRelicNft] || null;
+  }, [selectedChallenge, relicsMetadataMap]);
 
   // Estado para copiar la dirección del contrato NFT
   const [copiedContract, setCopiedContract] = useState(false);
 
   // Estado para controlar la apertura de la modal de detalles de la reliquia
   const [isRelicModalOpen, setIsRelicModalOpen] = useState(false);
-
-  // Cargar metadatos del NFT al seleccionar un desafío
-  useEffect(() => {
-    if (selectedChallenge) {
-      fetch(`/nft/usach/relics/${selectedChallenge.rewardRelicNft}.json`)
-        .then((res) => {
-          if (!res.ok) throw new Error('Error al cargar metadatos');
-          return res.json();
-        })
-        .then((data) => setRelicMetadata(data))
-        .catch((err) => {
-          console.error('Error al cargar metadatos de la reliquia:', err);
-          setRelicMetadata(null);
-        });
-    } else {
-      setRelicMetadata(null);
-    }
-  }, [selectedChallenge]);
 
   // Copiar dirección de contrato al portapapeles
   const handleCopyContract = () => {
@@ -294,9 +303,9 @@ const DesafiosPage: NextPage = () => {
 
   // Determinar si el desafío seleccionado es reclamable
   const isSelectedChallengeClaimable = useMemo(() => {
-    if (selectedChallengeId >= challenges.length) return false;
-    return isCompleted(selectedChallengeId) && !hasNft(selectedChallengeId);
-  }, [selectedChallengeId, challenges, isCompleted, hasNft]);
+    if (selectedChallengeIndex >= challenges.length) return false;
+    return isCompleted(selectedChallengeIndex) && !hasNft(selectedChallengeIndex);
+  }, [selectedChallengeIndex, challenges, isCompleted, hasNft]);
 
   // Desafío activo actual a mostrar en pantalla
   const activeChallenge = useMemo(() => {
@@ -760,7 +769,7 @@ const DesafiosPage: NextPage = () => {
                     {/* Cuadrícula de Reliquias */}
                     <div className="grid grid-cols-5 gap-1.5 pt-2">
                       {challenges.map((c) => (
-                        <div key={c.id} className="h-7 w-7 rounded border border-border/50 overflow-hidden bg-background/80" title={c.relicName}>
+                        <div key={c.id} className="h-7 w-7 rounded border border-border/50 overflow-hidden bg-background/80" title={relicsMetadataMap[c.rewardRelicNft]?.name || ''}>
                           <img src={`/nft/usach/relics/${c.rewardRelicNft}.png`} alt={`Reliquia ${c.id}`} className="h-full w-full object-cover" />
                         </div>
                       ))}
@@ -790,7 +799,7 @@ const DesafiosPage: NextPage = () => {
                 <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-thin select-none">
                   {challenges.map((c, idx) => {
                     const state = getChallengeState(idx);
-                    const isSel = idx === selectedChallengeId;
+                    const isSel = idx === selectedChallengeIndex;
                     
                     let stateIcon = <Lock className="h-3.5 w-3.5 text-muted-foreground/30" />;
                     let stateBadgeColor = "bg-muted text-muted-foreground border-border/30";
@@ -826,14 +835,14 @@ const DesafiosPage: NextPage = () => {
                     return (
                       <button
                         key={c.id}
-                        onClick={() => setSelectedChallengeId(c.id)}
+                        onClick={() => setSelectedChallengeIndex(idx)}
                         className={`flex items-center gap-3 p-3 rounded-xl border text-left cursor-pointer transition-all duration-200 min-w-[220px] lg:min-w-0 w-full shrink-0 group ${itemBg} ${itemBorder} hover:bg-muted/10`}
                       >
                         {/* Número grande */}
                         <div className={`h-8 w-8 rounded-lg font-mono font-black text-xs flex items-center justify-center border shrink-0 ${
                           isSel ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border/40"
                         }`}>
-                          {c.id + 1}
+                          {idx + 1}
                         </div>
                         
                         {/* Título y Badge */}
@@ -846,7 +855,7 @@ const DesafiosPage: NextPage = () => {
                               {stateText}
                             </span>
                             <span className="text-[8px] text-muted-foreground/80 font-mono">
-                              +{c.xp} XP
+                              +{getTraitValue(relicsMetadataMap[c.rewardRelicNft], 'Experiencia') || '0'} XP
                             </span>
                           </div>
                         </div>
@@ -864,21 +873,21 @@ const DesafiosPage: NextPage = () => {
 
             {/* Panel principal de detalles */}
             <div className={`flex-1 flex flex-col bg-card/45 backdrop-blur-md rounded-2xl border transition-all duration-300 shadow-xl overflow-hidden text-left relative ${
-              getChallengeState(selectedChallenge.id) === 'completed' 
+              getChallengeState(selectedChallengeIndex) === 'completed' 
                 ? 'border-emerald-500/20 hover:border-emerald-500/30' 
-                : getChallengeState(selectedChallenge.id) === 'claimable' 
+                : getChallengeState(selectedChallengeIndex) === 'claimable' 
                   ? 'border-amber-500/30 hover:border-amber-500/50' 
-                  : getChallengeState(selectedChallenge.id) === 'active' 
+                  : getChallengeState(selectedChallengeIndex) === 'active' 
                     ? 'border-primary/30 hover:border-primary/50' 
                     : 'border-border/60'
             }`}>
               {/* Luz LED decorativa de estado */}
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
-                getChallengeState(selectedChallenge.id) === 'completed' 
+                getChallengeState(selectedChallengeIndex) === 'completed' 
                   ? 'from-emerald-500 to-green-400' 
-                  : getChallengeState(selectedChallenge.id) === 'claimable' 
+                  : getChallengeState(selectedChallengeIndex) === 'claimable' 
                     ? 'from-amber-500 to-yellow-400' 
-                    : getChallengeState(selectedChallenge.id) === 'active' 
+                    : getChallengeState(selectedChallengeIndex) === 'active' 
                       ? 'from-primary to-indigo-500' 
                       : 'from-muted-foreground/30 to-muted/20'
               }`}></div>
@@ -892,7 +901,7 @@ const DesafiosPage: NextPage = () => {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge className="font-mono text-xs h-6 px-2.5 uppercase tracking-wider bg-primary/15 border-primary/25 text-primary flex items-center justify-center leading-none">
-                          Desafío #0{selectedChallenge.id + 1}
+                          Desafío #{selectedChallengeIndex + 1 < 10 ? '0' : ''}{selectedChallengeIndex + 1}
                         </Badge>
                         <Badge className={`text-xs h-6 px-2.5 font-bold rounded-full border flex items-center justify-center leading-none ${getDifficultyBadgeColor(selectedChallenge.difficulty)}`}>
                           {selectedChallenge.difficulty}
@@ -934,7 +943,7 @@ const DesafiosPage: NextPage = () => {
 
                       {/* Contenido de la pestaña Guía de Misión */}
                       <TabsContent value="pistas" className="focus-visible:outline-none flex-1">
-                        {getChallengeState(selectedChallenge.id) === 'locked' ? (
+                        {getChallengeState(selectedChallengeIndex) === 'locked' ? (
                           <div className="flex flex-col items-center justify-center py-10 text-center bg-muted/15 border border-border/10 rounded-2xl p-6 h-full">
                             <LockKeyhole className="h-8 w-8 text-muted-foreground/35 mb-2" />
                             <h4 className="font-bold text-xs text-foreground uppercase tracking-wider">Detalles Encriptados</h4>
@@ -1009,7 +1018,7 @@ const DesafiosPage: NextPage = () => {
                       {/* Badge de Estado del Desafío */}
                       <div className="shrink-0 flex items-center">
                         {(() => {
-                          const state = getChallengeState(selectedChallenge.id);
+                          const state = getChallengeState(selectedChallengeIndex);
                           if (state === 'completed') {
                             return (
                               <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-[10px] shadow-[0_0_6px_rgba(16,185,129,0.08)]">
@@ -1047,7 +1056,7 @@ const DesafiosPage: NextPage = () => {
                     {/* 1. Vitrina de la Reliquia */}
                     <div className="flex flex-col items-start text-left gap-2.5 pt-0.5 pb-2">
                       {/* Visual del NFT */}
-                      {getChallengeState(selectedChallenge.id) === 'locked' ? (
+                      {getChallengeState(selectedChallengeIndex) === 'locked' ? (
                         /* NFT Bloqueado */
                         <div className="h-72 w-72 sm:h-80 sm:w-80 rounded-2xl border-2 border-dashed border-border/60 bg-muted/30 flex flex-col items-center justify-center text-muted-foreground/35 relative shadow-inner">
                           <LockKeyhole className="h-14 w-14 shrink-0 mb-2" />
@@ -1062,14 +1071,14 @@ const DesafiosPage: NextPage = () => {
                         >
                           {/* Resplandor decorativo */}
                           <div className={`absolute inset-0 opacity-15 bg-gradient-to-tr ${
-                            getChallengeState(selectedChallenge.id) === 'completed'
+                            getChallengeState(selectedChallengeIndex) === 'completed'
                               ? 'from-emerald-500 to-green-500'
                               : 'from-amber-500 to-yellow-500'
                           }`}></div>
                           
                           <img 
                             src={`/nft/usach/relics/${selectedChallenge.rewardRelicNft}.png`} 
-                            alt={selectedChallenge.relicName} 
+                            alt={relicsMetadataMap[selectedChallenge.rewardRelicNft]?.name || ''} 
                             className="h-full w-full object-cover transition-transform duration-500 group-hover/nft:scale-105" 
                           />
 
@@ -1082,7 +1091,7 @@ const DesafiosPage: NextPage = () => {
 
                             {/* 2. XP */}
                             <div className="px-2 py-0.5 rounded bg-primary/95 backdrop-blur-md border border-primary/30 text-primary-foreground font-mono text-xs font-black">
-                              +{selectedChallenge.xp} XP
+                              +{getTraitValue(relicMetadata, 'Experiencia') || '0'} XP
                             </div>
 
                             {/* 3. Clase de Item */}
@@ -1105,15 +1114,15 @@ const DesafiosPage: NextPage = () => {
                       )}
 
                       {/* Lore y Buff de la Reliquia */}
-                      {getChallengeState(selectedChallenge.id) !== 'locked' ? (
+                      {getChallengeState(selectedChallengeIndex) !== 'locked' ? (
                         <div className="space-y-3 w-full">
                           <div className="space-y-1 text-left">
-                            <h4 className="font-extrabold text-sm text-foreground px-0 whitespace-normal break-words" title={selectedChallenge.relicName}>
-                              {selectedChallenge.relicName}
+                            <h4 className="font-extrabold text-sm text-foreground px-0 whitespace-normal break-words" title={relicMetadata?.name || ''}>
+                              {relicMetadata?.name || ''}
                             </h4>
                             <p className="text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/15 py-1 px-2.5 rounded-lg w-fit flex items-center gap-1 shadow-sm">
                               <Sparkle className="h-3 w-3 text-emerald-400" />
-                              Buff: {selectedChallenge.relicBuff}
+                              Buff: {getTraitValue(relicMetadata, 'Efecto Pasivo')}
                             </p>
                           </div>
 
@@ -1192,7 +1201,7 @@ const DesafiosPage: NextPage = () => {
                             <div className="flex justify-between items-center text-[10px] text-muted-foreground">
                               <span>Recompensa de XP:</span>
                               <span className="font-bold text-primary font-mono text-[10px]">
-                                +{selectedChallenge.xp} XP
+                                +{getTraitValue(relicMetadata, 'Experiencia') || '0'} XP
                               </span>
                             </div>
 
@@ -1290,7 +1299,7 @@ const DesafiosPage: NextPage = () => {
                             <div className="flex justify-between items-center text-[10px] text-muted-foreground">
                               <span>Recompensa de XP:</span>
                               <span className="font-bold text-primary/70 font-mono text-[10px]">
-                                +{selectedChallenge.xp} XP
+                                +{getTraitValue(relicMetadata, 'Experiencia') || '0'} XP
                               </span>
                             </div>
 
@@ -1309,7 +1318,7 @@ const DesafiosPage: NextPage = () => {
                   {/* 2. Control Interactivo / Panel de Acciones */}
                   <div className="relative z-10 w-full pt-4 border-t border-border/10">
                     {(() => {
-                      const state = getChallengeState(selectedChallenge.id);
+                      const state = getChallengeState(selectedChallengeIndex);
 
                       // CASO: NO CONECTADO
                       if (!isConnected) {
@@ -1443,7 +1452,7 @@ const DesafiosPage: NextPage = () => {
                       {String(getTraitValue(relicMetadata, 'Clase de Item') || 'Común')}
                     </Badge>
                     <Badge variant="outline" className="text-xs bg-background/95 font-bold border-border/40 px-2 py-1">
-                      +{selectedChallenge.xp} XP
+                      +{getTraitValue(relicMetadata, 'Experiencia') || '0'} XP
                     </Badge>
                   </div>
                 </div>

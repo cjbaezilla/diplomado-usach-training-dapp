@@ -58,7 +58,7 @@ const SEPOLIA_FAUCETS: FaucetLink[] = [
 
 export function FaucetInfo() {
   const handleFaucetClick = () => {
-    trackChallengeCompletion(9);
+    trackChallengeCompletion(1);
   };
 
   return (

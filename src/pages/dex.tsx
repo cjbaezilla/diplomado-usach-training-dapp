@@ -1070,8 +1070,8 @@ const DEXPage: NextPage = () => {
         txHash: factoryTxHash
       });
 
-      // Registrar el logro del desafío 6 en localStorage
-      trackChallengeCompletion(6);
+      // Registrar el logro del desafío 7 en localStorage
+      trackChallengeCompletion(7);
 
       setTransactions((prev) => [
         {
@@ -1101,16 +1101,16 @@ const DEXPage: NextPage = () => {
         type = 'swap';
         setSwapAmountIn('');
 
-        // Registrar el logro del desafío 4 en localStorage
-        trackChallengeCompletion(4);
+        // Registrar el logro del desafío 5 en localStorage
+        trackChallengeCompletion(5);
       } else if (activeActionType === 'add_liquidity') {
         desc = `Añadir liquidez ${metadataA.symbol}/${metadataB.symbol}`;
         type = 'add_liquidity';
         setAddAmountA('');
         setAddAmountB('');
 
-        // Registrar el logro del desafío 5 en localStorage
-        trackChallengeCompletion(5);
+        // Registrar el logro del desafío 6 en localStorage
+        trackChallengeCompletion(6);
       } else if (activeActionType === 'remove_liquidity') {
         desc = `Retirar liquidez ${metadataA.symbol}/${metadataB.symbol}`;
         type = 'remove_liquidity';
@@ -1190,8 +1190,8 @@ const DEXPage: NextPage = () => {
         txHash: wethTxHash
       });
 
-      // Registrar el logro del desafío 7 en localStorage
-      trackChallengeCompletion(7);
+      // Registrar el logro del desafío 8 en localStorage
+      trackChallengeCompletion(8);
 
       setTransactions((prev) => [
         {

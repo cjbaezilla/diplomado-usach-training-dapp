@@ -290,8 +290,8 @@ const ERC20Page: NextPage = () => {
         txHash: deployHash,
       });
 
-      // Registrar el logro del desafío 2 en localStorage
-      trackChallengeCompletion(2);
+      // Registrar el logro del desafío 3 en localStorage
+      trackChallengeCompletion(3);
 
       setTransactions((prev) => [
         {
@@ -333,16 +333,16 @@ const ERC20Page: NextPage = () => {
         setTransferAmount('');
         setTransferRecipient('');
 
-        // Registrar el logro del desafío 3 en localStorage
-        trackChallengeCompletion(3);
+        // Registrar el logro del desafío 4 en localStorage
+        trackChallengeCompletion(4);
       } else if (activeTab === 'mint') {
         actionLabel = `Acuñación de ${selectedMetadata.symbol}`;
         actionAmountStr = mintAmount;
         setMintAmount('');
         setMintRecipient('');
 
-        // Registrar el logro del desafío 3 en localStorage
-        trackChallengeCompletion(3);
+        // Registrar el logro del desafío 4 en localStorage
+        trackChallengeCompletion(4);
       } else if (activeTab === 'burn') {
         actionLabel = `Quema de ${selectedMetadata.symbol}`;
         actionAmountStr = burnAmount;

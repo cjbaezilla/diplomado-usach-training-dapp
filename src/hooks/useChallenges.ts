@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { BASE_ERC1155_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
+import challengesData from '../../public/desafios.json';
 
 /**
  * Función de utilidad pura para registrar la completación de un desafío en localStorage.
@@ -120,26 +121,30 @@ export function useChallenges() {
     }
   }, [batchBalances, address]);
 
-  // Determinar si posee el NFT relic para un desafío específico
-  const hasNft = useCallback((id: number) => {
+  // Determinar si posee el NFT relic para un desafío específico (por índice en el array)
+  const hasNft = useCallback((index: number) => {
     if (!isConnected || !address) return false;
-    const balance = nftBalances[id];
+    const challenge = challengesData[index];
+    if (!challenge) return false;
+    const balance = nftBalances[challenge.rewardRelicNft];
     return balance !== undefined && balance > 0n;
   }, [isConnected, address, nftBalances]);
 
   // Si el desafío está completado (ya sea porque posee el NFT on-chain o porque completó el paso localmente)
-  const isCompleted = useCallback((id: number) => {
+  const isCompleted = useCallback((index: number) => {
     if (!isConnected) return false;
-    if (hasNft(id)) return true;
-    if (id === 0) return true; // El paso 0 (conectar billetera) está completo si está conectado
-    return !!localCompleted[id];
+    if (hasNft(index)) return true;
+    const challenge = challengesData[index];
+    if (!challenge) return false;
+    if (challenge.id === 0) return true; // El paso con id 0 (conectar billetera) está completo si está conectado
+    return !!localCompleted[challenge.id];
   }, [isConnected, hasNft, localCompleted]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
     if (!isConnected) return 0;
-    const index = Array.from({ length: 10 }, (_, i) => i).findIndex((idx) => !hasNft(idx));
-    return index === -1 ? 10 : index;
+    const index = challengesData.findIndex((_, idx) => !hasNft(idx));
+    return index === -1 ? challengesData.length : index;
   }, [isConnected, hasNft]);
 
   const completeChallenge = useCallback((id: number) => {

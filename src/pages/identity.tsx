@@ -283,8 +283,8 @@ const IdentityPage: NextPage = () => {
         message: '¡Perfil actualizado en la blockchain exitosamente!',
         txHash: actionTxHash,
       });
-      // Registrar el logro del desafío 1 en localStorage
-      trackChallengeCompletion(1);
+      // Registrar el logro del desafío 2 en localStorage
+      trackChallengeCompletion(2);
       refetchMyProfile();
       refetchDirectory();
     }
