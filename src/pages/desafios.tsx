@@ -96,9 +96,21 @@ interface RelicMetadata {
 
 /**
  * Lanza una animación de confeti premium con múltiples ráfagas desde las esquinas inferiores
- * para celebrar la obtención de la reliquia académica de manera inmersiva.
+ * para celebrar la obtención de la reliquia académica de manera inmersiva y reproduce
+ * un efecto de sonido de aplausos.
  */
 const launchAcademicConfetti = () => {
+  // Reproducir sonido de aplausos (aplauso.mp3)
+  try {
+    const audio = new Audio('/aplauso.mp3');
+    audio.volume = 0.5; // Volumen moderado y agradable
+    audio.play().catch((err) => {
+      console.warn('La reproducción de audio fue bloqueada por el navegador:', err);
+    });
+  } catch (error) {
+    console.error('Error al inicializar el sonido de aplausos:', error);
+  }
+
   // Cañón izquierdo
   confetti({
     particleCount: 120,
@@ -138,6 +150,7 @@ const launchAcademicConfetti = () => {
     });
   }, 200);
 };
+
 
 const DesafiosPage: NextPage = () => {
   const isHydrated = useHydrated();

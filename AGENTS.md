@@ -197,6 +197,13 @@ A continuación se muestra el mapa de directorios actual de la aplicación. Fami
   - Las reglas responsivas basadas en media queries (`max-width` en reglas `@media`) están permitidas para definir puntos de quiebre y adaptabilidad responsiva.
   - Componentes muy específicos como diálogos (modales) o tooltips que por su propia naturaleza requieran un tamaño máximo definido para legibilidad.
 
+### G. Fórmulas Matemáticas y Notación Científica en Contenidos
+- **Sin Compilador LaTeX Completo**: El renderizador de markdown simplificado de la plataforma muestra las fórmulas matemáticas en un bloque monoespaciado pero **no compila comandos tradicionales de LaTeX** (como `\cdot`, `\Delta`, etc.), por lo que dichos comandos aparecerían como texto literal confuso.
+- **Caracteres Unicode Estándar**: Al redactar fórmulas matemáticas o exponentes en contenidos estáticos o dinámicos (como el archivo `desafios.json` o componentes), utiliza siempre caracteres Unicode nativos y legibles en lugar de sintaxis de LaTeX. Por ejemplo:
+  - Usa el punto medio (`·`) para representar la multiplicación en lugar de `\cdot`.
+  - Usa la letra delta mayúscula (`Δ`) en lugar de `\Delta`.
+  - Usa superíndices de texto como `^18` o `¹⁸` en lugar de `^{18}`.
+
 ---
 
 ## 5. Flujo de Trabajo de Desarrollo y Verificación
