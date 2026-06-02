@@ -4,7 +4,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, GraduationCap, BookOpen, ArrowRight, Wallet, Activity } from 'lucide-react';
+import { CheckCircle2, GraduationCap, BookOpen, ArrowRight, Wallet, Activity, User, Trophy, Award, ArrowRightLeft } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { FaucetInfo } from '@/components/FaucetInfo';
 import { WalletGuide } from '@/components/WalletGuide';
@@ -166,9 +166,146 @@ const Home: NextPage = () => {
           <RecentRelics />
           <RecentChallenges />
         </div>
+        {/* Cabecera de Secciones Informativas */}
+        <div className="space-y-3 pt-12 border-t border-border/30 text-center w-full">
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl bg-gradient-to-r from-primary via-cyan-400 to-indigo-500 bg-clip-text text-transparent">
+            Cómo Funciona el Ecosistema Web3
+          </h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Descubre los módulos prácticos diseñados para familiarizarte con las tecnologías blockchain, protocolos DeFi y desarrollo de Smart Contracts de manera directa.
+          </p>
+        </div>
+
+        {/* Sección 1: Identidad Onchain (Imagen izquierda, Contenido derecho) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-8 border-t border-border/20">
+          <div className="order-1 md:order-1 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-primary/30 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-cyan-500"></div>
+            <img 
+              src="/images/identidad_onchain.png" 
+              alt="Identidad Onchain" 
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div className="order-2 md:order-2 space-y-4 text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+              <User className="h-3.5 w-3.5" />
+              <span>Identidad Soberana</span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">Tu Identidad Estudiantil Onchain</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              Registra tu perfil en la blockchain de manera permanente. Esta identidad digital de estudiante asocia tu dirección criptográfica a tu nombre, permitiendo que todos tus avances académicos, calificaciones y participación en los módulos queden registrados públicamente y de forma inmutable. Es tu pasaporte al ecosistema Web3 de la universidad.
+            </p>
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                className="border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200" 
+                onClick={() => router.push('/identity')}
+              >
+                <span>Gestionar Mi Perfil</span>
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sección 2: Desafíos Onchain (Imagen derecha, Contenido izquierdo) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
+          <div className="order-2 md:order-1 space-y-4 text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-xs font-semibold text-cyan-400">
+              <Trophy className="h-3.5 w-3.5" />
+              <span>Aprendizaje Práctico</span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">Resuelve Desafíos de Smart Contracts</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              La teoría se consolida con la práctica. Enfréntate a una serie de desafíos interactivos diseñados para interactuar directamente con Smart Contracts desplegados en la red local. Desde la configuración de tu billetera hasta la interacción con protocolos DeFi complejos, cada desafío aprobado valida tus conocimientos técnicos de forma automática onchain.
+            </p>
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                className="border-cyan-500/20 hover:bg-cyan-500/5 hover:text-cyan-400 transition-all duration-200" 
+                onClick={() => router.push('/desafios')}
+              >
+                <span>Ver Desafíos Académicos</span>
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="order-1 md:order-2 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-cyan-500/30 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-indigo-500"></div>
+            <img 
+              src="/images/desafios_onchain.png" 
+              alt="Desafíos Onchain" 
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        </div>
+
+        {/* Sección 3: DEX de la Plataforma (Imagen izquierda, Contenido derecho) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
+          <div className="order-1 md:order-1 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+            <img 
+              src="/images/dex_plataforma.png" 
+              alt="Intercambio Descentralizado (DEX)" 
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div className="order-2 md:order-2 space-y-4 text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 text-xs font-semibold text-emerald-400">
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              <span>Finanzas Descentralizadas</span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">Intercambio Descentralizado y Liquidez</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              Experimenta con la creación de mercados automatizados (AMM). La plataforma incluye un DEX propio donde puedes intercambiar tokens creados por otros estudiantes o por la fábrica, proveer liquidez a piscinas personalizadas (pools) de tokens con par WETH y obtener comisiones por los intercambios. Comprende de forma empírica el deslizamiento de precios (slippage) y la fórmula del producto constante.
+            </p>
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                className="border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-400 transition-all duration-200" 
+                onClick={() => router.push('/dex')}
+              >
+                <span>Acceder al DEX</span>
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sección 4: Reliquias (Imagen derecha, Contenido izquierdo) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
+          <div className="order-2 md:order-1 space-y-4 text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 text-xs font-semibold text-amber-400">
+              <Award className="h-3.5 w-3.5" />
+              <span>Logros y Medallas</span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">Portal de Reliquias ERC-1155</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              Tus logros se transforman en activos digitales. Al completar los desafíos técnicos onchain, obtendrás el derecho de acuñar &quot;Reliquias Académicas&quot;, las cuales son tokens no fungibles multifracción bajo el estándar ERC-1155. Cada reliquia es una medalla digital verificable en la red que atestigua tus destrezas adquiridas durante el diplomado.
+            </p>
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                className="border-amber-500/20 hover:bg-amber-500/5 hover:text-amber-400 transition-all duration-200" 
+                onClick={() => router.push('/relics')}
+              >
+                <span>Explorar Mis Reliquias</span>
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="order-1 md:order-2 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-amber-500/30 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+            <img 
+              src="/images/reliquias_academicas.png" 
+              alt="Reliquias Académicas" 
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        </div>
 
         {/* Secciones informativas lado a lado */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start pt-8 border-t border-border/30">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start pt-12 border-t border-border/30">
           <WalletGuide />
           <FaucetInfo />
         </div>
