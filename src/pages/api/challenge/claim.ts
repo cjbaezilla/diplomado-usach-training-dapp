@@ -259,6 +259,77 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
+  // Validación estricta on-chain para el Desafío 8 (ID: 7 - Creación de una Piscina de Liquidez)
+  if (Number(id) === 7) {
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+      });
+
+      // 1. Obtener los tokens creados por el usuario en la fábrica
+      const userTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getTokensByOwner',
+        args: [userAddress as `0x${string}`],
+      });
+
+      if (!userTokens || (userTokens as any).length === 0) {
+        return res.status(400).json({ error: 'La dirección del usuario no ha creado ningún token ERC-20 en la fábrica.' });
+      }
+
+      // 2. Buscar eventos de creación de pool (PoolCreado)
+      const poolCreatedLogs = await publicClient.getLogs({
+        address: DEX_FACTORY_CONTRACT.address,
+        event: {
+          type: 'event',
+          name: 'PoolCreado',
+          inputs: [
+            { type: 'address', name: 'token0', indexed: true },
+            { type: 'address', name: 'token1', indexed: true },
+            { type: 'address', name: 'pool', indexed: false },
+            { type: 'uint256', name: 'cantidadPools', indexed: false }
+          ]
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      const userTokensLower = (userTokens as string[]).map(t => t.toLowerCase());
+
+      const userPoolLogs = poolCreatedLogs.filter(log => {
+        const token0 = log.args.token0?.toLowerCase();
+        const token1 = log.args.token1?.toLowerCase();
+        return (token0 && userTokensLower.includes(token0)) || (token1 && userTokensLower.includes(token1));
+      });
+
+      if (userPoolLogs.length === 0) {
+        return res.status(400).json({ error: 'No se encontró ninguna piscina de liquidez creada para sus tokens personalizados.' });
+      }
+
+      // 3. Verificar que la transacción que creó la piscina fue enviada por el usuario
+      let isCreator = false;
+      for (const log of userPoolLogs) {
+        if (log.transactionHash) {
+          const tx = await publicClient.getTransaction({
+            hash: log.transactionHash,
+          });
+          if (tx.from.toLowerCase() === (userAddress as string).toLowerCase()) {
+            isCreator = true;
+            break;
+          }
+        }
+      }
+
+      if (!isCreator) {
+        return res.status(400).json({ error: 'Debe ser el creador original de la piscina de liquidez para completar este desafío.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar la creación de piscina de liquidez on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
+    }
+  }
+
+
   try {
     const privateKey = process.env.NEXT_PUBLIC_CHALLENGE_MINTER_SIGNER_PK;
     const challengeMinterAddress = process.env.NEXT_PUBLIC_CHALLENGE_MINTER_ADDRESS || '0xd898ecBD77E4A428e9EAC2B1E445c2628E033653';

@@ -265,6 +265,85 @@ export function useChallenges() {
   useEffect(() => {
     checkLiquidity();
   }, [checkLiquidity]);
+
+  // Estado y callback para validar el Desafío #08 (ID: 7 - Creación de una Piscina de Liquidez)
+  const [isCreatePoolCompleted, setIsCreatePoolCompleted] = useState(false);
+
+  const checkCreatePool = useCallback(async () => {
+    if (!publicClient || !address) {
+      setIsCreatePoolCompleted(false);
+      return;
+    }
+    try {
+      const userTokens = createdTokensData as `0x${string}`[];
+
+      if (!userTokens || userTokens.length === 0) {
+        setIsCreatePoolCompleted(false);
+        return;
+      }
+
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount === 0) {
+        setIsCreatePoolCompleted(false);
+        return;
+      }
+
+      const poolCreatedLogs = await publicClient.getLogs({
+        address: DEX_FACTORY_CONTRACT.address,
+        event: {
+          type: 'event',
+          name: 'PoolCreado',
+          inputs: [
+            { type: 'address', name: 'token0', indexed: true },
+            { type: 'address', name: 'token1', indexed: true },
+            { type: 'address', name: 'pool', indexed: false },
+            { type: 'uint256', name: 'cantidadPools', indexed: false }
+          ]
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      const userTokensLower = userTokens.map(t => t.toLowerCase());
+
+      const userPoolLogs = poolCreatedLogs.filter(log => {
+        const token0 = log.args.token0?.toLowerCase();
+        const token1 = log.args.token1?.toLowerCase();
+        return (token0 && userTokensLower.includes(token0)) || (token1 && userTokensLower.includes(token1));
+      });
+
+      if (userPoolLogs.length === 0) {
+        setIsCreatePoolCompleted(false);
+        return;
+      }
+
+      let isCreator = false;
+      for (const log of userPoolLogs) {
+        if (log.transactionHash) {
+          const tx = await publicClient.getTransaction({
+            hash: log.transactionHash,
+          });
+          if (tx.from.toLowerCase() === address.toLowerCase()) {
+            isCreator = true;
+            break;
+          }
+        }
+      }
+
+      setIsCreatePoolCompleted(isCreator);
+    } catch (err) {
+      console.error('Error al verificar desafío de creación de piscina:', err);
+      setIsCreatePoolCompleted(false);
+    }
+  }, [publicClient, address, createdTokensData]);
+
+  useEffect(() => {
+    checkCreatePool();
+  }, [checkCreatePool]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -404,9 +483,14 @@ export function useChallenges() {
     if (challenge.id === 6) {
       return isLiquidityCompleted || !!localCompleted[challenge.id];
     }
+
+    // Desafío 8 (index 7, id 7: Creación de una Piscina de Liquidez) se completa si el usuario creó un pool en el DEX, o si lo completó localmente
+    if (challenge.id === 7) {
+      return isCreatePoolCompleted || !!localCompleted[challenge.id];
+    }
     
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted, isCreatePoolCompleted]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -428,9 +512,10 @@ export function useChallenges() {
       refetchCreatedTokens(),
       checkMintAndTransfer(),
       checkSwap(),
-      checkLiquidity()
+      checkLiquidity(),
+      checkCreatePool()
     ]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity, checkCreatePool]);
 
   return {
     localCompleted,
