@@ -853,7 +853,7 @@ const DesafiosPage: NextPage = () => {
             </div>
 
             {/* Panel principal de detalles */}
-            <div className={`flex-1 flex flex-col bg-card/45 backdrop-blur-md rounded-2xl border transition-all duration-300 shadow-xl overflow-hidden text-left ${
+            <div className={`flex-1 flex flex-col bg-card/45 backdrop-blur-md rounded-2xl border transition-all duration-300 shadow-xl overflow-hidden text-left relative ${
               getChallengeState(selectedChallenge.id) === 'completed' 
                 ? 'border-emerald-500/20 hover:border-emerald-500/30' 
                 : getChallengeState(selectedChallenge.id) === 'claimable' 
@@ -862,78 +862,79 @@ const DesafiosPage: NextPage = () => {
                     ? 'border-primary/30 hover:border-primary/50' 
                     : 'border-border/60'
             }`}>
-              {/* Cabecera del Panel */}
-              <div className="p-5 sm:p-6 border-b border-border/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative overflow-hidden bg-muted/5">
-                {/* Luz LED decorativa de estado */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
-                  getChallengeState(selectedChallenge.id) === 'completed' 
-                    ? 'from-emerald-500 to-green-400' 
-                    : getChallengeState(selectedChallenge.id) === 'claimable' 
-                      ? 'from-amber-500 to-yellow-400' 
-                      : getChallengeState(selectedChallenge.id) === 'active' 
-                        ? 'from-primary to-indigo-500' 
-                        : 'from-muted-foreground/30 to-muted/20'
-                }`}></div>
-
-                <div className="space-y-1.5 flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <Badge className="font-mono text-[9px] uppercase tracking-wider bg-primary/15 border-primary/25 text-primary">
-                      Desafío #0{selectedChallenge.id + 1}
-                    </Badge>
-                    <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getDifficultyBadgeColor(selectedChallenge.difficulty)}`}>
-                      {selectedChallenge.difficulty}
-                    </Badge>
-                    <Badge variant="outline" className="text-[9px] font-mono font-semibold text-muted-foreground border-border/40">
-                      {selectedChallenge.category}
-                    </Badge>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight truncate">
-                    {selectedChallenge.title}
-                  </h2>
-                </div>
-
-                {/* Badge de Estado del Desafío */}
-                <div className="shrink-0 flex items-center">
-                  {(() => {
-                    const state = getChallengeState(selectedChallenge.id);
-                    if (state === 'completed') {
-                      return (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-xs shadow-[0_0_8px_rgba(16,185,129,0.1)]">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          RELIQUIA ADQUIRIDA
-                        </div>
-                      );
-                    }
-                    if (state === 'claimable') {
-                      return (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 font-bold text-xs shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                          <Award className="h-4 w-4 text-amber-500" />
-                          RECOMPENSA LISTA
-                        </div>
-                      );
-                    }
-                    if (state === 'active') {
-                      return (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs shadow-[0_0_8px_rgba(249,115,22,0.1)]">
-                          <Unlock className="h-4 w-4 text-primary" />
-                          MISIÓN ACTIVA
-                        </div>
-                      );
-                    }
-                    return (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 bg-muted/10 text-muted-foreground/60 font-bold text-xs">
-                        <Lock className="h-4 w-4 text-muted-foreground/40" />
-                        PRUEBA SELLADA
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
+              {/* Luz LED decorativa de estado */}
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
+                getChallengeState(selectedChallenge.id) === 'completed' 
+                  ? 'from-emerald-500 to-green-400' 
+                  : getChallengeState(selectedChallenge.id) === 'claimable' 
+                    ? 'from-amber-500 to-yellow-400' 
+                    : getChallengeState(selectedChallenge.id) === 'active' 
+                      ? 'from-primary to-indigo-500' 
+                      : 'from-muted-foreground/30 to-muted/20'
+              }`}></div>
 
               {/* Cuerpo en Grid Interno */}
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 p-5 sm:p-6 flex-1 items-stretch">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-5 sm:p-6 flex-1 items-stretch pt-8">
                 {/* Subcolumna Pedagógica (Tabs) */}
-                <div className="xl:col-span-7 flex flex-col gap-4">
+                <div className="lg:col-span-7 flex flex-col gap-4">
+                  {/* Cabecera del Desafío Integrada */}
+                  <div className="space-y-3 pb-4 border-b border-border/10 pt-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge className="font-mono text-[9px] uppercase tracking-wider bg-primary/15 border-primary/25 text-primary">
+                          Desafío #0{selectedChallenge.id + 1}
+                        </Badge>
+                        <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getDifficultyBadgeColor(selectedChallenge.difficulty)}`}>
+                          {selectedChallenge.difficulty}
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px] font-mono font-semibold text-muted-foreground border-border/40">
+                          {selectedChallenge.category}
+                        </Badge>
+                      </div>
+
+                      {/* Badge de Estado del Desafío */}
+                      <div className="shrink-0 flex items-center">
+                        {(() => {
+                          const state = getChallengeState(selectedChallenge.id);
+                          if (state === 'completed') {
+                            return (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-xs shadow-[0_0_8px_rgba(16,185,129,0.1)]">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                RELIQUIA ADQUIRIDA
+                              </div>
+                            );
+                          }
+                          if (state === 'claimable') {
+                            return (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 font-bold text-xs shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                                <Award className="h-4 w-4 text-amber-500" />
+                                RECOMPENSA LISTA
+                              </div>
+                            );
+                          }
+                          if (state === 'active') {
+                            return (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs shadow-[0_0_8px_rgba(249,115,22,0.1)]">
+                                <Unlock className="h-4 w-4 text-primary" />
+                                MISIÓN ACTIVA
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 bg-muted/10 text-muted-foreground/60 font-bold text-xs">
+                              <Lock className="h-4 w-4 text-muted-foreground/40" />
+                              PRUEBA SELLADA
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight">
+                      {selectedChallenge.title}
+                    </h2>
+                  </div>
+
                   <Tabs defaultValue="teoria" className="w-full flex-1 flex flex-col">
                     <TabsList className="grid grid-cols-3 w-full bg-muted/30 border border-border/20 p-1 rounded-xl">
                       <TabsTrigger value="teoria" className="text-xs py-1.5 flex items-center gap-1.5 rounded-lg data-[state=active]:bg-card cursor-pointer">
@@ -1020,17 +1021,20 @@ const DesafiosPage: NextPage = () => {
                 </div>
 
                 {/* Subcolumna de Vitrina y Acción (Card Derecha) */}
-                <div className="xl:col-span-5 flex flex-col justify-between gap-6 bg-muted/15 border border-border/20 p-5 rounded-2xl relative overflow-hidden">
+                <div className="lg:col-span-5 flex flex-col justify-between gap-6 bg-muted/15 border border-border/20 pt-4 pb-5 px-5 rounded-2xl relative overflow-hidden">
                   {/* Fondo decorativo con gradiente */}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/5 to-transparent pointer-events-none"></div>
 
+                  {/* Cabecera de la Recompensa */}
+                  <div className="flex items-center justify-between border-b border-border/10 pb-2 relative z-10">
+                    <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Recompensa Académica
+                    </h3>
+                  </div>
+
                   {/* 1. Vitrina de la Reliquia */}
                   <div className="flex flex-col items-center text-center gap-4 py-4 relative z-10">
-                    <span className="text-[9px] font-bold uppercase text-muted-foreground/80 tracking-widest flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      Recompensa Académica
-                    </span>
-
                     {/* Visual del NFT */}
                     {getChallengeState(selectedChallenge.id) === 'locked' ? (
                       /* NFT Bloqueado */
