@@ -219,7 +219,7 @@ export function Navbar() {
                     Laboratorio de Aprendizaje DeFi y Web3
                   </span>
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[8px] font-extrabold tracking-normal uppercase border border-primary/30 shadow-[0_0_8px_rgba(var(--primary),0.1)]">
-                    v1.03
+                    v1.04
                   </span>
                 </div>
               </div>

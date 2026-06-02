@@ -4,7 +4,21 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, GraduationCap, BookOpen, ArrowRight, Wallet, Activity, User, Trophy, Award, ArrowRightLeft } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  GraduationCap, 
+  BookOpen, 
+  ArrowRight, 
+  Wallet, 
+  Activity, 
+  User, 
+  Trophy, 
+  Award, 
+  ArrowRightLeft,
+  Coins,
+  Sparkles,
+  AlertCircle
+} from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { FaucetInfo } from '@/components/FaucetInfo';
 import { WalletGuide } from '@/components/WalletGuide';
@@ -16,14 +30,44 @@ import { RecentPools } from '@/components/RecentPools';
 import { RecentRelics } from '@/components/RecentRelics';
 import { RecentChallenges } from '@/components/RecentChallenges';
 import { Footer } from '@/components/Footer';
+import { useAllStudents, useStudentProfile } from '@/hooks/useStudentIdentity';
+import { useAllTokens } from '@/hooks/useTokenFactory';
+import { useAllDEXPools } from '@/hooks/useDEXFactory';
+import { useChallenges } from '@/hooks/useChallenges';
+import { UserAvatar } from '@/components/UserAvatar';
+import challengesData from '../../public/desafios.json';
+import { useMemo } from 'react';
 
 const Home: NextPage = () => {
   const isHydrated = useHydrated();
   const { isConnected, address } = useAccount();
   const router = useRouter();
 
+  // Hooks para estadísticas globales
+  const { count: studentCount } = useAllStudents();
+  const { count: tokenCount } = useAllTokens();
+  const { poolsCount } = useAllDEXPools();
+
+  // Hooks para progreso de estudiante
+  const { profile } = useStudentProfile(address);
+  const { isCompleted, activeChallengeIndex } = useChallenges();
+
+  const totalChallenges = challengesData.length;
+  const completedCount = useMemo(() => {
+    if (!isConnected) return 0;
+    let count = 0;
+    for (let i = 0; i < totalChallenges; i++) {
+      if (isCompleted(i)) count++;
+    }
+    return count;
+  }, [isConnected, isCompleted, totalChallenges]);
+
+  const progressPercent = useMemo(() => {
+    return totalChallenges > 0 ? (completedCount / totalChallenges) * 100 : 0;
+  }, [completedCount, totalChallenges]);
+
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
+    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10 relative overflow-hidden">
       <Head>
         <title>USACH dApp de Entrenamiento</title>
         <meta
@@ -32,6 +76,10 @@ const Home: NextPage = () => {
         />
         <link href="/favicon.ico" rel="icon" />
       </Head>
+
+      {/* Luces de fondo ambientales */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
+      <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-cyan-500/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
       {/* Barra de navegación responsiva */}
       <Navbar />
@@ -42,33 +90,49 @@ const Home: NextPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
           {/* Columna Izquierda: Información Académica y DeFi */}
           <div className="lg:col-span-7 space-y-6 text-left">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary transition-all duration-300 hover:border-primary/45">
               <GraduationCap className="h-4 w-4" />
               <span>Diplomado en Tecnologías Blockchain &bull; USACH</span>
             </div>
             
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-foreground via-foreground/90 to-foreground/75 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
               Laboratorio de Aprendizaje DeFi y Web3
             </h1>
             
             <p className="text-base sm:text-lg leading-relaxed text-muted-foreground">
-              Esta plataforma es un entorno práctico diseñado para el estudio y experimentación de los protocolos que componen las Finanzas Descentralizadas (DeFi). Aquí podrás interactuar con Smart Contracts de forma segura y directa, aplicando los conocimientos teóricos del diplomado.
+              Esta plataforma es un entorno práctico interactivo diseñado para el estudio y experimentación de los protocolos que componen las Finanzas Descentralizadas (DeFi). Interactúa de forma segura con Smart Contracts y pon en práctica tus conocimientos en nuestra blockchain local.
             </p>
 
-            <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-1">
-              <div className="flex gap-3">
-                <BookOpen className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-foreground text-sm sm:text-base">Fundamentos Teóricos con Práctica Directa</h4>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Entiende el gas, las firmas de transacciones, los proveedores de RPC y el ciclo de vida de los bloques en una red EVM local.</p>
-                </div>
+            {/* Notificación de red Ethereum Sepolia */}
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-amber-800 dark:text-amber-200 transition-all duration-300 hover:bg-amber-500/10 hover:border-amber-500/30">
+              <AlertCircle className="h-5 w-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm text-amber-800 dark:text-amber-300">¡Conexión recomendada para interactuar!</h4>
+                <p className="text-xs leading-relaxed text-amber-700/90 dark:text-amber-300/80">
+                  Para interactuar con éxito con los contratos inteligentes y registrar tus logros, asegúrate de conectar tu billetera a la red de prueba <strong>Ethereum Sepolia</strong>. Mantener activa esta red te garantizará una experiencia fluida y segura.
+                </p>
               </div>
-              <div className="flex gap-3">
-                <Activity className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-foreground text-sm sm:text-base">Interactúa con Tokens Estándar</h4>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Experimenta con acuñación (minting), transferencias y quemado (burning) de tokens estándar ERC-20 y ERC-1155.</p>
+            </div>
+
+            {/* Panel de Métricas Rápidas */}
+            <div className="grid grid-cols-3 gap-4 pt-2">
+              <div className="p-3 bg-muted/30 border border-border/30 rounded-xl text-center hover:bg-muted/50 transition-all duration-200">
+                <div className="text-2xl font-extrabold text-foreground font-mono">
+                  {isHydrated ? studentCount : '...'}
                 </div>
+                <div className="text-[10px] text-muted-foreground font-semibold uppercase mt-0.5">Estudiantes</div>
+              </div>
+              <div className="p-3 bg-muted/30 border border-border/30 rounded-xl text-center hover:bg-muted/50 transition-all duration-200">
+                <div className="text-2xl font-extrabold text-foreground font-mono">
+                  {isHydrated ? tokenCount : '...'}
+                </div>
+                <div className="text-[10px] text-muted-foreground font-semibold uppercase mt-0.5">Tokens ERC20</div>
+              </div>
+              <div className="p-3 bg-muted/30 border border-border/30 rounded-xl text-center hover:bg-muted/50 transition-all duration-200">
+                <div className="text-2xl font-extrabold text-foreground font-mono">
+                  {isHydrated ? poolsCount : '...'}
+                </div>
+                <div className="text-[10px] text-muted-foreground font-semibold uppercase mt-0.5">Piscinas DEX</div>
               </div>
             </div>
           </div>
@@ -77,74 +141,128 @@ const Home: NextPage = () => {
           <div className="lg:col-span-5 w-full flex flex-col justify-center">
             {isHydrated && (
               <div className="w-full p-6 rounded-2xl border border-border/80 bg-card/65 text-card-foreground shadow-lg backdrop-blur-sm relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/30">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary to-cyan-500"></div>
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-cyan-500 to-indigo-500"></div>
                 {isConnected ? (
-                  <div className="space-y-6 text-left">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="rounded-full bg-green-500/10 p-2 text-green-600 dark:text-green-400">
-                          <CheckCircle2 className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-sm tracking-tight">Estudiante Conectado</h3>
-                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Estado de Sesión Web3</p>
+                  <div className="space-y-5 text-left">
+                    <div className="flex items-center justify-between pb-3 border-b border-border/40">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar address={address} className="h-10 w-10 border border-primary/20 shadow-inner shrink-0" />
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-sm text-foreground truncate max-w-[160px]">
+                            {profile?.isRegistered ? profile.name : 'Estudiante Web3'}
+                          </h3>
+                          <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[160px] mt-0.5">
+                            {address}
+                          </p>
                         </div>
                       </div>
-                      <span className="inline-flex items-center rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:text-green-400">
-                        Activo
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
+                        Conectado
                       </span>
                     </div>
 
-                    <div className="space-y-2 bg-muted/50 p-4 rounded-xl border border-border/40">
+                    <div className="space-y-2">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-muted-foreground">Dirección Wallet</span>
-                        <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">EVM</span>
+                        <span className="text-muted-foreground font-semibold">Progreso Académico</span>
+                        <span className="font-mono font-bold text-primary">{completedCount} / {totalChallenges} Desafíos</span>
                       </div>
-                      <p className="text-xs sm:text-sm font-mono text-foreground break-all bg-background/80 p-2.5 rounded-lg border border-border/30">
-                        {address}
-                      </p>
+                      <div className="w-full bg-muted/60 h-2.5 rounded-full overflow-hidden border border-border/30">
+                        <div 
+                          className="bg-gradient-to-r from-primary via-cyan-400 to-indigo-500 h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-3 pt-2">
-                      <p className="text-xs text-muted-foreground text-center">Explora los módulos de aprendizaje disponibles:</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Button 
-                          variant="outline" 
-                          className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200" 
-                          onClick={() => router.push('/erc20')}
-                        >
-                          <span>Simulador ERC20</span>
-                          <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200" 
-                          onClick={() => router.push('/identity')}
-                        >
-                          <span>Identidad Digital</span>
-                          <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                        </Button>
+                    <div className="bg-muted/40 border border-border/30 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded border border-primary/20 uppercase tracking-wider">
+                          {activeChallengeIndex < totalChallenges ? 'Siguiente Desafío' : 'Estatus'}
+                        </span>
+                        {activeChallengeIndex < totalChallenges && (
+                          <span className="text-[9px] text-muted-foreground font-mono font-bold">
+                            {challengesData[activeChallengeIndex]?.difficulty}
+                          </span>
+                        )}
                       </div>
+                      
+                      {activeChallengeIndex < totalChallenges ? (
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
+                            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0 animate-pulse" />
+                            {challengesData[activeChallengeIndex]?.title}
+                          </h4>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                            {challengesData[activeChallengeIndex]?.description.replace(/[#*`$\\]/g, '').substring(0, 120)}...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-center py-2 space-y-1">
+                          <Trophy className="h-7 w-7 text-amber-400 mx-auto animate-bounce" />
+                          <h4 className="font-bold text-sm text-foreground">¡Todo Completado!</h4>
+                          <p className="text-[11px] text-muted-foreground">
+                            Has completado todos los desafíos académicos de este laboratorio DeFi.
+                          </p>
+                        </div>
+                      )}
+
+                      {activeChallengeIndex < totalChallenges ? (
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold transition-all duration-200 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5 text-xs py-2 h-9"
+                          onClick={() => router.push('/desafios')}
+                        >
+                          <span>Continuar Aprendizaje</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline"
+                          className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200 flex items-center justify-center gap-1.5 text-xs py-2 h-9"
+                          onClick={() => router.push(`/estudiante/${address?.toLowerCase()}`)}
+                        >
+                          <span>Ver mi Galería de Reliquias</span>
+                          <Award className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-border/80 hover:bg-muted/40 hover:text-foreground text-[11px] h-8 px-2" 
+                        onClick={() => router.push('/erc20')}
+                      >
+                        <Coins className="mr-1 h-3.5 w-3.5 text-primary" />
+                        Simulador ERC20
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-border/80 hover:bg-muted/40 hover:text-foreground text-[11px] h-8 px-2" 
+                        onClick={() => router.push('/identity')}
+                      >
+                        <User className="mr-1 h-3.5 w-3.5 text-primary" />
+                        Mi Perfil Digital
+                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-6 text-center">
+                  <div className="space-y-6 text-center py-2">
                     <div className="flex flex-col items-center space-y-3">
-                      <div className="rounded-full bg-primary/10 p-3.5 text-primary">
+                      <div className="rounded-2xl bg-primary/10 p-3.5 text-primary shadow-inner">
                         <Wallet className="h-6 w-6" />
                       </div>
-                      <h3 className="font-bold text-lg">Billetera Desconectada</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Para iniciar las prácticas interactivas y registrar tu progreso académico en la blockchain, por favor conecta tu billetera.
+                      <h3 className="font-extrabold text-lg">Billetera Desconectada</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        Para iniciar las prácticas interactivas, ver tu progreso y registrar tu identidad en la blockchain, por favor conecta tu billetera de estudio.
                       </p>
                     </div>
 
-                    <div className="pt-2 flex justify-center">
+                    <div className="pt-1 flex justify-center">
                       <ConnectButton label="Conectar Billetera de Estudio" />
                     </div>
 
                     <div className="text-[10px] text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border/40">
-                      💡 Asegúrate de estar conectado a la red de prueba Sepolia configurada para el curso.
+                      💡 Asegúrate de estar conectado a la red de prueba Sepolia o tu nodo local configurado.
                     </div>
                   </div>
                 )}
@@ -301,6 +419,49 @@ const Home: NextPage = () => {
               alt="Reliquias Académicas" 
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
+          </div>
+        </div>
+        {/* Sección 5: Competencia de Liquidez y Ranking (Gran CTA de Ancho Completo) */}
+        <div className="w-full pt-12 border-t border-border/30">
+          <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-b from-card/85 to-primary/5 p-8 md:p-12 text-center space-y-8 shadow-2xl backdrop-blur-md">
+            {/* Luces decorativas en las esquinas */}
+            <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
+
+            <div className="space-y-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-xs font-bold text-amber-400 uppercase tracking-widest">
+                <Trophy className="h-4 w-4" />
+                <span>Competencia Activa de Estudiantes</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-primary to-cyan-400 bg-clip-text text-transparent">
+                Compite en el Ranking de Liquidez DEX
+              </h2>
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">
+                ¡Lleva tus destrezas DeFi al límite! Crea y gestiona tu propio pool de liquidez con el par de tokens que elijas frente a <strong>WETH</strong>. Compite directamente con otros estudiantes de la USACH para lograr posicionarse en la cima del podio acumulando la mayor cantidad de liquidez bloqueada (TVL) en tu pool. El mercado es dinámico, ¿tienes lo necesario para dominar el DEX?
+              </p>
+            </div>
+
+            {/* Imagen del Ranking Centrada y Premium */}
+            <div className="max-w-xl mx-auto relative overflow-hidden rounded-2xl border border-border/80 bg-muted/40 shadow-xl transition-all duration-300 hover:shadow-2xl hover:border-amber-500/40 group">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-primary to-cyan-500"></div>
+              <img 
+                src="/images/ranking_competencia.png" 
+                alt="Ranking de Liquidez Web3" 
+                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-102"
+              />
+            </div>
+
+            <div className="pt-4">
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-amber-500 via-primary to-cyan-500 hover:opacity-90 hover:scale-[1.03] text-white font-extrabold px-8 py-6 rounded-xl text-base tracking-wider uppercase transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mx-auto"
+                onClick={() => router.push('/ranking')}
+              >
+                <Trophy className="h-5 w-5 animate-bounce" />
+                <span>Ver Tabla de Clasificación</span>
+                <ArrowRight className="h-5 w-5 ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
 
