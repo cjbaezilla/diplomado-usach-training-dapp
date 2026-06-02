@@ -551,7 +551,7 @@ const DesafiosPage: NextPage = () => {
           return (
             <ul key={i} className="list-disc pl-5 space-y-1.5 my-3">
               {block.lines.map((item, j) => (
-                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed text-justify">
                   {renderInline(item)}
                 </li>
               ))}
@@ -561,7 +561,7 @@ const DesafiosPage: NextPage = () => {
           return (
             <ol key={i} className="list-decimal pl-5 space-y-1.5 my-3">
               {block.lines.map((item, j) => (
-                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed text-justify">
                   {renderInline(item)}
                 </li>
               ))}
@@ -579,7 +579,7 @@ const DesafiosPage: NextPage = () => {
         case 'p':
         default:
           return (
-            <p key={i} className="text-xs sm:text-sm text-muted-foreground leading-relaxed my-2.5">
+            <p key={i} className="text-xs sm:text-sm text-muted-foreground leading-relaxed my-2.5 text-justify">
               {renderInline(block.lines.join(' '))}
             </p>
           );
@@ -1476,7 +1476,7 @@ const DesafiosPage: NextPage = () => {
                       </h5>
                       <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-muted/20 border border-border/20 p-4 rounded-xl max-h-[170px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted">
                         {relicMetadata.description.split('\n').map((para, i) => (
-                          <p key={i} className="mb-2 last:mb-0">
+                          <p key={i} className="mb-2 last:mb-0 text-justify">
                             {para}
                           </p>
                         ))}

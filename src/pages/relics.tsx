@@ -954,7 +954,7 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
                       </h5>
                       <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-muted/20 border border-border/20 p-4 rounded-xl max-h-[170px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted">
                         {selectedRelic.description.split('\n').map((para, i) => (
-                          <p key={i} className="mb-2 last:mb-0">
+                          <p key={i} className="mb-2 last:mb-0 text-justify">
                             {para}
                           </p>
                         ))}
