@@ -109,6 +109,20 @@ const Aprender: NextPage = () => {
       ]
     },
     {
+      id: 'criptografia',
+      label: 'Criptografía ECDSA',
+      icon: ShieldCheck,
+      subcategories: [
+        { id: 'ecdsa-intro', label: 'Criptografía Asimétrica' },
+        { id: 'ecdsa-matematicas', label: 'Matemáticas y secp256k1' },
+        { id: 'ecdsa-algoritmo', label: 'Algoritmo ECDSA' },
+        { id: 'ecdsa-ethereum', label: 'Adaptación en Ethereum' },
+        { id: 'ecdsa-casos', label: 'Casos de Uso en dApps' },
+        { id: 'ecdsa-vulnerabilidades', label: 'Vulnerabilidades y Ataques' },
+        { id: 'ecdsa-implementacion', label: 'Guía de Implementación' }
+      ]
+    },
+    {
       id: 'glosario',
       label: 'Glosario Web3',
       icon: Terminal,
@@ -2055,6 +2069,648 @@ const Aprender: NextPage = () => {
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     El contrato inteligente almacena una dirección URL base de metadatos. Al realizar una consulta, la aplicación lee dinámicamente el identificador decimal del token, descarga el archivo JSON correspondiente desde el servidor descentralizado y renderiza sus propiedades.
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - INTRO */}
+            {activeSubSection === 'ecdsa-intro' && (
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch w-full animate-in fade-in duration-300">
+                <Card className="md:col-span-8 border-border/80 bg-card/45 backdrop-blur-md flex flex-col justify-between text-left">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-primary animate-pulse" />
+                      Criptografía de Clave Asimétrica en Blockchains
+                    </CardTitle>
+                    <CardDescription>
+                      Evolución histórica, comparativa y fundamentos de seguridad en sistemas distribuidos.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                    <p>
+                      La confianza y seguridad en los sistemas distribuidos y descentralizados (blockchains) como Bitcoin y Ethereum descansan fundamentalmente sobre la criptografía asimétrica o de clave pública. A diferencia de la criptografía simétrica, donde una única clave secreta debe compartirse para cifrar y descifrar información, la criptografía asimétrica utiliza pares de claves acopladas matemáticamente: una <strong>clave privada</strong> (<code>d</code>), mantenida bajo secreto absoluto por su propietario, y una <strong>clave pública</strong> (<code>Q</code>), distribuida libremente.
+                    </p>
+                    <p>
+                      El concepto de criptografía de clave pública fue introducido formalmente por Whitfield Diffie y Martin Hellman en 1976. Poco después, en 1977, Ron Rivest, Adi Shamir y Leonard Adleman desarrollaron <strong>RSA</strong>, el primer algoritmo práctico de cifrado y firma digital basado en la dificultad matemática de factorizar el producto de dos números primos grandes.
+                    </p>
+                    <p>
+                      A pesar del éxito histórico de RSA, su aplicación en sistemas con recursos computacionales restringidos o que requieren un alto rendimiento transaccional (como las redes blockchain) presenta desventajas insalvables:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-2 text-xs">
+                      <li><strong>Tamaño de las claves:</strong> Para mantener un nivel de seguridad equivalente a 128 bits de fuerza bruta en la actualidad, una clave RSA requiere al menos 3072 bits. En contraste, la Criptografía de Curva Elíptica (ECC) ofrece el mismo nivel de seguridad con claves de apenas 256 bits.</li>
+                      <li><strong>Eficiencia en almacenamiento y gas:</strong> En Ethereum, cada byte almacenado o transmitido en una transacción representa un costo directo de gas. Utilizar firmas del tamaño de RSA incrementaría los costos transaccionales a niveles insostenibles.</li>
+                      <li><strong>Velocidad de procesamiento:</strong> La generación y verificación de firmas basadas en curvas elípticas es computacionalmente más rápida en los procesadores modernos que las operaciones aritméticas modulares de números extremadamente grandes requeridos por RSA.</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="md:col-span-4 border-border/80 bg-card/45 backdrop-blur-md text-left flex flex-col justify-between">
+                  <div>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold flex items-center gap-2 text-primary">
+                        <Info className="h-5 w-5" />
+                        Resumen Ejecutivo
+                      </CardTitle>
+                      <CardDescription>
+                        Firma Digital ECDSA y la EVM.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-xs text-muted-foreground leading-relaxed">
+                      <p>
+                        Este módulo presenta las bases matemáticas del Algoritmo de Firma Digital de Curva Elíptica (ECDSA) bajo el estándar <code>secp256k1</code> y su implementación en la EVM.
+                      </p>
+                      <p>
+                        Se examina cómo verificar firmas para delegar acciones <em>off-chain</em> al entorno <em>on-chain</em> sin almacenar listas en el almacenamiento del contrato, optimizando gas.
+                      </p>
+                      <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl">
+                        <span className="block font-bold text-primary mb-1">Equivalencia de Seguridad (Bits)</span>
+                        <div className="overflow-x-auto text-[10px]">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-border bg-muted/40">
+                                <th className="p-1 font-semibold text-foreground">Nivel</th>
+                                <th className="p-1 font-semibold text-foreground">RSA (bits)</th>
+                                <th className="p-1 font-semibold text-foreground">ECC (bits)</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              <tr>
+                                <td className="p-1">80 (Obsoleto)</td>
+                                <td className="p-1">1024</td>
+                                <td className="p-1">160</td>
+                              </tr>
+                              <tr>
+                                <td className="p-1">128 (Estándar)</td>
+                                <td className="p-1">3072</td>
+                                <td className="p-1">256</td>
+                              </tr>
+                              <tr>
+                                <td className="p-1">256 (Militar)</td>
+                                <td className="p-1">15360</td>
+                                <td className="p-1">512</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - MATEMÁTICAS */}
+            {activeSubSection === 'ecdsa-matematicas' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Cpu className="h-5 w-5 text-primary" />
+                    Matemáticas Detrás de ECC y la Curva secp256k1
+                  </CardTitle>
+                  <CardDescription>
+                    Campos finitos, la ecuación de Weierstrass y el problema del logaritmo discreto.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    La seguridad de la criptografía de curva elíptica se fundamenta en la estructura algebraica de los grupos abelianos definidos sobre campos finitos. A diferencia de las curvas elípticas sobre números reales, que forman líneas continuas, las curvas utilizadas en criptografía se definen sobre un <strong>cuerpo finito</strong> (campo de Galois, <code>F_p</code>). Esto resulta en un conjunto discreto de puntos que satisfacen la ecuación de la curva.
+                  </p>
+                  
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-2">La Ecuación de Weierstrass</h3>
+                  <p>
+                    La forma generalizada de la ecuación de una curva elíptica es:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    y² = x³ + ax + b (mod p)
+                  </div>
+                  <p>
+                    Para que la curva sea criptográficamente útil y no tenga singularidades (puntos cúspides o auto-intersecciones), se debe cumplir que su discriminante sea distinto de cero:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    4a³ + 27b² ≠ 0 (mod p)
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-2">Parámetros del Estándar secp256k1</h3>
+                  <p>
+                    Ethereum utiliza la curva específica denominada <strong>secp256k1</strong>, optimizada por el <em>Standards for Efficient Cryptography Group</em> (SECG). Sus coeficientes son <code>a = 0</code> y <code>b = 7</code>.
+                  </p>
+                  <p>
+                    Por lo tanto, la ecuación que define la curva de Ethereum es:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    y² = x³ + 7 (mod p)
+                  </div>
+                  <p>
+                    Esta estructura particular se conoce como una <strong>curva de Koblitz</strong>. Las curvas de Koblitz permiten optimizaciones computacionales significativas en la multiplicación escalar de puntos gracias a la existencia de endomorfismos eficientes.
+                  </p>
+
+                  <div className="p-4 bg-muted/40 border border-border/20 rounded-xl space-y-2 text-xs">
+                    <span className="block font-bold text-foreground uppercase">Parámetros del grupo (p, a, b, G, n, h):</span>
+                    <ul className="space-y-1.5 font-mono text-[11px]">
+                      <li><strong>El Primo del Campo (p):</strong> <code>2²⁵⁶ - 2³² - 2⁹ - 2⁸ - 2⁷ - 2⁶ - 2⁴ - 1</code><br />En hex: <code>FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFFCF</code></li>
+                      <li><strong>El Punto Generador (G):</strong> Punto base predeterminado de la curva.<br />x_G: <code>79BE667E F9DCBBAC 55A06295 CE870B07 029BFCDB 2DCE28D9 59F2815B 16F81798</code><br />y_G: <code>483ADA77 26A3C465 5DA4FBFC 0E1108A8 FD17B448 A6855419 9C47D08F FB10D4B8</code></li>
+                      <li><strong>El Orden del Grupo (n):</strong> Total de puntos en el subgrupo cíclico generado por G.<br />En hex: <code>FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE BAAEDCE6 AF48A03B BFD25E8C D0364141</code></li>
+                      <li><strong>Cofactor (h):</strong> <code>1</code> (el subgrupo cíclico generado por G abarca la totalidad de los puntos).</li>
+                    </ul>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-2">Aritmética de la Curva: Suma y Multiplicación Escalar</h3>
+                  <p>
+                    La operación básica en ECC es la adición de puntos. Si tomamos dos puntos de la curva, <code>P = (x1, y1)</code> y <code>Q = (x2, y2)</code>, la suma <code>R = P + Q = (x3, y3)</code> se calcula algebraicamente. La pendiente <code>λ</code> (lambda) de la línea es:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary my-2 space-y-1">
+                    <p>λ = (y2 - y1) / (x2 - x1) (mod p) — si P ≠ Q</p>
+                    <p>λ = (3 · x1² + a) / (2 · y1) (mod p) — si P = Q</p>
+                  </div>
+                  <p>
+                    Las coordenadas del punto resultante <code>R = (x3, y3)</code> se definen como:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl font-mono text-xs text-primary my-2 space-y-1">
+                    <p>x3 = λ² - x1 - x2 (mod p)</p>
+                    <p>y3 = λ · (x1 - x3) - y1 (mod p)</p>
+                  </div>
+                  <p>
+                    La <strong>multiplicación escalar</strong> se define como la suma repetida de un punto P consigo mismo un número <code>k</code> de veces:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    k · P = P + P + ... + P  (k veces)
+                  </div>
+                  <p>
+                    La derivación del par de claves se realiza mediante esta multiplicación:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-1 text-xs">
+                    <li>Se elige un número entero aleatorio <code>d</code> en el intervalo <code>[1, n-1]</code>. Este número es la <strong>clave privada</strong>.</li>
+                    <li>Se calcula el punto Q en la curva multiplicando la clave privada por el punto generador: <code>Q = d · G</code>. El punto <code>Q = (x_Q, y_Q)</code> representa la <strong>clave pública</strong>.</li>
+                  </ol>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-4">
+                    <span className="font-bold text-primary">El Problema del Logaritmo Discreto de Curva Elíptica (ECDLP)</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      La seguridad de todo el sistema radica en el hecho de que, mientras realizar la multiplicación escalar <code>d · G</code> es sencillo en tiempo logarítmico <code>O(log d)</code>, la operación inversa es impracticable. Dado el punto Q y el punto base G, es computacionalmente imposible determinar el entero <code>d</code> tal que <code>Q = d · G</code>. Para <code>secp256k1</code>, los algoritmos de resolución más eficientes conocidos (como el algoritmo rho de Pollard) tienen una complejidad temporal de aproximadamente <code>O(√n)</code>. Con <code>n ≈ 2²⁵⁶</code>, esto requiere <code>2¹²⁸</code> operaciones, un límite físicamente inalcanzable hoy en día.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - ALGORITMO */}
+            {activeSubSection === 'ecdsa-algoritmo' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    El Algoritmo de Firmas Digitales de Curva Elíptica (ECDSA)
+                  </CardTitle>
+                  <CardDescription>
+                    Fases de generación y verificación de firmas junto a la demostración matemática formal.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    El algoritmo ECDSA permite asegurar la autenticidad e integridad de un mensaje sin revelar la clave privada del emisor. El proceso consta de dos fases principales: la firma del mensaje y su posterior verificación.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-2">Fase 1: Generación de la Firma</h3>
+                  <p>
+                    Para firmar un mensaje <code>m</code>, el firmante realiza los siguientes pasos utilizando su clave privada <code>d</code>:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-2 text-xs">
+                    <li>
+                      <strong>Cálculo del Hash:</strong> Se genera el hash criptográfico del mensaje utilizando Keccak-256: <code>e = H(m)</code>.
+                      Sea <code>z</code> el número entero correspondiente a los 256 bits más significativos de <code>e</code>.
+                    </li>
+                    <li>
+                      <strong>Selección del Nonce Efímero (k):</strong> Se selecciona un número entero aleatorio criptográficamente seguro <code>k</code> en el rango <code>[1, n-1]</code>.
+                      <div className="bg-destructive/10 text-destructive border border-destructive/20 p-2 rounded-lg mt-1 text-[11px] font-bold">
+                        ▲ CAUTION: El valor k debe ser estrictamente aleatorio y de un solo uso (nonce). La reutilización de k en firmas distintas revela directamente la clave privada d.
+                      </div>
+                    </li>
+                    <li>
+                      <strong>Cálculo del Punto Temporal (R):</strong> Se calcula el punto de la curva: <code>R = k · G</code>. Sean <code>(x_R, y_R)</code> las coordenadas del punto R.
+                    </li>
+                    <li>
+                      <strong>Cálculo del Parámetro r:</strong> Se extrae la coordenada X del punto R y se reduce módulo n: <code>r = x_R (mod n)</code>. Si <code>r = 0</code>, se debe volver al paso 2 y seleccionar un nuevo k.
+                    </li>
+                    <li>
+                      <strong>Cálculo del Parámetro s:</strong> Se computa el valor de la firma: <code>s = k⁻¹ · (z + r · d) (mod n)</code>, donde <code>k⁻¹</code> es el inverso multiplicativo modular de k módulo n. Si <code>s = 0</code>, se debe volver al paso 2.
+                    </li>
+                  </ol>
+                  <p>
+                    La firma digital final es el par ordenado: <strong>Firma = (r, s)</strong>.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Fase 2: Verificación de la Firma</h3>
+                  <p>
+                    Para verificar la validez de la firma <code>(r, s)</code> sobre el mensaje <code>m</code>, el verificador utiliza la clave pública del emisor <code>Q</code> y sigue este procedimiento:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-2 text-xs">
+                    <li>Verificar que los valores <code>r</code> y <code>s</code> sean números enteros en el rango <code>[1, n-1]</code>. Si no lo son, la firma es inválida.</li>
+                    <li>Calcular el hash del mensaje: <code>e = H(m)</code> y derivar el valor entero <code>z</code> de los bits más significativos.</li>
+                    <li>Calcular el inverso modular de s: <code>w = s⁻¹ (mod n)</code>.</li>
+                    <li>Calcular los dos coeficientes auxiliares: <code>u1 = z · w (mod n)</code> y <code>u2 = r · w (mod n)</code>.</li>
+                    <li>Calcular el punto de verificación en la curva elíptica: <code>P = u1 · G + u2 · Q</code>.</li>
+                  </ol>
+                  <p>
+                    Si la firma es auténtica, el punto P será igual al punto temporal R utilizado durante la fase de generación. Por lo tanto, el verificador comprueba la siguiente igualdad:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    r ≡ x_p (mod n)
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl text-xs space-y-2 mt-4">
+                    <span className="font-bold text-primary">Demostración Matemática de la Verificación</span>
+                    <p className="text-muted-foreground leading-relaxed font-normal">
+                      Para demostrar que <code>P = R</code> cuando la firma es auténtica, partimos de la definición del punto de verificación:
+                    </p>
+                    <div className="font-mono text-[11px] space-y-1 bg-background/80 p-2.5 rounded border border-border/30 overflow-x-auto">
+                      <p>P = u1 · G + u2 · Q</p>
+                      <p>Sustituyendo Q por d · G:</p>
+                      <p>P = u1 · G + u2 · (d · G) = (u1 + u2 · d) · G</p>
+                      <p>Sustituyendo u1 y u2:</p>
+                      <p>P = (z · w + r · w · d) · G = (z + r · d) · w · G</p>
+                      <p>Dado que w = s⁻¹ (mod n), tenemos:</p>
+                      <p>P = (z + r · d) · s⁻¹ · G</p>
+                      <p>Por la definición de s en la fase de generación, sabemos que s ≡ k⁻¹ · (z + r · d) (mod n). De esto se deriva que s⁻¹ ≡ k · (z + r · d)⁻¹ (mod n). Sustituyendo esto en la ecuación:</p>
+                      <p>P = (z + r · d) · [k · (z + r · d)⁻¹] · G</p>
+                      <p>Los términos (z + r · d) y su inverso se cancelan bajo aritmética modular:</p>
+                      <p>P = k · G = R</p>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed font-normal mt-2">
+                      Dado que <code>P = R</code>, se cumple que la coordenada X del punto P (<code>x_p</code>) es idéntica a la coordenada X de R (<code>x_R</code>), por lo que <code>r ≡ x_p (mod n)</code>. Q.E.D.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - ETHEREUM */}
+            {activeSubSection === 'ecdsa-ethereum' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Terminal className="h-5 w-5 text-primary" />
+                    La Adaptación de ECDSA en Ethereum
+                  </CardTitle>
+                  <CardDescription>
+                    Mecanismo de Key Recovery con el byte v, el opcode ecrecover y el estándar de seguridad EIP-191.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Ethereum implementa el estándar ECDSA sobre <code>secp256k1</code> con una característica clave: el soporte para la <strong>Recuperación de la Clave Pública</strong> (Key Recovery).
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-2">El Byte de Recuperación (v)</h3>
+                  <p>
+                    En la verificación matemática tradicional de ECDSA, se requiere la clave pública Q del firmante para validar la firma. En Ethereum, sin embargo, transmitir la clave pública de 64 bytes en cada transacción duplicaría el peso de los datos. Para solventar esto, se utiliza un tercer parámetro llamado <strong>byte de recuperación</strong> (<code>v</code>).
+                  </p>
+                  <p>
+                    Cuando calculamos el punto <code>R = k · G</code>, la coordenada Y tiene dos soluciones posibles (una par y otra impar) para una coordenada X (<code>r</code>) dada, debido a la simetría de la ecuación de curva elíptica <code>y² = f(x)</code>. Además, es posible (aunque extremadamente improbable) que <code>x_R</code> sea mayor que el orden del grupo <code>n</code> pero menor que el primo <code>p</code>, lo que daría lugar a dos posibles valores de coordenadas X.
+                  </p>
+                  <p>
+                    El byte de recuperación v es un entero que indica cuál de las posibles soluciones de la curva es el punto de origen real. En Ethereum:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-muted-foreground">
+                    <li>Originalmente, <code>v ∈ &#123;27, 28&#125;</code>. El valor 27 indica una coordenada Y par, y 28 una impar.</li>
+                    <li>Con la implementación del estándar <strong>EIP-155</strong> (protección contra replay attacks entre cadenas), v se calcula en función del ID de la blockchain (<code>chainId</code>):
+                      <div className="font-mono text-xs text-primary my-1 bg-slate-900/60 p-2 rounded text-center">
+                        v ∈ &#123;2 · chainId + 35, 2 · chainId + 36&#125;
+                      </div>
+                    </li>
+                  </ul>
+                  <p>
+                    Con la tupla <code>(r, s, v)</code> y el hash del mensaje <code>z</code>, la EVM ejecuta el opcode <code>ecrecover</code>, el cual realiza las operaciones matemáticas necesarias para reconstruir la clave pública Q directamente. Una vez obtenida la clave pública, se calcula su hash Keccak-256 y se extraen los últimos 20 bytes para obtener la <strong>dirección de la cuenta de Ethereum</strong>:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    Address = Keccak256(Q)[12:31]
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">El Prefijo de Seguridad EIP-191</h3>
+                  <p>
+                    Una vulnerabilidad conceptual crítica en blockchains es el secuestro de firmas para transacciones. Si un usuario firma un mensaje de texto plano que coincide exactamente con los bytes de una transacción de envío de fondos, un atacante podría enviar dicho mensaje firmado a la red de Ethereum y hacer que se ejecute como una transacción válida.
+                  </p>
+                  <p>
+                    Para mitigar este riesgo, se definió el estándar <strong>EIP-191</strong>. Este estándar obliga a anteponer un prefijo especial a cualquier mensaje firmado que no sea una transacción de la EVM antes de calcular su hash definitivo:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-center font-mono text-xs text-primary my-2">
+                    Mensaje a Firmar = Keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", longitud(mensaje), mensaje))
+                  </div>
+                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-muted-foreground">
+                    <li>El byte inicial <code>0x19</code> (<code>\x19</code>) fue elegido específicamente porque no es válido como primer byte de una transacción RLP en Ethereum. De este modo, <strong>ningún mensaje firmado bajo EIP-191 puede ser interpretado jamás como una transacción válida por un nodo</strong>.</li>
+                    <li>El texto <code>"Ethereum Signed Message:\n"</code> identifica la naturaleza de la firma.</li>
+                    <li>La longitud del mensaje le permite al deserializador saber cuántos bytes leer.</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - CASOS */}
+            {activeSubSection === 'ecdsa-casos' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Blocks className="h-5 w-5 text-primary" />
+                    Casos de Uso en el Desarrollo de dApps
+                  </CardTitle>
+                  <CardDescription>
+                    Distribución de recompensas sin whitelists on-chain, firmas de permisos (permit) y puentes multicadena.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Las firmas criptográficas off-chain habilitan dinámicas de interacción complejas y eficientes en términos de gas dentro de las aplicaciones descentralizadas.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-1.5">A. Acuñación y Distribución de Recompensas sin Whitelist (Dynamic Claim)</h3>
+                  <p>
+                    En aplicaciones tradicionales que recompensan a usuarios por completar tareas (como la dApp de entrenamiento del Diplomado USACH), el enfoque ingenuo requiere que un administrador mantenga un mapa de usuarios permitidos en blockchain (whitelist), lo cual consume aproximadamente 20,000 unidades de gas por cada usuario registrado.
+                  </p>
+                  <p>
+                    Al migrar al esquema de firmas ECDSA:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-1.5 text-xs text-muted-foreground">
+                    <li>El backend del sistema valida la tarea off-chain.</li>
+                    <li>El backend firma con su clave privada un mensaje que contiene <code>(usuario, tokenId, cantidad, nonce)</code>.</li>
+                    <li>El usuario recibe los datos y la firma del backend, y los envía a un contrato inteligente intermediario (<code>ChallengeMinter.sol</code>), el cual verifica la firma y ejecuta el minteo.</li>
+                    <li>El gasto de gas se transfiere enteramente al usuario final cuando reclama su NFT, y el administrador gasta <strong>cero gas</strong> en la gestión.</li>
+                  </ol>
+
+                  {/* Flujo Visual Interactivo (HTML/CSS) del Claim con Firma */}
+                  <div className="my-6 border border-border rounded-2xl bg-slate-950/80 p-5 space-y-4">
+                    <span className="block text-xs uppercase font-extrabold text-primary tracking-wider text-center">Flujo de Reclamo Dinámico (ECDSA Claim)</span>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
+                      <div className="bg-card border border-border p-3 rounded-xl flex-1 w-full">
+                        <span className="block text-xs font-bold text-foreground">1. Cliente/Usuario</span>
+                        <span className="text-[10px] text-muted-foreground">Completa el desafío en el Frontend.</span>
+                      </div>
+                      <div className="text-muted-foreground text-xs font-bold rotate-90 sm:rotate-0">➔</div>
+                      <div className="bg-card border border-border p-3 rounded-xl flex-1 w-full">
+                        <span className="block text-xs font-bold text-foreground">2. Servidor Backend</span>
+                        <span className="text-[10px] text-muted-foreground">Valida el logro y firma un mensaje con su clave privada.</span>
+                      </div>
+                      <div className="text-muted-foreground text-xs font-bold rotate-90 sm:rotate-0">➔</div>
+                      <div className="bg-card border border-border p-3 rounded-xl flex-1 w-full">
+                        <span className="block text-xs font-bold text-foreground">3. Blockchain (Smart Contract)</span>
+                        <span className="text-[10px] text-muted-foreground">Verifica la firma con `ecrecover` y acuña la insignia NFT.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-1.5">B. Aprobaciones y Transferencias sin Gas (EIP-2612 / Permit)</h3>
+                  <p>
+                    El estándar ERC-20 tradicional requiere dos transacciones para interactuar con un smart contract externo (como un DEX): una llamada a <code>approve(spender, value)</code> y luego una interacción con el contrato destino que llama a <code>transferFrom</code>.
+                  </p>
+                  <p>
+                    El estándar <strong>EIP-2612</strong> introduce la función <code>permit</code>, permitiendo a los usuarios firmar una aprobación off-chain. El contrato receptor de la firma realiza el <code>permit</code> y el intercambio en una sola transacción, pagando el gas de la aprobación el propio contrato o un intermediario (relayer), logrando transacciones completamente <em>gasless</em> para el usuario final.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-1.5">C. Puentes Multicadena (Bridges)</h3>
+                  <p>
+                    Los puentes de tokens descentralizados dependen de firmas multifirma o esquemas de firma de umbral (Threshold Signatures). Cuando se depositan fondos en la Cadena A, un grupo de validadores off-chain firma un mensaje que autoriza el retiro en la Cadena B. El usuario presenta estas firmas ECDSA en la Cadena B para liberar sus tokens envueltos.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - VULNERABILIDADES */}
+            {activeSubSection === 'ecdsa-vulnerabilidades' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary" />
+                    Vulnerabilidades y Vectores de Ataque en ECDSA y Solidity
+                  </CardTitle>
+                  <CardDescription>
+                    Puntos críticos de fallo: maleabilidad de firma, ataques de repetición y reutilización de nonces k.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    El desarrollo con firmas criptográficas requiere un entendimiento profundo de los riesgos criptográficos asociados. Un error de lógica de negocio o de implementación matemática puede resultar en la pérdida total de los fondos o el minteo no autorizado de activos.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-1.5">A. Maleabilidad de Firma (Signature Malleability)</h3>
+                  <p>
+                    La maleabilidad es una propiedad inherente de las firmas ECDSA matemáticas. Para cualquier firma válida <code>(r, s, v)</code> generada para un hash de mensaje determinado, existe una segunda firma <code>(r, -s (mod n), v ⊕ 1)</code> que es igualmente válida para el <strong>mismo</strong> hash de mensaje (donde <code>-s ≡ n - s (mod n)</code>).
+                  </p>
+                  <p>
+                    Si un contrato inteligente no controla este escenario, un atacante podría interceptar una transacción legítima de reclamo de fondos de un usuario, calcular la firma maleada alternativa y enviarla a la red con un gas fee mayor (Front-running). Si la lógica del contrato marca la firma como usada guardando el hash completo de la firma en un mapping, la segunda transacción también pasará, permitiendo un doble retiro de fondos con la misma firma original modificada.
+                  </p>
+                  <div className="bg-primary/5 border border-primary/10 p-3.5 rounded-xl text-xs space-y-1.5">
+                    <span className="font-bold text-primary">Mitigación</span>
+                    <p>
+                      Para evitar la maleabilidad de firmas, la especificación de Ethereum y las librerías modernas restringen los valores válidos de <code>s</code> a la mitad inferior del orden del grupo <code>n</code>, es decir: <code>s ≤ n / 2</code>.
+                    </p>
+                    <p>
+                      En hexadecimal, esto equivale a comprobar que: <code>s ≤ 0x7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 5D576E73 57A4501D DFE92F46 681B20A0</code>. La librería <code>ECDSA.sol</code> de OpenZeppelin implementa esta restricción de forma nativa en su función <code>recover</code>.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-1.5">B. Ataque de Repetición (Replay Attack)</h3>
+                  <p>
+                    Un ataque de repetición ocurre cuando un atacante toma una firma que fue válida para un reclamo y la envía nuevamente al contrato inteligente para repetir la acción.
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <span className="font-bold text-foreground text-xs uppercase block">Mitigación por Nonces y Salting</span>
+                    <p className="text-xs">Para que una firma sea de un único uso, el contrato inteligente debe registrar que el mensaje firmado ya fue procesado. Hay dos formas principales:</p>
+                    <ul className="list-disc pl-5 text-xs space-y-2">
+                      <li>
+                        <strong>Nonces Secuenciales:</strong> El contrato mantiene un contador por usuario: <code>mapping(address =&gt; uint256) public nonces</code>. La firma debe incluir el nonce actual del usuario y, al procesarse, este se incrementa.
+                        <pre className="text-[10px] font-mono text-primary bg-background/80 p-2 rounded border border-border/20 mt-1">
+                          {`bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, nonces[msg.sender]));
+nonces[msg.sender]++;`}
+                        </pre>
+                      </li>
+                      <li>
+                        <strong>Registro de Hash Único (Salt/UUID):</strong> El backend genera un identificador único para cada recompensa (<code>salt</code>). El contrato guarda un registro booleano de los hashes procesados:
+                        <pre className="text-[10px] font-mono text-primary bg-background/80 p-2 rounded border border-border/20 mt-1">
+                          {`bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, salt));
+require(!usedSignatures[messageHash], "Firma ya utilizada");
+usedSignatures[messageHash] = true;`}
+                        </pre>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-1.5">C. Replay Attack entre Contratos y Cadenas (Cross-Contract / Cross-Chain Replay)</h3>
+                  <p>
+                    Si despliegas dos contratos independientes de minteo de NFTs (por ejemplo, <code>DesafioMinter1</code> y <code>DesafioMinter2</code>), y ambos utilizan el mismo servidor firmante, un usuario que reciba una firma válida para el contrato 1 podría reutilizar esa misma firma para reclamar tokens en el contrato 2, a menos que se restrinja.
+                  </p>
+                  <p>
+                    De forma similar, si una dApp corre en Sepolia y en Arbitrum, una firma válida generada para la red de pruebas Sepolia podría ser repetida en la red principal de Arbitrum si el contrato comparte la misma dirección.
+                  </p>
+                  <div className="bg-primary/5 border border-primary/10 p-3.5 rounded-xl text-xs space-y-1.5">
+                    <span className="font-bold text-primary">Mitigación</span>
+                    <p>Es obligatorio incluir en el hash del mensaje:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>La dirección del contrato verificador (<code>address(this)</code>): Garantiza que la firma solo sea válida para el contrato que la ejecuta.</li>
+                      <li>El ID de la cadena (<code>block.chainid</code>): Garantiza que la firma no pueda ser repetida en otra red blockchain.</li>
+                    </ul>
+                    <p className="mt-1">
+                      El estándar <strong>EIP-712</strong> formaliza esta estructura mediante el <strong>Domain Separator</strong> (Separador de Dominio), el cual define de forma explícita el nombre de la dApp, la versión del contrato, el <code>chainId</code> y la dirección del contrato verificador.
+                    </p>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-1.5">D. Reutilización del Nonce Efímero (k)</h3>
+                  <p>
+                    Este es un vector de ataque que afecta principalmente al servidor (backend) que genera las firmas. En la ecuación para calcular s: <code>s = k⁻¹ · (z + r · d) (mod n)</code>.
+                  </p>
+                  <p>
+                    Si un servidor utiliza el mismo valor <code>k</code> para firmar dos mensajes distintos <code>m1</code> y <code>m2</code>, se obtendrán dos firmas con la misma coordenada <code>r</code>. Un atacante puede resolver el siguiente sistema de ecuaciones algebraicas modulares para calcular la clave privada del servidor <code>d</code> sin necesidad de fuerza bruta:
+                  </p>
+                  <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl font-mono text-[11px] text-primary/95 space-y-1">
+                    <p>s1 ≡ k⁻¹ · (z1 + r · d) (mod n)</p>
+                    <p>s2 ≡ k⁻¹ · (z2 + r · d) (mod n)</p>
+                    <p>Dividiendo las ecuaciones y despejando d:</p>
+                    <p>d ≡ (s2 · z1 - s1 · z2) / (r · (s1 - s2)) (mod n)</p>
+                  </div>
+                  <p>
+                    Para evitar esto de forma absoluta, los servidores modernos no deben utilizar generadores de números puramente aleatorios para k, sino implementar firmas deterministas basadas en el estándar <strong>RFC 6979</strong>, el cual deriva <code>k</code> de la clave privada <code>d</code> y del hash <code>z</code> de manera determinista.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* SUB-SECCIÓN: CRIPTOGRAFÍA ECDSA - IMPLEMENTACIÓN */}
+            {activeSubSection === 'ecdsa-implementacion' && (
+              <Card className="border-border/80 bg-card/45 backdrop-blur-md text-left w-full animate-in fade-in duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <FileCode className="h-5 w-5 text-primary" />
+                    Guía de Implementación Paso a Paso
+                  </CardTitle>
+                  <CardDescription>
+                    Código fuente del contrato ChallengeMinter.sol en Solidity y del script de firma en Node.js.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    A continuación se detalla la implementación técnica del flujo propuesto para la validación de desafíos en el Diplomado de la Universidad de Santiago de Chile.
+                  </p>
+
+                  <h3 className="text-base font-bold text-foreground mt-4 mb-2">Componente A: Contrato de Solidity (`ChallengeMinter.sol`)</h3>
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl">
+                    <pre className="text-[11px] font-mono text-primary overflow-x-auto whitespace-pre">
+{`// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.35;
+
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
+interface IERC1155Minter {
+    function mint(address account, uint256 id, uint256 amount, bytes memory data) external;
+}
+
+contract ChallengeMinter is AccessControl {
+    using ECDSA for bytes32;
+
+    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
+    IERC1155Minter public immutable nftContract;
+
+    // Registro para mitigar Replay Attacks
+    mapping(bytes32 => bool) public usedSignatures;
+
+    event ChallengeClaimed(address indexed user, uint256 indexed id, uint256 amount, bytes32 salt);
+
+    constructor(
+        address defaultAdmin,
+        address authorizedSigner,
+        address nftContractAddress
+    ) {
+        require(nftContractAddress != address(0), "Direccion de NFT invalida");
+        require(authorizedSigner != address(0), "Direccion de firmante invalida");
+        
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
+        _grantRole(SIGNER_ROLE, authorizedSigner);
+        
+        nftContract = IERC1155Minter(nftContractAddress);
+    }
+
+    function claimChallenge(
+        uint256 id,
+        bytes32 salt,
+        bytes memory signature
+    ) external {
+        // Reconstrucción del hash del mensaje (incluye address(this) y block.chainid)
+        bytes32 messageHash = keccak256(
+            abi.encodePacked(
+                msg.sender, 
+                id, 
+                salt, 
+                address(this),
+                block.chainid
+            )
+        );
+
+        // Convertir al hash EIP-191 prependeando "\\x19Ethereum Signed Message:\\n32"
+        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
+
+        // Recuperar el firmante utilizando la librería segura de OpenZeppelin
+        address signer = ethSignedMessageHash.recover(signature);
+
+        // Validaciones críticas de seguridad
+        require(hasRole(SIGNER_ROLE, signer), "Firma invalida o no autorizada");
+        require(!usedSignatures[messageHash], "Esta recompensa ya fue reclamada");
+
+        // Registrar el mensaje como usado
+        usedSignatures[messageHash] = true;
+
+        // Ejecutar el minteo en el contrato destino (cantidad estática = 1)
+        nftContract.mint(msg.sender, id, 1, "");
+
+        emit ChallengeClaimed(msg.sender, id, 1, salt);
+    }
+}`}
+                    </pre>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Componente B: Script del Servidor (Node.js con Ethers.js v6)</h3>
+                  <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl">
+                    <pre className="text-[11px] font-mono text-primary overflow-x-auto whitespace-pre">
+{`const { ethers } = require("ethers");
+require("dotenv").config();
+
+/**
+ * Genera la firma criptográfica necesaria para el reclamo de recompensas.
+ */
+async function generarFirmaDesafio(userAddress, tokenId, salt, contractAddress, chainId) {
+  const privateKey = process.env.SIGNER_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("Falta la variable de entorno SIGNER_PRIVATE_KEY");
+  }
+
+  const wallet = new ethers.Wallet(privateKey);
+
+  // 1. Hashear los datos usando la empaquetación equivalente a abi.encodePacked
+  const messageHash = ethers.solidityPackedKeccak256(
+    ["address", "uint256", "bytes32", "address", "uint256"],
+    [userAddress, tokenId, salt, contractAddress, chainId]
+  );
+
+  // 2. Firmar el mensaje (aplica automáticamente el prefijo de firma EIP-191)
+  const signature = await wallet.signMessage(ethers.getBytes(messageHash));
+  
+  return signature;
+}`}
+                    </pre>
+                  </div>
+
+                  <h3 className="text-base font-bold text-foreground mt-6 mb-2">Conclusiones y Referencias Bibliográficas</h3>
+                  <p>
+                    El uso de firmas ECDSA en combinación con EIP-191 ofrece un balance óptimo entre eficiencia y descentralización. Permite delegar únicamente el cambio de estado de distribución a la blockchain y procesar la lógica de negocio compleja de forma off-chain.
+                  </p>
+                  
+                  <div className="p-4 bg-muted/40 border border-border/20 rounded-xl text-xs space-y-2">
+                    <span className="block font-bold text-foreground uppercase">Referencias:</span>
+                    <ol className="list-decimal pl-5 space-y-1 text-muted-foreground font-sans">
+                      <li><strong>Diffie, W., &amp; Hellman, M. (1976).</strong> <em>New directions in cryptography.</em> IEEE Transactions on Information Theory.</li>
+                      <li><strong>Koblitz, N. (1987).</strong> <em>Elliptic curve cryptosystems.</em> Mathematics of Computation.</li>
+                      <li><strong>Standards for Efficient Cryptography Group (SECG). (2010).</strong> <em>SEC 2: Recommended Elliptic Curve Domain Parameters.</em></li>
+                      <li><strong>OpenZeppelin Contracts Documentation.</strong> <em>Cryptography utilities: ECDSA.</em></li>
+                      <li><strong>Pornin, T. (2013).</strong> <em>RFC 6979: Deterministic Usage of ECDSA.</em></li>
+                    </ol>
+                  </div>
                 </CardContent>
               </Card>
             )}
