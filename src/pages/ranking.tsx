@@ -61,7 +61,7 @@ function CreatorCell({ address }: CreatorCellProps) {
 
   return (
     <Link 
-      href={`/estudiante/${address.toLowerCase()}`}
+      href={`/estudiante?address=${address.toLowerCase()}`}
       className="flex items-center gap-2 hover:text-primary transition-colors group/creator"
     >
       <UserAvatar address={address} className="h-5 w-5 border border-border/40 group-hover/creator:border-primary/50 transition-colors" />

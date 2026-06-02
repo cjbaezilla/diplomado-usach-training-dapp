@@ -60,7 +60,7 @@ import {
 } from 'lucide-react';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useChallengeMinter } from '@/hooks/useChallengeMinter';
-import { BASE_ERC1155_CONTRACT } from '@/contracts';
+import { BASE_ERC1155_CONTRACT, CHALLENGE_MINTER_CONTRACT } from '@/contracts';
 import confetti from 'canvas-confetti';
 
 interface Challenge {
@@ -391,25 +391,69 @@ const DesafiosPage: NextPage = () => {
     setMintingId(id);
     
     try {
-      // 1. Obtener la firma y el salt del backend local
-      const response = await fetch('/api/challenge/claim', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userAddress: address,
-          id: id,
-        }),
-      });
+      let salt: `0x${string}`;
+      let signature: `0x${string}`;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al obtener la firma del servidor.');
+      try {
+        // 1. Obtener la firma y el salt del backend local
+        const response = await fetch('/api/challenge/claim', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userAddress: address,
+            id: id,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al obtener la firma del servidor.');
+        }
+
+        const data = await response.json();
+        salt = data.salt;
+        signature = data.signature;
+      } catch (apiErr: any) {
+        console.warn('API de reclamación no disponible o fallida, ejecutando firma en el cliente:', apiErr);
+
+        // Carga dinámica de viem/accounts y viem para el navegador
+        const { privateKeyToAccount } = await import('viem/accounts');
+        const { keccak256, encodePacked } = await import('viem');
+
+        const privateKey = process.env.NEXT_PUBLIC_CHALLENGE_MINTER_SIGNER_PK;
+        if (!privateKey) {
+          throw new Error('La clave privada de firma no está configurada ni en el servidor ni en el cliente.');
+        }
+
+        const formattedPrivateKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+        const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+
+        salt = keccak256(
+          encodePacked(
+            ['address', 'uint256', 'string'],
+            [address as `0x${string}`, BigInt(id), 'usach-defi-salt-nonce']
+          )
+        );
+
+        const challengeMinterAddress = CHALLENGE_MINTER_CONTRACT.address;
+        const messageHash = keccak256(
+          encodePacked(
+            ['address', 'uint256', 'bytes32', 'address'],
+            [
+              address as `0x${string}`,
+              BigInt(id),
+              salt,
+              challengeMinterAddress
+            ]
+          )
+        );
+
+        signature = await account.signMessage({
+          message: { raw: messageHash }
+        });
       }
-
-      const data = await response.json();
-      const { salt, signature } = data;
 
       // 2. Ejecutar la transacción en la blockchain
       claimChallenge(BigInt(id), salt, signature);
@@ -797,7 +841,7 @@ const DesafiosPage: NextPage = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-3 pt-2">
-                    <Link href={`/estudiante/${address}`}>
+                    <Link href={`/estudiante?address=${address}`}>
                       <Button variant="default" className="font-bold text-sm bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-white border-none shadow-md">
                         Ver Mi Perfil Público
                       </Button>

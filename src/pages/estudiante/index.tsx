@@ -3,8 +3,6 @@ import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import fs from 'fs';
-import path from 'path';
 import { useRouter } from 'next/router';
 import { useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
@@ -97,11 +95,6 @@ interface RelicMetadata {
   localImage: string;
   external_url: string;
   attributes: Attribute[];
-}
-
-interface StudentPageProps {
-  studentAddress: `0x${string}`;
-  relics: RelicMetadata[];
 }
 
 // -------------------------------------------------------------
@@ -346,16 +339,59 @@ function StudentPoolRow({ poolAddress, studentAddress, onPoolActive }: StudentPo
 // -------------------------------------------------------------
 // Página Principal de Estudiante
 // -------------------------------------------------------------
-const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics }) => {
+const StudentProfilePage: NextPage = () => {
   const router = useRouter();
   const isHydrated = useHydrated();
   const { address: connectedAddress, isConnected } = useAccount();
 
-  // Obtener Perfil del Estudiante desde la dirección de la URL
-  const { profile, isLoading: isLoadingProfile } = useStudentProfile(studentAddress);
+  const [studentAddress, setStudentAddress] = useState<`0x${string}` | null>(null);
+  const [relics, setRelics] = useState<RelicMetadata[]>([]);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
+
+  // Cargar la dirección del estudiante desde los parámetros de consulta (?address=0x...)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const addr = router.query.address as string;
+    if (addr && addr.startsWith('0x') && addr.length === 42) {
+      setStudentAddress(addr.toLowerCase() as `0x${string}`);
+    } else if (connectedAddress) {
+      // Fallback a la billetera conectada
+      setStudentAddress(connectedAddress.toLowerCase() as `0x${string}`);
+    } else {
+      setStudentAddress(null);
+    }
+  }, [router.isReady, router.query.address, connectedAddress]);
+
+  // Cargar los metadatos de las 10 reliquias desde la ruta pública client-side
+  useEffect(() => {
+    const fetchRelics = async () => {
+      try {
+        const promises = Array.from({ length: 10 }, (_, i) =>
+          fetch(`/nft/usach/relics/${i}.json`).then((res) => {
+            if (!res.ok) throw new Error(`Error al cargar reliquia ${i}`);
+            return res.json().then((data) => {
+              data.id = i;
+              data.localImage = `/nft/usach/relics/${i}.png`;
+              return data as RelicMetadata;
+            });
+          })
+        );
+        const results = await Promise.all(promises);
+        setRelics(results);
+      } catch (err) {
+        console.error('Error al cargar metadatos de reliquias:', err);
+      } finally {
+        setIsLoadingMetadata(false);
+      }
+    };
+    fetchRelics();
+  }, []);
+
+  // Obtener Perfil del Estudiante desde la dirección resuelta
+  const { profile, isLoading: isLoadingProfile } = useStudentProfile(studentAddress || undefined);
 
   // Obtener tokens creados por el estudiante
-  const { tokens: createdTokensAddresses, isLoading: isLoadingCreatedTokens } = useTokensByOwner(studentAddress);
+  const { tokens: createdTokensAddresses, isLoading: isLoadingCreatedTokens } = useTokensByOwner(studentAddress || undefined);
 
   // Obtener todos los tokens en la plataforma para verificar tenencias (balances > 0)
   const { tokens: allPlatformTokens, isLoading: isLoadingAllTokens } = useAllTokens();
@@ -378,7 +414,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
 
   // Trackear si el visitante es el dueño del perfil
   const isOwnerOfProfile = useMemo(() => {
-    return isConnected && !!connectedAddress && connectedAddress.toLowerCase() === studentAddress.toLowerCase();
+    return isConnected && !!connectedAddress && !!studentAddress && connectedAddress.toLowerCase() === studentAddress.toLowerCase();
   }, [isConnected, connectedAddress, studentAddress]);
 
   // Registrar el logro del desafío 8 en localStorage
@@ -412,6 +448,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
   const [copiedAddress, setCopiedAddress] = useState(false);
 
   const handleCopyAddress = () => {
+    if (!studentAddress) return;
     navigator.clipboard.writeText(studentAddress);
     setCopiedAddress(true);
     setTimeout(() => setCopiedAddress(false), 2000);
@@ -421,7 +458,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
   const ownedBalances = batchBalances ? (batchBalances as bigint[]) : Array(relics.length).fill(0n);
 
   const getTraitValue = (relic: RelicMetadata, type: string) => {
-    const attr = relic.attributes.find(a => a.trait_type === type);
+    const attr = relic.attributes?.find(a => a.trait_type === type);
     return attr ? attr.value : '';
   };
 
@@ -510,14 +547,43 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
     return Object.values(activePools).filter(Boolean).length;
   }, [activePools]);
 
-  // Si no está hidratado
-  if (!isHydrated) {
+  // Si no está hidratado o está cargando metadatos iniciales sin tener dirección resuelta
+  if (!isHydrated || (isLoadingMetadata && !studentAddress)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  // Si la carga de metadatos finalizó pero no hay una dirección de estudiante válida
+  if (!studentAddress && !isLoadingMetadata) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
+        <Navbar />
+        <main className="flex-1 w-full p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center space-y-4">
+          <div className="text-center p-6 max-w-md border border-border/85 bg-card/45 backdrop-blur-md rounded-2xl shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-amber-505 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+            <Info className="h-10 w-10 text-amber-500 mx-auto mb-3 animate-pulse" />
+            <h2 className="text-lg font-bold text-foreground">Dirección no especificada</h2>
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+              No se ha proporcionado una dirección de estudiante válida en la URL (?address=0x...) ni se ha detectado una billetera conectada.
+            </p>
+            <div className="mt-4 flex flex-col gap-2">
+              <Link href="/identity">
+                <Button className="w-full text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
+                  Ver Directorio / Registrarse
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const resolvedStudentAddress = studentAddress as `0x${string}`;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
@@ -548,12 +614,10 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                 variant="outline"
                 size="sm"
                 className="gap-1.5 border-border/60 hover:bg-muted/80 text-xs font-semibold"
-                onClick={() => {
-                  navigator.clipboard.writeText(studentAddress);
-                }}
+                onClick={handleCopyAddress}
               >
                 <Copy className="h-3.5 w-3.5" />
-                Copiar Wallet
+                {copiedAddress ? 'Copiado!' : 'Copiar Wallet'}
               </Button>
               {isOwnerOfProfile && (
                 <Link href="/identity">
@@ -607,7 +671,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                 <div className="space-y-4">
                   {/* Avatar y Datos Principales */}
                   <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-xl border border-border/30">
-                    <UserAvatar address={studentAddress} className="size-16 border-2 border-primary/20 shadow-sm" />
+                    <UserAvatar address={resolvedStudentAddress} className="size-16 border-2 border-primary/20 shadow-sm" />
 
                     <div className="flex-1 min-w-0 text-left">
                       {profile?.isRegistered ? (
@@ -631,7 +695,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                       {/* Dirección Ethereum copiable */}
                       <div className="flex items-center gap-1.5 mt-2 bg-background/60 p-1 px-2 rounded border border-border/20 w-fit">
                         <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">
-                          {studentAddress}
+                          {resolvedStudentAddress}
                         </span>
                         <Button
                           variant="ghost"
@@ -748,11 +812,11 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                     <p className="text-[10px] text-muted-foreground/70 mt-1">Reclama insignias históricas para activar bonificaciones.</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1 text-xs">
                     {activeBuffs.map((buff, idx) => {
                       const style = getRarityColor(buff.rarity);
                       return (
-                        <div key={idx} className="p-2.5 rounded-xl border border-border/40 bg-muted/15 flex flex-col gap-1 text-left text-xs">
+                        <div key={idx} className="p-2.5 rounded-xl border border-border/40 bg-muted/15 flex flex-col gap-1 text-left">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-foreground truncate max-w-[70%]">{buff.relicName}</span>
                             <Badge className={`text-[8px] px-1.5 py-0.5 rounded-full ${style.bg} border-none font-semibold shrink-0`}>
@@ -813,7 +877,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                         <StudentTokenRow
                           key={addr}
                           tokenAddress={addr}
-                          studentAddress={studentAddress}
+                          studentAddress={resolvedStudentAddress}
                           showIfZeroBalance={true}
                         />
                       ))}
@@ -839,7 +903,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                           <StudentTokenRow
                             key={`tracker-${addr}`}
                             tokenAddress={addr}
-                            studentAddress={studentAddress}
+                            studentAddress={resolvedStudentAddress}
                             onHasBalance={handleHasBalance}
                           />
                         ))}
@@ -855,7 +919,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                             <StudentTokenRow
                               key={`owned-${addr}`}
                               tokenAddress={addr}
-                              studentAddress={studentAddress}
+                              studentAddress={resolvedStudentAddress}
                             />
                           ))}
                         </div>
@@ -894,7 +958,7 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
                         <StudentPoolRow
                           key={poolAddr}
                           poolAddress={poolAddr}
-                          studentAddress={studentAddress}
+                          studentAddress={resolvedStudentAddress}
                           onPoolActive={handlePoolActive}
                         />
                       ))}
@@ -1019,42 +1083,5 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
     </div>
   );
 };
-
-export async function getServerSideProps(context: any) {
-  const { address } = context.params;
-
-  // Validar dirección de Ethereum
-  if (!address || !address.startsWith('0x') || address.length !== 42) {
-    return {
-      notFound: true,
-    };
-  }
-
-  // Leer metadatos locales de reliquias
-  const relicsDir = path.join(process.cwd(), 'public', 'nft', 'usach', 'relics');
-  const relics: RelicMetadata[] = [];
-
-  for (let i = 0; i < 10; i++) {
-    const filePath = path.join(relicsDir, `${i}.json`);
-    try {
-      if (fs.existsSync(filePath)) {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const data = JSON.parse(fileContent);
-        data.id = i;
-        data.localImage = `/nft/usach/relics/${i}.png`;
-        relics.push(data);
-      }
-    } catch (e) {
-      console.error(`Error al leer metadatos de reliquia ${i}:`, e);
-    }
-  }
-
-  return {
-    props: {
-      studentAddress: address.toLowerCase() as `0x${string}`,
-      relics,
-    },
-  };
-}
 
 export default StudentProfilePage;

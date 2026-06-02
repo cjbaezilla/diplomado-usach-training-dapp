@@ -105,7 +105,8 @@ function CustomConnectButton() {
           );
         }
 
-        const profilePath = `/estudiante/${address?.toLowerCase()}`;
+        const profilePath = `/estudiante?address=${address?.toLowerCase()}`;
+        const isProfileActive = router.pathname === '/estudiante' && router.query.address?.toString().toLowerCase() === address?.toLowerCase();
 
         return (
           <div className="flex items-center gap-2">
@@ -119,7 +120,7 @@ function CustomConnectButton() {
                 title="Mi Perfil"
                 className={cn(
                   "flex items-center justify-center h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-primary hover:border-primary/50 transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shrink-0",
-                  isActive(profilePath) && "text-primary border-primary bg-primary/5"
+                  isProfileActive && "text-primary border-primary bg-primary/5"
                 )}
               >
                 <User className="h-4 w-4" />

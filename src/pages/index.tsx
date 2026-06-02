@@ -242,7 +242,7 @@ const Home: NextPage = () => {
                         <Button 
                           variant="outline"
                           className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200 flex items-center justify-center gap-1.5 text-xs py-2 h-9"
-                          onClick={() => router.push(`/estudiante/${address?.toLowerCase()}`)}
+                          onClick={() => router.push(`/estudiante?address=${address?.toLowerCase()}`)}
                         >
                           <span>Ver mi Galería de Reliquias</span>
                           <Award className="h-4 w-4" />
