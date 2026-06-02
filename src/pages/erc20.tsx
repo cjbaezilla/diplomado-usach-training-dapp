@@ -3,8 +3,9 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useEffect, useState, useMemo } from 'react';
+import { useAccount, useReadContracts } from 'wagmi';
+import { baseERC20Abi } from '@/contracts/abis/baseERC20';
 import { parseUnits } from 'viem';
 import { PageHeader } from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
@@ -69,11 +70,71 @@ interface TokenRowProps {
   userAddress: `0x${string}`;
   onSelect: (address: `0x${string}`) => void;
   isSelected: boolean;
+  onShowNotification?: (notification: { type: 'success' | 'error'; message: string }) => void;
 }
 
-function TokenRow({ tokenAddress, userAddress, onSelect, isSelected }: TokenRowProps) {
+function TokenRow({ tokenAddress, userAddress, onSelect, isSelected, onShowNotification }: TokenRowProps) {
   const { metadata, isLoadingMetadata } = useBaseERC20(tokenAddress);
   const { balance, isLoading: isLoadingBalance } = useERC20Balance(tokenAddress, userAddress);
+  const [addressCopied, setAddressCopied] = useState(false);
+
+  const handleCopyAddress = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar seleccionar el token al hacer clic en el botón de copiar
+    navigator.clipboard.writeText(tokenAddress);
+    setAddressCopied(true);
+    setTimeout(() => setAddressCopied(false), 2000);
+  };
+
+  const handleAddTokenToWallet = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar cambiar la selección de token al hacer clic en el botón
+
+    if (typeof window === 'undefined') return;
+
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      onShowNotification?.({
+        type: 'error',
+        message: 'No se detectó ninguna billetera compatible (ej. MetaMask).',
+      });
+      return;
+    }
+
+    try {
+      // Usar PNG de Dicebear para compatibilidad visual con billeteras
+      const diceBearUrl = `https://api.dicebear.com/9.x/rings/png?seed=${tokenAddress}`;
+
+      const wasAdded = await ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: tokenAddress,
+            symbol: metadata.symbol,
+            decimals: metadata.decimals,
+            image: diceBearUrl,
+          },
+        },
+      });
+
+      if (wasAdded) {
+        onShowNotification?.({
+          type: 'success',
+          message: `¡Token ${metadata.symbol} añadido exitosamente a tu billetera!`,
+        });
+      } else {
+        onShowNotification?.({
+          type: 'error',
+          message: `Operación cancelada. No se añadió ${metadata.symbol}.`,
+        });
+      }
+    } catch (err: any) {
+      console.error("Error adding token to wallet:", err);
+      onShowNotification?.({
+        type: 'error',
+        message: `Error al añadir el token: ${err.message || 'Error desconocido'}`,
+      });
+    }
+  };
 
   if (isLoadingMetadata || isLoadingBalance) {
     return (
@@ -90,6 +151,9 @@ function TokenRow({ tokenAddress, userAddress, onSelect, isSelected }: TokenRowP
         </td>
         <td className="px-4 py-4 text-right">
           <div className="h-4 w-16 bg-muted rounded ml-auto" />
+        </td>
+        <td className="px-4 py-4 text-center">
+          <div className="h-8 w-8 bg-muted rounded mx-auto" />
         </td>
       </tr>
     );
@@ -133,16 +197,40 @@ function TokenRow({ tokenAddress, userAddress, onSelect, isSelected }: TokenRowP
         </div>
       </td>
       <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-        <span className="hidden sm:inline">{tokenAddress}</span>
-        <span className="sm:hidden text-[10px]">
-          {tokenAddress.substring(0, 6)}...{tokenAddress.substring(tokenAddress.length - 4)}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span>
+            {tokenAddress.substring(0, 6)}...{tokenAddress.substring(tokenAddress.length - 4)}
+          </span>
+          <button
+            onClick={handleCopyAddress}
+            className="p-1 rounded hover:bg-primary/10 text-foreground/80 hover:text-primary transition-all duration-200 shrink-0"
+            title="Copiar dirección del contrato"
+          >
+            {addressCopied ? (
+              <Check className="h-3.5 w-3.5 text-emerald-500" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
       </td>
       <td className="px-4 py-4 text-right">
         <div className="font-mono font-bold text-foreground">{formattedBalance}</div>
         <div className="text-[10px] text-muted-foreground">
           Suministro: {formattedTotalSupply}
         </div>
+      </td>
+      <td className="px-4 py-4 text-center">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 px-3 border-border/60 hover:bg-muted/80 hover:text-primary transition-all duration-200 hover:scale-[1.02] active:scale-95 group font-semibold text-xs shrink-0"
+          onClick={handleAddTokenToWallet}
+          title={`Agregar ${metadata.symbol} a tu billetera`}
+        >
+          <PlusCircle className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+          <span>Agregar a billetera</span>
+        </Button>
       </td>
     </tr>
   );
@@ -214,12 +302,51 @@ const ERC20Page: NextPage = () => {
   const { tokens: allTokenAddresses, isLoading: isLoadingAllTokens, refetch: refetchAllTokens } = useAllTokens();
   const [selectedTokenAddr, setSelectedTokenAddr] = useState<`0x${string}` | undefined>(undefined);
 
-  // Seleccionar automáticamente el primer token una vez cargados
+  // Consultar balances y dueños de todos los tokens en paralelo
+  const { data: tokenDetails, isLoading: isLoadingDetails, refetch: refetchDetails } = useReadContracts({
+    contracts: allTokenAddresses.flatMap((addr) => [
+      {
+        address: addr,
+        abi: baseERC20Abi,
+        functionName: 'balanceOf',
+        args: address ? [address] : undefined,
+      },
+      {
+        address: addr,
+        abi: baseERC20Abi,
+        functionName: 'owner',
+      }
+    ]),
+    query: {
+      enabled: isHydrated && !!address && allTokenAddresses.length > 0,
+    },
+  });
+
+  const visibleTokenAddresses = useMemo(() => {
+    if (!allTokenAddresses || !tokenDetails) return [];
+    return allTokenAddresses.filter((addr, index) => {
+      const balanceResult = tokenDetails[2 * index];
+      const ownerResult = tokenDetails[2 * index + 1];
+      
+      const balance = balanceResult && balanceResult.status === 'success' ? (balanceResult.result as bigint) : 0n;
+      const owner = ownerResult && ownerResult.status === 'success' ? (ownerResult.result as string) : '';
+      
+      const isOwner = address && owner.toLowerCase() === address.toLowerCase();
+      
+      return balance > 0n || isOwner;
+    });
+  }, [allTokenAddresses, tokenDetails, address]);
+
+  // Seleccionar automáticamente el primer token con saldo o propiedad
   useEffect(() => {
-    if (allTokenAddresses.length > 0 && !selectedTokenAddr) {
-      setSelectedTokenAddr(allTokenAddresses[0]);
+    if (visibleTokenAddresses.length > 0) {
+      if (!selectedTokenAddr || !visibleTokenAddresses.includes(selectedTokenAddr)) {
+        setSelectedTokenAddr(visibleTokenAddresses[0]);
+      }
+    } else {
+      setSelectedTokenAddr(undefined);
     }
-  }, [allTokenAddresses, selectedTokenAddr]);
+  }, [visibleTokenAddresses, selectedTokenAddr]);
 
   // Hooks para interactuar con el token seleccionado
   const {
@@ -306,6 +433,7 @@ const ERC20Page: NextPage = () => {
       ]);
 
       refetchAllTokens();
+      refetchDetails();
       setDeployName('');
       setDeploySymbol('');
     }
@@ -371,6 +499,7 @@ const ERC20Page: NextPage = () => {
 
       refetchSelectedBalance();
       refetchAllTokens();
+      refetchDetails();
     }
   }, [isActionSuccess, actionTxHash]);
 
@@ -999,13 +1128,13 @@ const ERC20Page: NextPage = () => {
                       id="select-token"
                       value={selectedTokenAddr || ''}
                       onChange={(e) => setSelectedTokenAddr(e.target.value as `0x${string}`)}
-                      disabled={isActionPending || allTokenAddresses.length === 0}
+                      disabled={isActionPending || visibleTokenAddresses.length === 0}
                       className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
                     >
-                      {allTokenAddresses.length === 0 ? (
+                      {visibleTokenAddresses.length === 0 ? (
                         <option value="" disabled className="bg-card text-foreground">No hay tokens disponibles</option>
                       ) : (
-                        allTokenAddresses.map((addr) => (
+                        visibleTokenAddresses.map((addr) => (
                           <TokenOption key={addr} tokenAddress={addr} userAddress={address} />
                         ))
                       )}
@@ -1214,32 +1343,36 @@ const ERC20Page: NextPage = () => {
                           <th className="px-4 py-3 font-bold">Token</th>
                           <th className="px-4 py-3 font-bold">Dirección del Contrato</th>
                           <th className="px-4 py-3 font-bold text-right">Tu Balance</th>
+                          <th className="px-4 py-3 font-bold text-center"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/10">
-                        {isLoadingAllTokens ? (
+                        {isLoadingAllTokens || (isLoadingDetails && allTokenAddresses.length > 0) ? (
                           <tr>
-                            <td colSpan={3} className="text-center py-8">
+                            <td colSpan={4} className="text-center py-8">
                               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                Cargando contratos...
+                                Cargando balances...
                               </div>
                             </td>
                           </tr>
-                        ) : allTokenAddresses.length === 0 ? (
+                        ) : visibleTokenAddresses.length === 0 ? (
                           <tr>
-                            <td colSpan={3} className="text-center py-8 text-xs text-muted-foreground">
-                              No hay tokens creados por la fábrica. ¡Sé el primero en desplegar uno!
+                            <td colSpan={4} className="text-center py-8 text-xs text-muted-foreground">
+                              {allTokenAddresses.length === 0
+                                ? "No hay tokens creados por la fábrica. ¡Sé el primero en desplegar uno!"
+                                : "No tienes saldo en ningún token."}
                             </td>
                           </tr>
                         ) : (
-                          allTokenAddresses.map((addr) => (
+                          visibleTokenAddresses.map((addr) => (
                             <TokenRow
                               key={addr}
                               tokenAddress={addr}
                               userAddress={address}
                               isSelected={selectedTokenAddr === addr}
                               onSelect={setSelectedTokenAddr}
+                              onShowNotification={setNotification}
                             />
                           ))
                         )}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAccount, useReadContract, useBalance } from 'wagmi';
-import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT } from '@/contracts';
+import { useAccount, useReadContract, useBalance, usePublicClient } from 'wagmi';
+import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
 
@@ -28,6 +28,7 @@ export function trackChallengeCompletion(id: number) {
 export function useChallenges() {
   const isHydrated = useHydrated();
   const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
   
   // Consultar balance de ETH nativo para validar Desafío #02 (Faucet)
   const { data: ethBalanceData, refetch: refetchEthBalance } = useBalance({
@@ -41,7 +42,7 @@ export function useChallenges() {
   const { data: studentProfileData, refetch: refetchStudentProfile } = useReadContract({
     ...STUDENT_IDENTITY_CONTRACT,
     functionName: 'getProfile',
-    args: address ? [address] : undefined,
+    args: [address || '0x0000000000000000000000000000000000000000'],
     query: {
       enabled: isHydrated && !!address,
     },
@@ -56,7 +57,7 @@ export function useChallenges() {
   const { data: createdTokensData, refetch: refetchCreatedTokens } = useReadContract({
     ...TOKEN_FACTORY_CONTRACT,
     functionName: 'getTokensByOwner',
-    args: address ? [address] : undefined,
+    args: [address || '0x0000000000000000000000000000000000000000'],
     query: {
       enabled: isHydrated && !!address,
     },
@@ -66,6 +67,91 @@ export function useChallenges() {
     if (!createdTokensData) return false;
     return (createdTokensData as any).length > 0;
   }, [createdTokensData]);
+
+  // Estado y callback para validar el Desafío #05 (Acuñación y Transferencia de Tokens ERC-20)
+  const [isMintAndTransferCompleted, setIsMintAndTransferCompleted] = useState(false);
+
+  const checkMintAndTransfer = useCallback(async () => {
+    if (!publicClient || !address) {
+      setIsMintAndTransferCompleted(false);
+      return;
+    }
+    try {
+      const allTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getAllTokens',
+      });
+
+      if (!allTokens || allTokens.length === 0) {
+        setIsMintAndTransferCompleted(false);
+        return;
+      }
+
+      // Buscar eventos de acuñación (Transfer de 0x0 al usuario)
+      const mintLogs = await publicClient.getLogs({
+        address: allTokens as `0x${string}`[],
+        event: {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { type: 'address', name: 'from', indexed: true },
+            { type: 'address', name: 'to', indexed: true },
+            { type: 'uint256', name: 'value' }
+          ]
+        },
+        args: {
+          from: '0x0000000000000000000000000000000000000000',
+          to: address
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      if (mintLogs.length === 0) {
+        setIsMintAndTransferCompleted(false);
+        return;
+      }
+
+      // Buscar eventos de transferencia (Transfer desde el usuario a cualquier otra cuenta)
+      const transferLogs = await publicClient.getLogs({
+        address: allTokens as `0x${string}`[],
+        event: {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { type: 'address', name: 'from', indexed: true },
+            { type: 'address', name: 'to', indexed: true },
+            { type: 'uint256', name: 'value' }
+          ]
+        },
+        args: {
+          from: address
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      const mintedTokenAddresses = new Set(mintLogs.map(log => log.address.toLowerCase()));
+      const transferredTokenAddresses = new Set(
+        transferLogs
+          .filter(log => {
+            const toAddress = log.args.to;
+            return toAddress && 
+                   toAddress.toLowerCase() !== address.toLowerCase() && 
+                   toAddress !== '0x0000000000000000000000000000000000000000';
+          })
+          .map(log => log.address.toLowerCase())
+      );
+
+      const hasMintAndTransfer = Array.from(mintedTokenAddresses).some(addr => transferredTokenAddresses.has(addr));
+      setIsMintAndTransferCompleted(hasMintAndTransfer);
+    } catch (err) {
+      console.error('Error al verificar desafío de acuñación y transferencia:', err);
+      setIsMintAndTransferCompleted(false);
+    }
+  }, [publicClient, address]);
+
+  useEffect(() => {
+    checkMintAndTransfer();
+  }, [checkMintAndTransfer]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -134,10 +220,10 @@ export function useChallenges() {
   const { data: batchBalances, refetch: refetchBalances, isLoading: isLoadingBalances } = useReadContract({
     ...BASE_ERC1155_CONTRACT,
     functionName: 'balanceOfBatch',
-    args: address ? [
-      Array(10).fill(address),
+    args: [
+      Array(10).fill(address || '0x0000000000000000000000000000000000000000'),
       Array.from({ length: 10 }, (_, i) => BigInt(i))
-    ] : undefined,
+    ],
     query: {
       enabled: isHydrated && !!address,
     }
@@ -191,6 +277,11 @@ export function useChallenges() {
       return hasCreatedToken;
     }
     
+    // Desafío 5 (index 4, id 4: Acuñación y Transferencia de Tokens) se completa únicamente si el usuario acuñó y transfirió un token de la fábrica
+    if (challenge.id === 4) {
+      return isMintAndTransferCompleted;
+    }
+    
     return !!localCompleted[challenge.id];
   }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken]);
 
@@ -211,9 +302,10 @@ export function useChallenges() {
       refetchBalances(),
       refetchEthBalance(),
       refetchStudentProfile(),
-      refetchCreatedTokens()
+      refetchCreatedTokens(),
+      checkMintAndTransfer()
     ]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer]);
 
   return {
     localCompleted,

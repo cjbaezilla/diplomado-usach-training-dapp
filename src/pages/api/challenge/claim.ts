@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { privateKeyToAccount } from 'viem/accounts';
 import { keccak256, encodePacked, createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
-import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT } from '@/contracts';
+import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -59,6 +59,88 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (contractError: any) {
       console.error('Error al verificar la creación del token ERC-20 on-chain:', contractError);
       return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar el contrato inteligente.'}` });
+    }
+  }
+
+  // Validación estricta on-chain para el Desafío 5 (ID: 4 - Acuñación y Transferencia de Tokens)
+  if (Number(id) === 4) {
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+      });
+
+      // 1. Obtener todos los tokens creados por la fábrica
+      const allTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getAllTokens',
+      });
+
+      if (!allTokens || (allTokens as any).length === 0) {
+        return res.status(400).json({ error: 'No se han creado tokens en la fábrica aún.' });
+      }
+
+      // 2. Buscar eventos de acuñación (Transfer de 0x0 al usuario)
+      const mintLogs = await publicClient.getLogs({
+        address: allTokens as `0x${string}`[],
+        event: {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { type: 'address', name: 'from', indexed: true },
+            { type: 'address', name: 'to', indexed: true },
+            { type: 'uint256', name: 'value' }
+          ]
+        },
+        args: {
+          from: '0x0000000000000000000000000000000000000000',
+          to: userAddress as `0x${string}`
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      if (mintLogs.length === 0) {
+        return res.status(400).json({ error: 'No se encontró ningún evento de acuñación (mint) para sus tokens creados.' });
+      }
+
+      // 3. Buscar eventos de transferencia (Transfer desde el usuario a cualquier otra cuenta)
+      const transferLogs = await publicClient.getLogs({
+        address: allTokens as `0x${string}`[],
+        event: {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { type: 'address', name: 'from', indexed: true },
+            { type: 'address', name: 'to', indexed: true },
+            { type: 'uint256', name: 'value' }
+          ]
+        },
+        args: {
+          from: userAddress as `0x${string}`
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      const mintedTokenAddresses = new Set(mintLogs.map(log => log.address.toLowerCase()));
+      const transferredTokenAddresses = new Set(
+        transferLogs
+          .filter(log => {
+            const toAddress = log.args.to;
+            return toAddress && 
+                   toAddress.toLowerCase() !== (userAddress as string).toLowerCase() && 
+                   toAddress !== '0x0000000000000000000000000000000000000000';
+          })
+          .map(log => log.address.toLowerCase())
+      );
+
+      const hasMintAndTransfer = Array.from(mintedTokenAddresses).some(addr => transferredTokenAddresses.has(addr));
+
+      if (!hasMintAndTransfer) {
+        return res.status(400).json({ error: 'Debe acuñar un token de la fábrica y luego transferirlo a otra dirección.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar la acuñación y transferencia on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
     }
   }
 
