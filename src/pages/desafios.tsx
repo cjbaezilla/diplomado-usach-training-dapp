@@ -891,13 +891,13 @@ const DesafiosPage: NextPage = () => {
                   <div className="space-y-3 pb-4 border-b border-border/10 pt-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge className="font-mono text-[9px] uppercase tracking-wider bg-primary/15 border-primary/25 text-primary">
+                        <Badge className="font-mono text-xs h-6 px-2.5 uppercase tracking-wider bg-primary/15 border-primary/25 text-primary flex items-center justify-center leading-none">
                           Desafío #0{selectedChallenge.id + 1}
                         </Badge>
-                        <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getDifficultyBadgeColor(selectedChallenge.difficulty)}`}>
+                        <Badge className={`text-xs h-6 px-2.5 font-bold rounded-full border flex items-center justify-center leading-none ${getDifficultyBadgeColor(selectedChallenge.difficulty)}`}>
                           {selectedChallenge.difficulty}
                         </Badge>
-                        <Badge variant="outline" className="text-[9px] font-mono font-semibold text-muted-foreground border-border/40">
+                        <Badge variant="outline" className="text-xs h-6 px-2.5 font-mono font-semibold text-muted-foreground border-border/40 flex items-center justify-center leading-none">
                           {selectedChallenge.category}
                         </Badge>
                       </div>
