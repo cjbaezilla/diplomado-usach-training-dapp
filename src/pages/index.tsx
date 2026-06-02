@@ -17,7 +17,21 @@ import {
   ArrowRightLeft,
   Coins,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  Database,
+  Eye,
+  Code2,
+  Cpu,
+  TrendingUp,
+  Zap,
+  Scale,
+  LineChart,
+  Layers,
+  FileText,
+  GitPullRequest,
+  Users,
+  ExternalLink
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { FaucetInfo } from '@/components/FaucetInfo';
@@ -37,6 +51,16 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { UserAvatar } from '@/components/UserAvatar';
 import challengesData from '../../public/desafios.json';
 import { useMemo } from 'react';
+
+const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    {...props}
+  >
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+  </svg>
+);
 
 const Home: NextPage = () => {
   const isHydrated = useHydrated();
@@ -313,6 +337,47 @@ const Home: NextPage = () => {
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
               Registra tu perfil en la blockchain de manera permanente. Esta identidad digital de estudiante asocia tu dirección criptográfica a tu nombre, permitiendo que todos tus avances académicos, calificaciones y participación en los módulos queden registrados públicamente y de forma inmutable. Es tu pasaporte al ecosistema Web3 de la universidad.
             </p>
+            
+            {/* Tarjetas de Datos Clave */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-primary/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <User className="h-4 w-4 text-primary transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">ID Digital Único</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Vincula tu perfil y nombre a tu dirección de billetera pública.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-primary/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Database className="h-4 w-4 text-primary transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Registro Inmutable</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Historial y logros académicos grabados de forma permanente onchain.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-primary/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="h-4 w-4 text-primary transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Soberanía Digital</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Control completo de tu información mediante tu firma criptográfica.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-primary/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Eye className="h-4 w-4 text-primary transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Perfil Público</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Comparte tu portafolio de habilidades de forma transparente.
+                </p>
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button 
                 variant="outline" 
@@ -337,6 +402,47 @@ const Home: NextPage = () => {
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
               La teoría se consolida con la práctica. Enfréntate a una serie de desafíos interactivos diseñados para interactuar directamente con Smart Contracts desplegados en la red local. Desde la configuración de tu billetera hasta la interacción con protocolos DeFi complejos, cada desafío aprobado valida tus conocimientos técnicos de forma automática onchain.
             </p>
+
+            {/* Tarjetas de Datos Clave */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-cyan-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Code2 className="h-4 w-4 text-cyan-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Desafíos Reales</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Interactúa directamente con Smart Contracts desplegados en la red.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-cyan-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Cpu className="h-4 w-4 text-cyan-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Verificación Onchain</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Tu progreso es verificado y grabado en vivo mediante lógica de contratos.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-cyan-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="h-4 w-4 text-cyan-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Ruta Progresiva</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Avanza desde lo básico hasta integraciones DeFi complejas a tu ritmo.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-cyan-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="h-4 w-4 text-cyan-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Cero Costos</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Prácticas interactivas en redes de prueba locales sin arriesgar fondos reales.
+                </p>
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button 
                 variant="outline" 
@@ -377,6 +483,47 @@ const Home: NextPage = () => {
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
               Experimenta con la creación de mercados automatizados (AMM). La plataforma incluye un DEX propio donde puedes intercambiar tokens creados por otros estudiantes o por la fábrica, proveer liquidez a piscinas personalizadas (pools) de tokens con par WETH y obtener comisiones por los intercambios. Comprende de forma empírica el deslizamiento de precios (slippage) y la fórmula del producto constante.
             </p>
+
+            {/* Tarjetas de Datos Clave */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-emerald-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Scale className="h-4 w-4 text-emerald-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Algoritmo AMM</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Comprende el funcionamiento práctico de la fórmula de producto constante (x · y = k).
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-emerald-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Coins className="h-4 w-4 text-emerald-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Provisión de Pools</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Aporta liquidez a piscinas de intercambio y simula el cobro de comisiones.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-emerald-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <LineChart className="h-4 w-4 text-emerald-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Simulación de Slippage</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Experimenta el impacto del deslizamiento de precios en transacciones grandes.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-emerald-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Layers className="h-4 w-4 text-emerald-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Fusión con WETH</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Usa Wrapped Ether como el activo base para emparejar y cotizar tus tokens.
+                </p>
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button 
                 variant="outline" 
@@ -401,6 +548,47 @@ const Home: NextPage = () => {
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
               Tus logros se transforman en activos digitales. Al completar los desafíos técnicos onchain, obtendrás el derecho de acuñar &quot;Reliquias Académicas&quot;, las cuales son tokens no fungibles multifracción bajo el estándar ERC-1155. Cada reliquia es una medalla digital verificable en la red que atestigua tus destrezas adquiridas durante el diplomado.
             </p>
+
+            {/* Tarjetas de Datos Clave */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-amber-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Layers className="h-4 w-4 text-amber-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Estándar Semifungible</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Aprende a interactuar con colecciones usando el estándar ERC-1155.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-amber-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Award className="h-4 w-4 text-amber-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Medallas de Logro</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Obtén insignias digitales exclusivas al resolver cada desafío académico.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-amber-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="h-4 w-4 text-amber-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Propiedad Onchain</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Tus reliquias se almacenan y custodian directamente en tu dirección.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-amber-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className="h-4 w-4 text-amber-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Metadatos Descentralizados</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Descripciones y atributos de tus logros guardados en formato estructurado.
+                </p>
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button 
                 variant="outline" 
@@ -421,7 +609,164 @@ const Home: NextPage = () => {
             />
           </div>
         </div>
-        {/* Sección 5: Competencia de Liquidez y Ranking (Gran CTA de Ancho Completo) */}
+
+        {/* Sección 5: Portal de Aprendizaje (Imagen izquierda, Contenido derecho) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
+          <div className="order-1 md:order-1 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-indigo-500/30 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-primary"></div>
+            <img 
+              src="/images/aprender_web3.png" 
+              alt="Portal de Aprendizaje" 
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div className="order-2 md:order-2 space-y-4 text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3 py-1 text-xs font-semibold text-indigo-400">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>Portal de Aprendizaje</span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">Aprende la Teoría del Ecosistema Web3</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              La base de un buen desarrollador comienza con una teoría sólida. Accede a nuestra sección de aprendizaje para explorar documentación complementaria sobre redes de bloques, desarrollo de Smart Contracts, criptografía y firma digital. Diseñado para resolver tus dudas y profundizar tus conocimientos técnicos.
+            </p>
+
+            {/* Tarjetas de Datos Clave */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-indigo-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <BookOpen className="h-4 w-4 text-indigo-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Documentación Completa</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Consulta material didáctico estructurado que cubre desde lo básico hasta temas avanzados.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-indigo-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="h-4 w-4 text-indigo-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Firmas Criptográficas</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Domina el uso de firmas ECDSA y la verificación de mensajes firmados onchain.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-indigo-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className="h-4 w-4 text-indigo-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Estándares Web3</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Explora en profundidad las especificaciones de tokens ERC-20, ERC-721 y ERC-1155.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-indigo-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <GraduationCap className="h-4 w-4 text-indigo-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Ruta Pedagógica</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Material diseñado para complementar directamente tus prácticas y laboratorios.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                className="border-indigo-500/20 hover:bg-indigo-500/5 hover:text-indigo-400 transition-all duration-200" 
+                onClick={() => router.push('/aprender')}
+              >
+                <span>Explorar Portal de Aprendizaje</span>
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sección 6: Código Open Source (Imagen derecha, Contenido izquierdo) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
+          <div className="order-2 md:order-1 space-y-4 text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/20 bg-purple-500/5 px-3 py-1 text-xs font-semibold text-purple-400">
+              <GithubIcon className="h-3.5 w-3.5" />
+              <span>Código Abierto</span>
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">Proyecto y Contratos Open Source</h3>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              Creemos firmemente en el poder del código abierto y la transparencia de la tecnología blockchain. Tanto la interfaz de usuario de esta dApp como la lógica de sus Smart Contracts están disponibles públicamente en GitHub. Explora el código, audita el comportamiento de los contratos, o contribuye a la mejora del repositorio académico.
+            </p>
+
+            {/* Tarjetas de Datos Clave */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-purple-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Cpu className="h-4 w-4 text-purple-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Contratos Públicos</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Revisa la lógica y los métodos expuestos de todos los contratos inteligentes del ecosistema.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-purple-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Code2 className="h-4 w-4 text-purple-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Front-end Moderno</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Explora la interfaz de usuario desarrollada con Next.js, TypeScript y Tailwind CSS v4.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-purple-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="h-4 w-4 text-purple-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Licencia Educativa</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Todo el software está licenciado para libre uso, estudio académico y desarrollo colectivo.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-purple-500/30 transition-all duration-300 group/card">
+                <div className="flex items-center gap-2 mb-1">
+                  <GitPullRequest className="h-4 w-4 text-purple-400 transition-transform duration-300 group-hover/card:scale-110" />
+                  <h4 className="font-bold text-xs text-foreground">Colaboración Activa</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Crea forks, abre pull requests y contribuye activamente al crecimiento del proyecto.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <a 
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-2 text-xs font-semibold text-purple-400 hover:bg-purple-500/10 transition-all duration-200"
+              >
+                <span>Repositorio Contratos</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+              <a 
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-2 text-xs font-semibold text-purple-400 hover:bg-purple-500/10 transition-all duration-200"
+              >
+                <span>Repositorio Frontend</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+          <div className="order-1 md:order-2 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-purple-500/30 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+            <img 
+              src="/images/codigo_open_source.png" 
+              alt="Código Abierto" 
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        </div>
+
+        {/* Sección 7: Competencia de Liquidez y Ranking (Gran CTA de Ancho Completo) */}
         <div className="w-full pt-12 border-t border-border/30">
           <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-b from-card/85 to-primary/5 p-8 md:p-12 text-center space-y-8 shadow-2xl backdrop-blur-md">
             {/* Luces decorativas en las esquinas */}
