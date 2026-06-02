@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { Navbar } from '@/components/Navbar';
+import { SEO } from '@/components/SEO';
 import { PageHeader } from '@/components/PageHeader';
 import { Footer } from '@/components/Footer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -176,14 +177,11 @@ const Aprender: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Centro de Aprendizaje Web3 - USACH</title>
-        <meta
-          content="Documentación, guías de usuario y explicaciones técnicas de los módulos DeFi del Laboratorio de Aprendizaje Web3 de la USACH."
-          name="description"
-        />
-        <link href="/favicon.ico" rel="icon" />
-      </Head>
+      <SEO
+        title="Centro de Aprendizaje Web3"
+        description="Explora documentación técnica, guías prácticas y teoría de blockchain para el Diplomado de la USACH. Aprende sobre Smart Contracts, criptografía ECDSA, estándares ERC-20 y AMM."
+        urlPath="/aprender"
+      />
 
       <Navbar />
 

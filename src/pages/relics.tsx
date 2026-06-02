@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { SEO } from '@/components/SEO';
 import fs from 'fs';
 import path from 'path';
 import { useAccount, useReadContract } from 'wagmi';
@@ -350,14 +351,11 @@ const RelicsPage: NextPage<RelicsPageProps> = ({ relics }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Reliquias Históricas USACH - Web3 dApp</title>
-        <meta
-          content="Colecciona las reliquias e insignias de la Escuela de Artes y Oficios (EAO) y acumula experiencia y ventajas pasivas en la blockchain."
-          name="description"
-        />
-        <link href="/favicon.ico" rel="icon" />
-      </Head>
+      <SEO
+        title="Reliquias Académicas y Logros"
+        description="Colecciona insignias patrimoniales ERC-1155 de la Escuela de Artes y Oficios (EAO) y la USACH, sube de nivel estudiantil y activa ventajas pasivas."
+        urlPath="/relics"
+      />
 
       <Navbar />
 

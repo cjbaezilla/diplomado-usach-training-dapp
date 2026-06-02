@@ -3,6 +3,7 @@ import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { SEO } from '@/components/SEO';
 import { useRouter } from 'next/router';
 import { useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
@@ -587,14 +588,12 @@ const StudentProfilePage: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>{profile?.isRegistered ? `Perfil Estudiante: ${profile.name}` : 'Perfil Público de Estudiante'} - USACH Web3</title>
-        <meta
-          content="Consulta la información pública on-chain de los estudiantes del programa Web3 de la USACH, incluyendo sus reliquias, tokens y pools de liquidez."
-          name="description"
-        />
-        <link href="/favicon.ico" rel="icon" />
-      </Head>
+      <SEO
+        title={profile?.isRegistered ? `Perfil de ${profile.name}` : 'Perfil Público de Estudiante'}
+        description="Consulta la información pública on-chain de los estudiantes del programa Web3 de la USACH, incluyendo sus reliquias, tokens y pools de liquidez."
+        urlPath="/estudiante"
+        type="profile"
+      />
 
       <Navbar />
 

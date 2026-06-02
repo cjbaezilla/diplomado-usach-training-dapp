@@ -2,18 +2,19 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { SEO } from '@/components/SEO';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
-import { 
-  CheckCircle2, 
-  GraduationCap, 
-  BookOpen, 
-  ArrowRight, 
-  Wallet, 
-  Activity, 
-  User, 
-  Trophy, 
-  Award, 
+import {
+  CheckCircle2,
+  GraduationCap,
+  BookOpen,
+  ArrowRight,
+  Wallet,
+  Activity,
+  User,
+  Trophy,
+  Award,
   ArrowRightLeft,
   Coins,
   Sparkles,
@@ -92,14 +93,11 @@ const Home: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10 relative overflow-hidden">
-      <Head>
-        <title>USACH dApp de Entrenamiento</title>
-        <meta
-          content="Aplicación descentralizada de entrenamiento para el Diplomado de la USACH"
-          name="description"
-        />
-        <link href="/favicon.ico" rel="icon" />
-      </Head>
+      <SEO
+        title="Inicio"
+        description="Laboratorio de aprendizaje práctico DeFi y Web3 de la Universidad de Santiago de Chile (USACH). Conecta tu billetera a Sepolia, resuelve desafíos de Smart Contracts, crea tokens ERC-20 y compite en el ranking de liquidez."
+        urlPath=""
+      />
 
       {/* Luces de fondo ambientales */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
@@ -118,11 +116,11 @@ const Home: NextPage = () => {
               <GraduationCap className="h-4 w-4" />
               <span>Diplomado en Tecnologías Blockchain &bull; USACH</span>
             </div>
-            
+
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
               Laboratorio de Aprendizaje DeFi y Web3
             </h1>
-            
+
             <p className="text-base sm:text-lg leading-relaxed text-muted-foreground">
               Esta plataforma es un entorno práctico interactivo diseñado para el estudio y experimentación de los protocolos que componen las Finanzas Descentralizadas (DeFi). Interactúa de forma segura con Smart Contracts y pon en práctica tus conocimientos en nuestra blockchain local.
             </p>
@@ -191,8 +189,8 @@ const Home: NextPage = () => {
                         <span className="font-mono font-bold text-primary">{completedCount} / {totalChallenges} Desafíos</span>
                       </div>
                       <div className="w-full bg-muted/60 h-2.5 rounded-full overflow-hidden border border-border/30">
-                        <div 
-                          className="bg-gradient-to-r from-primary via-cyan-400 to-indigo-500 h-full rounded-full transition-all duration-500" 
+                        <div
+                          className="bg-gradient-to-r from-primary via-cyan-400 to-indigo-500 h-full rounded-full transition-all duration-500"
                           style={{ width: `${progressPercent}%` }}
                         />
                       </div>
@@ -209,7 +207,7 @@ const Home: NextPage = () => {
                           </span>
                         )}
                       </div>
-                      
+
                       {activeChallengeIndex < totalChallenges ? (
                         <div className="space-y-1">
                           <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
@@ -231,7 +229,7 @@ const Home: NextPage = () => {
                       )}
 
                       {activeChallengeIndex < totalChallenges ? (
-                        <Button 
+                        <Button
                           className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold transition-all duration-200 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5 text-xs py-2 h-9"
                           onClick={() => router.push('/desafios')}
                         >
@@ -239,7 +237,7 @@ const Home: NextPage = () => {
                           <ArrowRight className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button 
+                        <Button
                           variant="outline"
                           className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200 flex items-center justify-center gap-1.5 text-xs py-2 h-9"
                           onClick={() => router.push(`/estudiante?address=${address?.toLowerCase()}`)}
@@ -251,17 +249,17 @@ const Home: NextPage = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 pt-1">
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-border/80 hover:bg-muted/40 hover:text-foreground text-[11px] h-8 px-2" 
+                      <Button
+                        variant="outline"
+                        className="w-full border-border/80 hover:bg-muted/40 hover:text-foreground text-[11px] h-8 px-2"
                         onClick={() => router.push('/erc20')}
                       >
                         <Coins className="mr-1 h-3.5 w-3.5 text-primary" />
                         Simulador ERC20
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-border/80 hover:bg-muted/40 hover:text-foreground text-[11px] h-8 px-2" 
+                      <Button
+                        variant="outline"
+                        className="w-full border-border/80 hover:bg-muted/40 hover:text-foreground text-[11px] h-8 px-2"
                         onClick={() => router.push('/identity')}
                       >
                         <User className="mr-1 h-3.5 w-3.5 text-primary" />
@@ -322,9 +320,9 @@ const Home: NextPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-8 border-t border-border/20">
           <div className="order-1 md:order-1 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-primary/30 group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-cyan-500"></div>
-            <img 
-              src="/images/identidad_onchain.png" 
-              alt="Identidad Onchain" 
+            <img
+              src="/images/identidad_onchain.png"
+              alt="Identidad Onchain"
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -337,7 +335,7 @@ const Home: NextPage = () => {
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
               Registra tu perfil en la blockchain de manera permanente. Esta identidad digital de estudiante asocia tu dirección criptográfica a tu nombre, permitiendo que todos tus avances académicos, calificaciones y participación en los módulos queden registrados públicamente y de forma inmutable. Es tu pasaporte al ecosistema Web3 de la universidad.
             </p>
-            
+
             {/* Tarjetas de Datos Clave */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-5">
               <div className="p-3 rounded-xl border border-border/40 dark:border-border/10 bg-card/40 backdrop-blur-[2px] hover:bg-card/65 hover:border-primary/30 transition-all duration-300 group/card">
@@ -379,9 +377,9 @@ const Home: NextPage = () => {
             </div>
 
             <div className="pt-2">
-              <Button 
-                variant="outline" 
-                className="border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200" 
+              <Button
+                variant="outline"
+                className="border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-200"
                 onClick={() => router.push('/identity')}
               >
                 <span>Gestionar Mi Perfil</span>
@@ -444,9 +442,9 @@ const Home: NextPage = () => {
             </div>
 
             <div className="pt-2">
-              <Button 
-                variant="outline" 
-                className="border-cyan-500/20 hover:bg-cyan-500/5 hover:text-cyan-400 transition-all duration-200" 
+              <Button
+                variant="outline"
+                className="border-cyan-500/20 hover:bg-cyan-500/5 hover:text-cyan-400 transition-all duration-200"
                 onClick={() => router.push('/desafios')}
               >
                 <span>Ver Desafíos Académicos</span>
@@ -456,9 +454,9 @@ const Home: NextPage = () => {
           </div>
           <div className="order-1 md:order-2 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-cyan-500/30 group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-indigo-500"></div>
-            <img 
-              src="/images/desafios_onchain.png" 
-              alt="Desafíos Onchain" 
+            <img
+              src="/images/desafios_onchain.png"
+              alt="Desafíos Onchain"
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -468,9 +466,9 @@ const Home: NextPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
           <div className="order-1 md:order-1 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30 group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-            <img 
-              src="/images/dex_plataforma.png" 
-              alt="Intercambio Descentralizado (DEX)" 
+            <img
+              src="/images/dex_plataforma.png"
+              alt="Intercambio Descentralizado (DEX)"
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -525,9 +523,9 @@ const Home: NextPage = () => {
             </div>
 
             <div className="pt-2">
-              <Button 
-                variant="outline" 
-                className="border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-400 transition-all duration-200" 
+              <Button
+                variant="outline"
+                className="border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-400 transition-all duration-200"
                 onClick={() => router.push('/dex')}
               >
                 <span>Acceder al DEX</span>
@@ -590,9 +588,9 @@ const Home: NextPage = () => {
             </div>
 
             <div className="pt-2">
-              <Button 
-                variant="outline" 
-                className="border-amber-500/20 hover:bg-amber-500/5 hover:text-amber-400 transition-all duration-200" 
+              <Button
+                variant="outline"
+                className="border-amber-500/20 hover:bg-amber-500/5 hover:text-amber-400 transition-all duration-200"
                 onClick={() => router.push('/relics')}
               >
                 <span>Explorar Mis Reliquias</span>
@@ -602,9 +600,9 @@ const Home: NextPage = () => {
           </div>
           <div className="order-1 md:order-2 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-amber-500/30 group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
-            <img 
-              src="/images/reliquias_academicas.png" 
-              alt="Reliquias Académicas" 
+            <img
+              src="/images/reliquias_academicas.png"
+              alt="Reliquias Académicas"
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -614,9 +612,9 @@ const Home: NextPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full items-center pt-12 border-t border-border/20">
           <div className="order-1 md:order-1 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-indigo-500/30 group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-primary"></div>
-            <img 
-              src="/images/aprender_web3.png" 
-              alt="Portal de Aprendizaje" 
+            <img
+              src="/images/aprender_web3.png"
+              alt="Portal de Aprendizaje"
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -671,9 +669,9 @@ const Home: NextPage = () => {
             </div>
 
             <div className="pt-2">
-              <Button 
-                variant="outline" 
-                className="border-indigo-500/20 hover:bg-indigo-500/5 hover:text-indigo-400 transition-all duration-200" 
+              <Button
+                variant="outline"
+                className="border-indigo-500/20 hover:bg-indigo-500/5 hover:text-indigo-400 transition-all duration-200"
                 onClick={() => router.push('/aprender')}
               >
                 <span>Explorar Portal de Aprendizaje</span>
@@ -736,18 +734,18 @@ const Home: NextPage = () => {
             </div>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <a 
-                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts" 
-                target="_blank" 
+              <a
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp-contracts"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-2 text-xs font-semibold text-purple-400 hover:bg-purple-500/10 transition-all duration-200"
               >
                 <span>Repositorio Contratos</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
-              <a 
-                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp" 
-                target="_blank" 
+              <a
+                href="https://github.com/cjbaezilla/diplomado-usach-training-dapp"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-2 text-xs font-semibold text-purple-400 hover:bg-purple-500/10 transition-all duration-200"
               >
@@ -758,9 +756,9 @@ const Home: NextPage = () => {
           </div>
           <div className="order-1 md:order-2 relative overflow-hidden rounded-2xl border border-border/60 bg-muted/30 shadow-md transition-all duration-300 hover:shadow-lg hover:border-purple-500/30 group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-            <img 
-              src="/images/codigo_open_source.png" 
-              alt="Código Abierto" 
+            <img
+              src="/images/codigo_open_source.png"
+              alt="Código Abierto"
               className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -789,15 +787,15 @@ const Home: NextPage = () => {
             {/* Imagen del Ranking Centrada y Premium */}
             <div className="max-w-xl mx-auto relative overflow-hidden rounded-2xl border border-border/80 bg-muted/40 shadow-xl transition-all duration-300 hover:shadow-2xl hover:border-amber-500/40 group">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-primary to-cyan-500"></div>
-              <img 
-                src="/images/ranking_competencia.png" 
-                alt="Ranking de Liquidez Web3" 
+              <img
+                src="/images/ranking_competencia.png"
+                alt="Ranking de Liquidez Web3"
                 className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-102"
               />
             </div>
 
             <div className="pt-4">
-              <Button 
+              <Button
                 size="lg"
                 className="bg-gradient-to-r from-amber-500 via-primary to-cyan-500 hover:opacity-90 hover:scale-[1.03] text-white font-extrabold px-8 py-6 rounded-xl text-base tracking-wider uppercase transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mx-auto"
                 onClick={() => router.push('/ranking')}

@@ -3,6 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { SEO } from '@/components/SEO';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { PageHeader } from '@/components/PageHeader';
@@ -345,13 +346,11 @@ const IdentityPage: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Identidad Estudiantil Web3 - USACH dApp</title>
-        <meta
-          content="Registra tu identidad digital en la blockchain y conecta tus redes profesionales en la plataforma de entrenamiento USACH."
-          name="description"
-        />
-      </Head>
+      <SEO
+        title="Identidad Estudiantil Digital"
+        description="Registra y administra tu perfil profesional on-chain en el Diplomado de la USACH. Asocia tu nombre, correo, LinkedIn y Twitter a tu billetera."
+        urlPath="/identity"
+      />
 
       <Navbar />
 

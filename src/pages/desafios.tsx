@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Navbar } from '@/components/Navbar';
+import { SEO } from '@/components/SEO';
 import { PageHeader } from '@/components/PageHeader';
 import { Footer } from '@/components/Footer';
 import { useHydrated } from '@/hooks/useHydrated';
@@ -720,14 +721,11 @@ const DesafiosPage: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Desafíos Web3 e Identidad de Explorador - USACH</title>
-        <meta
-          content="Sigue tu senda de desafíos on-chain. Completa cada reto secuencial para descifrar contratos inteligentes y reclamar reliquias históricas."
-          name="description"
-        />
-        <link href="/favicon.ico" rel="icon" />
-      </Head>
+      <SEO
+        title="Desafíos Académicos Web3"
+        description="Supera pruebas interactivas de Smart Contracts y criptografía en la red Sepolia para obtener Reliquias Académicas ERC-1155 del Diplomado de la USACH."
+        urlPath="/desafios"
+      />
 
       <Navbar />
 

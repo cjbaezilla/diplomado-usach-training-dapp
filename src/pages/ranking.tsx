@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { SEO } from '@/components/SEO';
 import { useAccount, useReadContracts } from 'wagmi';
 import { Navbar } from '@/components/Navbar';
 import { PageHeader } from '@/components/PageHeader';
@@ -300,14 +301,11 @@ const TokenRankingPage: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Ranking de Liquidez - Web3 dApp</title>
-        <meta
-          content="Ranking de tokens creados por los estudiantes ordenados según la liquidez en WETH bloqueada en el DEX de la USACH."
-          name="description"
-        />
-        <link href="/favicon.ico" rel="icon" />
-      </Head>
+      <SEO
+        title="Ranking de Liquidez de Tokens"
+        description="Explora la tabla de clasificación de los tokens de los estudiantes ordenados por liquidez en WETH en el DEX/AMM del Diplomado de la USACH."
+        urlPath="/ranking"
+      />
 
       <Navbar />
 

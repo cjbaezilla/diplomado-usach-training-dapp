@@ -3,6 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { SEO } from '@/components/SEO';
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount, useReadContracts } from 'wagmi';
 import { baseERC20Abi } from '@/contracts/abis/baseERC20';
@@ -616,13 +617,11 @@ const ERC20Page: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Portal de Tokens ERC-20 - USACH dApp</title>
-        <meta
-          content="Aprende sobre el estándar ERC-20 y despliega tus propios contratos inteligentes en tiempo real."
-          name="description"
-        />
-      </Head>
+      <SEO
+        title="Fábrica de Tokens ERC-20"
+        description="Aprende sobre el estándar ERC-20, crea y personaliza tus propios tokens (nombre, símbolo, suministro) en la blockchain Sepolia de forma instantánea."
+        urlPath="/erc20"
+      />
 
       <Navbar />
 

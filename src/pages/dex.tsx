@@ -3,6 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { SEO } from '@/components/SEO';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount, useBalance, usePublicClient } from 'wagmi';
@@ -1475,13 +1476,11 @@ const DEXPage: NextPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-primary/10">
-      <Head>
-        <title>Simulador de Intercambio (DEX) - USACH dApp</title>
-        <meta
-          content="Interactúa con pools de liquidez y simula intercambios basados en la fórmula constante x * y = k."
-          name="description"
-        />
-      </Head>
+      <SEO
+        title="Simulador de Intercambio (DEX) y Liquidez"
+        description="Aporta liquidez a piscinas personalizadas (pools) frente a WETH y simula intercambios de tokens basados en la fórmula de producto constante."
+        urlPath="/dex"
+      />
 
       <Navbar />
 
