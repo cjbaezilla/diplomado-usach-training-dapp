@@ -202,6 +202,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
+  // Validación estricta on-chain para el Desafío 7 (ID: 6 - Provisión de Liquidez en el DEX)
+  if (Number(id) === 6) {
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+      });
+
+      // 1. Obtener la cantidad de pools en la fábrica del DEX
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount === 0) {
+        return res.status(400).json({ error: 'No existen pools de liquidez creados en el DEX.' });
+      }
+
+      // 2. Obtener las direcciones de todos los pools
+      const poolPromises = Array.from({ length: poolsCount }, (_, i) =>
+        publicClient.readContract({
+          ...DEX_FACTORY_CONTRACT,
+          functionName: 'todosLosPools',
+          args: [BigInt(i)],
+        }) as Promise<`0x${string}`>
+      );
+      const pools = await Promise.all(poolPromises);
+
+      // 3. Buscar eventos de LiquidezAgregada asociados al usuario en cualquiera de los pools
+      const liquidezLogs = await publicClient.getLogs({
+        address: pools,
+        event: {
+          type: 'event',
+          name: 'LiquidezAgregada',
+          inputs: [
+            { type: 'address', name: 'proveedor', indexed: true },
+            { type: 'uint256', name: 'cantidad0' },
+            { type: 'uint256', name: 'cantidad1' },
+            { type: 'uint256', name: 'tokensLP' }
+          ]
+        },
+        args: {
+          proveedor: userAddress as `0x${string}`
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      if (liquidezLogs.length === 0) {
+        return res.status(400).json({ error: 'No se encontró ningún evento de provisión de liquidez (LiquidezAgregada) realizado por el usuario en los pools del DEX.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar la provisión de liquidez on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
+    }
+  }
+
   try {
     const privateKey = process.env.NEXT_PUBLIC_CHALLENGE_MINTER_SIGNER_PK;
     const challengeMinterAddress = process.env.NEXT_PUBLIC_CHALLENGE_MINTER_ADDRESS || '0xd898ecBD77E4A428e9EAC2B1E445c2628E033653';

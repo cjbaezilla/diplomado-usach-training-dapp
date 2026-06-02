@@ -207,6 +207,64 @@ export function useChallenges() {
   useEffect(() => {
     checkSwap();
   }, [checkSwap]);
+
+  // Estado y callback para validar el Desafío #07 (Provisión de Liquidez en el DEX)
+  const [isLiquidityCompleted, setIsLiquidityCompleted] = useState(false);
+
+  const checkLiquidity = useCallback(async () => {
+    if (!publicClient || !address) {
+      setIsLiquidityCompleted(false);
+      return;
+    }
+    try {
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount === 0) {
+        setIsLiquidityCompleted(false);
+        return;
+      }
+
+      const poolPromises = Array.from({ length: poolsCount }, (_, i) =>
+        publicClient.readContract({
+          ...DEX_FACTORY_CONTRACT,
+          functionName: 'todosLosPools',
+          args: [BigInt(i)],
+        }) as Promise<`0x${string}`>
+      );
+      const pools = await Promise.all(poolPromises);
+
+      const liquidezLogs = await publicClient.getLogs({
+        address: pools,
+        event: {
+          type: 'event',
+          name: 'LiquidezAgregada',
+          inputs: [
+            { type: 'address', name: 'proveedor', indexed: true },
+            { type: 'uint256', name: 'cantidad0' },
+            { type: 'uint256', name: 'cantidad1' },
+            { type: 'uint256', name: 'tokensLP' }
+          ]
+        },
+        args: {
+          proveedor: address
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      setIsLiquidityCompleted(liquidezLogs.length > 0);
+    } catch (err) {
+      console.error('Error al verificar desafío de liquidez:', err);
+      setIsLiquidityCompleted(false);
+    }
+  }, [publicClient, address]);
+
+  useEffect(() => {
+    checkLiquidity();
+  }, [checkLiquidity]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -341,9 +399,14 @@ export function useChallenges() {
     if (challenge.id === 5) {
       return isSwapCompleted || !!localCompleted[challenge.id];
     }
+
+    // Desafío 7 (index 6, id 6: Provisión de Liquidez en el DEX) se completa si el usuario aportó liquidez en el DEX, o si lo completó localmente
+    if (challenge.id === 6) {
+      return isLiquidityCompleted || !!localCompleted[challenge.id];
+    }
     
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -364,9 +427,10 @@ export function useChallenges() {
       refetchStudentProfile(),
       refetchCreatedTokens(),
       checkMintAndTransfer(),
-      checkSwap()
+      checkSwap(),
+      checkLiquidity()
     ]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity]);
 
   return {
     localCompleted,
