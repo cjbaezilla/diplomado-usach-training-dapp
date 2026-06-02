@@ -160,7 +160,10 @@ const DesafiosPage: NextPage = () => {
     hasNft, 
     activeChallengeIndex, 
     isLoading: isLoadingBalances, 
-    refetch: refetchBalances 
+    refetch: refetchBalances,
+    createdTokensCount,
+    foreignTokensWithBalanceCount,
+    foreignLiquidityPoolsCount
   } = useChallenges();
   const explorerUrl = chain?.blockExplorers?.default?.url || 'https://sepolia.etherscan.io';
 
@@ -1001,6 +1004,74 @@ const DesafiosPage: NextPage = () => {
                         <div className="prose prose-sm dark:prose-invert">
                           {renderDescription(selectedChallenge.description)}
                         </div>
+
+                        {selectedChallenge.id === 9 && isConnected && (
+                          <div className="mt-6 border border-amber-500/20 bg-amber-500/5 rounded-2xl p-5 space-y-4">
+                            <h3 className="font-extrabold text-sm text-foreground flex items-center gap-2">
+                              <Zap className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
+                              Progreso de Requisitos Especiales (Desafío Final)
+                            </h3>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {/* Requisito 1: Creador de Tokens */}
+                              <div className="bg-card/40 border border-border/40 p-4 rounded-xl flex flex-col justify-between transition-all duration-300 hover:border-amber-500/30">
+                                <div className="space-y-1">
+                                  <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Requisito 1</span>
+                                  <h4 className="text-xs font-bold text-foreground">Crear 5 Tokens Propios</h4>
+                                  <p className="text-[10px] text-muted-foreground mt-1">Desplegados en la fábrica `TokenFactory` bajo tu propiedad.</p>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between">
+                                  <span className={`text-xs font-black ${createdTokensCount >= 5 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                    {createdTokensCount} / 5
+                                  </span>
+                                  {createdTokensCount >= 5 ? (
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none text-[9px] font-black uppercase">Cumplido</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="border-amber-500/25 bg-amber-500/5 text-amber-500 text-[9px] font-semibold">Pendiente</Badge>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Requisito 2: Tokens Ajenos con Balance */}
+                              <div className="bg-card/40 border border-border/40 p-4 rounded-xl flex flex-col justify-between transition-all duration-300 hover:border-amber-500/30">
+                                <div className="space-y-1">
+                                  <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Requisito 2</span>
+                                  <h4 className="text-xs font-bold text-foreground">Balances Ajenos (&gt; 10)</h4>
+                                  <p className="text-[10px] text-muted-foreground mt-1">Tener saldo superior a 0 en al menos 11 tokens creados por otros.</p>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between">
+                                  <span className={`text-xs font-black ${foreignTokensWithBalanceCount > 10 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                    {foreignTokensWithBalanceCount} / 11
+                                  </span>
+                                  {foreignTokensWithBalanceCount > 10 ? (
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none text-[9px] font-black uppercase">Cumplido</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="border-amber-500/25 bg-amber-500/5 text-amber-500 text-[9px] font-semibold">Pendiente</Badge>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Requisito 3: Pools Ajenos con Liquidez */}
+                              <div className="bg-card/40 border border-border/40 p-4 rounded-xl flex flex-col justify-between transition-all duration-300 hover:border-amber-500/30">
+                                <div className="space-y-1">
+                                  <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Requisito 3</span>
+                                  <h4 className="text-xs font-bold text-foreground">Liquidez WETH Ajena</h4>
+                                  <p className="text-[10px] text-muted-foreground mt-1">Proveer liquidez en al menos 5 pools WETH de otros creadores.</p>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between">
+                                  <span className={`text-xs font-black ${foreignLiquidityPoolsCount >= 5 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                    {foreignLiquidityPoolsCount} / 5
+                                  </span>
+                                  {foreignLiquidityPoolsCount >= 5 ? (
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none text-[9px] font-black uppercase">Cumplido</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="border-amber-500/25 bg-amber-500/5 text-amber-500 text-[9px] font-semibold">Pendiente</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </TabsContent>
 
                       {/* Contenido de la pestaña Guía de Misión */}

@@ -381,6 +381,215 @@ export function useChallenges() {
   useEffect(() => {
     checkWeth();
   }, [checkWeth]);
+
+  // Estado y contadores para validar el Desafío #10 (ID: 9 - Maestría en Interacción On-Chain)
+  const [isActivityCompleted, setIsActivityCompleted] = useState(false);
+  const [createdTokensCount, setCreatedTokensCount] = useState(0);
+  const [foreignTokensWithBalanceCount, setForeignTokensWithBalanceCount] = useState(0);
+  const [foreignLiquidityPoolsCount, setForeignLiquidityPoolsCount] = useState(0);
+
+  const checkActivity = useCallback(async () => {
+    if (!publicClient || !address) {
+      setIsActivityCompleted(false);
+      setCreatedTokensCount(0);
+      setForeignTokensWithBalanceCount(0);
+      setForeignLiquidityPoolsCount(0);
+      return;
+    }
+    try {
+      // 1. Obtener todos los tokens creados por la fábrica
+      const allTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getAllTokens',
+      }) as `0x${string}`[];
+
+      // 2. Obtener los tokens creados por el propio usuario
+      const userTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getTokensByOwner',
+        args: [address],
+      }) as `0x${string}`[];
+
+      const userTokensCount = userTokens ? userTokens.length : 0;
+      setCreatedTokensCount(userTokensCount);
+
+      const userTokensSet = new Set((userTokens || []).map(t => t.toLowerCase()));
+      const foreignTokens = (allTokens || []).filter(t => !userTokensSet.has(t.toLowerCase()));
+
+      // 3. Consultar balance de la dirección del usuario en cada uno de estos tokens
+      let tokensWithBalance = 0;
+      if (foreignTokens.length > 0) {
+        const balancePromises = foreignTokens.map(async (tokenAddress) => {
+          try {
+            const balance = await publicClient.readContract({
+              address: tokenAddress,
+              abi: [
+                {
+                  "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
+                  "name": "balanceOf",
+                  "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                  "stateMutability": "view",
+                  "type": "function"
+                }
+              ] as const,
+              functionName: 'balanceOf',
+              args: [address],
+            });
+            return balance > 0n;
+          } catch (e) {
+            return false;
+          }
+        });
+        const balancesResults = await Promise.all(balancePromises);
+        tokensWithBalance = balancesResults.filter(Boolean).length;
+      }
+      setForeignTokensWithBalanceCount(tokensWithBalance);
+
+      // Requisito 1: Tener balance > 0 en más de 10 tokens ajenos
+      const req1 = tokensWithBalance > 10;
+
+      // Requisito 3: Haber creado al menos 5 tokens
+      const req3 = userTokensCount >= 5;
+
+      // Requisito 2: Agregar liquidez a 5 diferentes pools ajenos de par con WETH
+      let foreignLiquidityPoolCount = 0;
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount > 0) {
+        const poolPromises = Array.from({ length: poolsCount }, (_, i) =>
+          publicClient.readContract({
+            ...DEX_FACTORY_CONTRACT,
+            functionName: 'todosLosPools',
+            args: [BigInt(i)],
+          }) as Promise<`0x${string}`>
+        );
+        const pools = await Promise.all(poolPromises);
+
+        const poolDataPromises = pools.map(async (poolAddress) => {
+          try {
+            const [token0, token1] = await Promise.all([
+              publicClient.readContract({
+                address: poolAddress,
+                abi: [
+                  {
+                    "inputs": [],
+                    "name": "token0",
+                    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                  }
+                ] as const,
+                functionName: 'token0',
+              }),
+              publicClient.readContract({
+                address: poolAddress,
+                abi: [
+                  {
+                    "inputs": [],
+                    "name": "token1",
+                    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                  }
+                ] as const,
+                functionName: 'token1',
+              })
+            ]);
+            return { poolAddress, token0, token1 };
+          } catch (e) {
+            return null;
+          }
+        });
+
+        const poolsData = (await Promise.all(poolDataPromises)).filter(p => p !== null) as { poolAddress: `0x${string}`, token0: `0x${string}`, token1: `0x${string}` }[];
+
+        const wethLower = WETH_CONTRACT.address.toLowerCase();
+        const wethPools = poolsData.filter(p => 
+          p.token0.toLowerCase() === wethLower || p.token1.toLowerCase() === wethLower
+        );
+
+        const nonOwnerWethPools = wethPools.filter(p => {
+          const otherToken = p.token0.toLowerCase() === wethLower ? p.token1 : p.token0;
+          return !userTokensSet.has(otherToken.toLowerCase());
+        });
+
+        if (nonOwnerWethPools.length > 0) {
+          const poolAddressesToSearch = nonOwnerWethPools.map(p => p.poolAddress);
+          const liquidezLogs = await publicClient.getLogs({
+            address: poolAddressesToSearch,
+            event: {
+              type: 'event',
+              name: 'LiquidezAgregada',
+              inputs: [
+                { type: 'address', name: 'proveedor', indexed: true },
+                { type: 'uint256', name: 'cantidad0' },
+                { type: 'uint256', name: 'cantidad1' },
+                { type: 'uint256', name: 'tokensLP' }
+              ]
+            },
+            args: {
+              proveedor: address
+            },
+            fromBlock: DEPLOYMENT_BLOCK
+          });
+
+          const poolsWithLiquidity = new Set(liquidezLogs.map(log => log.address.toLowerCase()));
+
+          const poolCreatedLogs = await publicClient.getLogs({
+            address: DEX_FACTORY_CONTRACT.address,
+            event: {
+              type: 'event',
+              name: 'PoolCreado',
+              inputs: [
+                { type: 'address', name: 'token0', indexed: true },
+                { type: 'address', name: 'token1', indexed: true },
+                { type: 'address', name: 'pool', indexed: false },
+                { type: 'uint256', name: 'cantidadPools', indexed: false }
+              ]
+            },
+            fromBlock: DEPLOYMENT_BLOCK
+          });
+
+          const poolCreators: Record<string, string> = {};
+          for (const log of poolCreatedLogs) {
+            const pAddr = log.args.pool?.toLowerCase();
+            if (pAddr && poolsWithLiquidity.has(pAddr) && log.transactionHash) {
+              try {
+                const tx = await publicClient.getTransaction({
+                  hash: log.transactionHash,
+                });
+                poolCreators[pAddr] = tx.from.toLowerCase();
+              } catch (txErr) {
+                // Ignorar errores al buscar transacciones
+              }
+            }
+          }
+
+          for (const pAddr of poolsWithLiquidity) {
+            if (poolCreators[pAddr] !== address.toLowerCase()) {
+              foreignLiquidityPoolCount++;
+            }
+          }
+        }
+      }
+      setForeignLiquidityPoolsCount(foreignLiquidityPoolCount);
+
+      const req2 = foreignLiquidityPoolCount >= 5;
+
+      setIsActivityCompleted(req1 && req2 && req3);
+    } catch (err) {
+      console.error('Error al verificar desafío de actividad criptográfica:', err);
+      setIsActivityCompleted(false);
+    }
+  }, [publicClient, address]);
+
+  useEffect(() => {
+    checkActivity();
+  }, [checkActivity]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -530,9 +739,13 @@ export function useChallenges() {
     if (challenge.id === 8) {
       return isWethCompleted || !!localCompleted[challenge.id];
     }
+    // Desafío 10 (index 9, id 9: Maestría en Interacción On-Chain) se completa si el usuario cumplió los 3 requisitos de actividad on-chain, o si lo completó localmente
+    if (challenge.id === 9) {
+      return isActivityCompleted || !!localCompleted[challenge.id];
+    }
     
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted, isCreatePoolCompleted, isWethCompleted]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted, isCreatePoolCompleted, isWethCompleted, isActivityCompleted]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -556,9 +769,10 @@ export function useChallenges() {
       checkSwap(),
       checkLiquidity(),
       checkCreatePool(),
-      checkWeth()
+      checkWeth(),
+      checkActivity()
     ]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity, checkCreatePool, checkWeth]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity, checkCreatePool, checkWeth, checkActivity]);
 
   return {
     localCompleted,
@@ -569,6 +783,9 @@ export function useChallenges() {
     // Solo bloquea si no tiene balances en caché y está cargando por primera vez desde la blockchain
     isLoading: isLoadingBalances && !hasCachedBalances,
     refetch: refetchAll,
-    completeChallenge
+    completeChallenge,
+    createdTokensCount,
+    foreignTokensWithBalanceCount,
+    foreignLiquidityPoolsCount
   };
 }

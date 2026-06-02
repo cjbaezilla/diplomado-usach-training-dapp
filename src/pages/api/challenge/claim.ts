@@ -339,6 +339,206 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
     }
   }
+  // Validación estricta on-chain para el Desafío 10 (ID: 9 - Maestría en Interacción On-Chain)
+  if (Number(id) === 9) {
+    try {
+      // 1. Obtener la lista de todos los tokens de la factory y los creados por el usuario
+      const allTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getAllTokens',
+      }) as `0x${string}`[];
+
+      const userTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getTokensByOwner',
+        args: [userAddress as `0x${string}`],
+      }) as `0x${string}`[];
+
+      // Requisito 3: Haber creado al menos 5 tokens en la plataforma
+      if (!userTokens || userTokens.length < 5) {
+        return res.status(400).json({ error: `Debe haber creado al menos 5 tokens en la plataforma. Actual: ${userTokens ? userTokens.length : 0}` });
+      }
+
+      const userTokensSet = new Set(userTokens.map(t => t.toLowerCase()));
+      const foreignTokens = allTokens.filter(t => !userTokensSet.has(t.toLowerCase()));
+
+      // Requisito 1: Tener balance superior a 0 en más de 10 tokens creados por la factory de los cuales no sea dueño
+      let tokensWithBalanceCount = 0;
+      if (foreignTokens.length > 0) {
+        const balancePromises = foreignTokens.map(async (tokenAddress) => {
+          try {
+            const balance = await publicClient.readContract({
+              address: tokenAddress,
+              abi: [
+                {
+                  "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
+                  "name": "balanceOf",
+                  "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                  "stateMutability": "view",
+                  "type": "function"
+                }
+              ] as const,
+              functionName: 'balanceOf',
+              args: [userAddress as `0x${string}`],
+            });
+            return balance > 0n;
+          } catch (e) {
+            return false;
+          }
+        });
+        const balancesResults = await Promise.all(balancePromises);
+        tokensWithBalanceCount = balancesResults.filter(Boolean).length;
+      }
+
+      if (tokensWithBalanceCount <= 10) {
+        return res.status(400).json({ error: `Debe tener balance superior a 0 en más de 10 tokens creados por otros usuarios. Actual: ${tokensWithBalanceCount}` });
+      }
+
+      // Requisito 2: Agregar liquidez a 5 diferentes pools de los cuales no sean dueños/creadores y formen par con WETH
+      const count = await publicClient.readContract({
+        ...DEX_FACTORY_CONTRACT,
+        functionName: 'cantidadPools',
+      }) as bigint;
+      const poolsCount = Number(count);
+
+      if (poolsCount === 0) {
+        return res.status(400).json({ error: 'No existen pools de liquidez creados en el DEX.' });
+      }
+
+      // Obtener direcciones de todos los pools
+      const poolPromises = Array.from({ length: poolsCount }, (_, i) =>
+        publicClient.readContract({
+          ...DEX_FACTORY_CONTRACT,
+          functionName: 'todosLosPools',
+          args: [BigInt(i)],
+        }) as Promise<`0x${string}`>
+      );
+      const pools = await Promise.all(poolPromises);
+
+      // Obtener tokens que componen cada pool
+      const poolDataPromises = pools.map(async (poolAddress) => {
+        try {
+          const [token0, token1] = await Promise.all([
+            publicClient.readContract({
+              address: poolAddress,
+              abi: [
+                {
+                  "inputs": [],
+                  "name": "token0",
+                  "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                  "stateMutability": "view",
+                  "type": "function"
+                }
+              ] as const,
+              functionName: 'token0',
+            }),
+            publicClient.readContract({
+              address: poolAddress,
+              abi: [
+                {
+                  "inputs": [],
+                  "name": "token1",
+                  "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                  "stateMutability": "view",
+                  "type": "function"
+                }
+              ] as const,
+              functionName: 'token1',
+            })
+          ]);
+          return { poolAddress, token0, token1 };
+        } catch (e) {
+          return null;
+        }
+      });
+
+      const poolsData = (await Promise.all(poolDataPromises)).filter(p => p !== null) as { poolAddress: `0x${string}`, token0: `0x${string}`, token1: `0x${string}` }[];
+
+      // Filtrar pools que tienen par con WETH
+      const wethLower = WETH_CONTRACT.address.toLowerCase();
+      const wethPools = poolsData.filter(p => 
+        p.token0.toLowerCase() === wethLower || p.token1.toLowerCase() === wethLower
+      );
+
+      // Filtrar pools que no correspondan a tokens creados por el usuario
+      const nonOwnerWethPools = wethPools.filter(p => {
+        const otherToken = p.token0.toLowerCase() === wethLower ? p.token1 : p.token0;
+        return !userTokensSet.has(otherToken.toLowerCase());
+      });
+
+      if (nonOwnerWethPools.length === 0) {
+        return res.status(400).json({ error: 'No se encontraron pools de par con WETH de los cuales no sea dueño de los tokens.' });
+      }
+
+      // Buscar eventos de LiquidezAgregada en estos pools para el usuario
+      const poolAddressesToSearch = nonOwnerWethPools.map(p => p.poolAddress);
+      const liquidezLogs = await publicClient.getLogs({
+        address: poolAddressesToSearch,
+        event: {
+          type: 'event',
+          name: 'LiquidezAgregada',
+          inputs: [
+            { type: 'address', name: 'proveedor', indexed: true },
+            { type: 'uint256', name: 'cantidad0' },
+            { type: 'uint256', name: 'cantidad1' },
+            { type: 'uint256', name: 'tokensLP' }
+          ]
+        },
+        args: {
+          proveedor: userAddress as `0x${string}`
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      const poolsWithLiquidity = new Set(liquidezLogs.map(log => log.address.toLowerCase()));
+
+      // Obtener creadores de las piscinas
+      const poolCreatedLogs = await publicClient.getLogs({
+        address: DEX_FACTORY_CONTRACT.address,
+        event: {
+          type: 'event',
+          name: 'PoolCreado',
+          inputs: [
+            { type: 'address', name: 'token0', indexed: true },
+            { type: 'address', name: 'token1', indexed: true },
+            { type: 'address', name: 'pool', indexed: false },
+            { type: 'uint256', name: 'cantidadPools', indexed: false }
+          ]
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      const poolCreators: Record<string, string> = {};
+      for (const log of poolCreatedLogs) {
+        const pAddr = log.args.pool?.toLowerCase();
+        if (pAddr && poolsWithLiquidity.has(pAddr) && log.transactionHash) {
+          try {
+            const tx = await publicClient.getTransaction({
+              hash: log.transactionHash,
+            });
+            poolCreators[pAddr] = tx.from.toLowerCase();
+          } catch (txErr) {
+            // Ignorar errores al buscar transacciones
+          }
+        }
+      }
+
+      let foreignLiquidityPoolCount = 0;
+      for (const pAddr of poolsWithLiquidity) {
+        if (poolCreators[pAddr] !== (userAddress as string).toLowerCase()) {
+          foreignLiquidityPoolCount++;
+        }
+      }
+
+      if (foreignLiquidityPoolCount < 5) {
+        return res.status(400).json({ error: `Debe agregar liquidez a al menos 5 pools de par con WETH de los cuales no sea dueño o creador. Actual: ${foreignLiquidityPoolCount}` });
+      }
+
+    } catch (contractError: any) {
+      console.error('Error al verificar la actividad criptográfica on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
+    }
+  }
 
 
 

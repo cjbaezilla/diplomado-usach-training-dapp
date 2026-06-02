@@ -154,19 +154,19 @@
   },
   {
     "id": 9,
-    "title": "Exploración de la Actividad Criptográfica",
+    "title": "Maestría en Interacción On-Chain",
     "category": "Explorador",
-    "difficulty": "Principiante",
-    "estimatedTime": "5 min",
+    "difficulty": "Avanzado",
+    "estimatedTime": "20 min",
     "rewardRelicNft": 9,
     "accomplishmentFactor": "VER_HISTORIAL_TRANSACCIONES",
     "actionLabel": "Ver mi Perfil y Transacciones",
     "actionUrl": "/estudiante/me",
-    "description": "La transparencia y la auditabilidad pública son pilares de la Web3. Todas las acciones de creación, acuñación, transferencias y swaps que has realizado quedan registradas con un Hash de Transacción único en el libro de contabilidad de la blockchain.\n\nEn este desafío, visitarás la sección de tu perfil público de estudiante. Aquí, la dApp recopila e integra tus datos cargándolos directamente desde los contratos inteligentes y nodos de la red, mostrándote cómo la identidad digital soberana unifica tus logros en una sola página pública.",
+    "description": "¡Bienvenido al desafío final de interacción y fluidez en la red de la USACH! Para consolidar y demostrar tu dominio de los fundamentos de Web3, este reto requiere que interactúes de manera activa y colaborativa con el ecosistema de contratos inteligentes y el mercado descentralizado creado por tus compañeros de clase.\n\n### 🌟 Requisitos de Acreditación de Actividad:\n\n1. **Tokens Ajenos con Balance Activo (> 10)**: Debes poseer un saldo mayor a 0 en al menos **11 tokens estándar ERC-20** que hayan sido creados en la plataforma por otros usuarios (donde tú NO seas el creador ni propietario).\n2. **Provisión de Liquidez en Pools Ajenos de Par WETH (>= 5)**: Debes haber aportado liquidez (añadido fondos) a un mínimo de **5 piscinas de liquidez (DEXPools)** diferentes que contengan el par con Wrapped Ether (WETH) y que NO hayan sido creadas por ti ni correspondan a tus propios tokens creados.\n3. **Creador de Tokens Propios (>= 5)**: Debes haber desplegado al menos **5 tokens ERC-20 personalizados** en la fábrica de tokens (`TokenFactory.sol`) de la plataforma.\n\n### ¿Por qué implementamos estas métricas?\n- **Fomento del Comercio y Uso Real**: En el ecosistema DeFi, los tokens sin liquidez ni tenedores activos carecen de valor o utilidad. Interactuar con los tokens de tus pares simula la dinámica económica de una red real.\n- **Seguridad en Pools con WETH**: Proveer liquidez contra el par base de la red (WETH) te enseña a manejar la paridad económica básica del DEX, estimando correctamente las cantidades correspondientes para evitar el deslizamiento adverso y arbitrajes.\n- **Automatización y Despliegue Masivo**: Crear múltiples contratos a través de la fábrica te permite comprender a fondo los costos de gas de despliegue y cómo el patrón Factory escala de manera eficiente.",
     "hints": [
-      "Haz clic en tu ícono de perfil de usuario en la barra de navegación superior (o usa el botón de acción de abajo).",
-      "Revisa la vista de tus balances y tus reliquias en tu página de perfil estudiantil.",
-      "Esta acción de consulta directa de la blockchain completará tu desafío."
+      "Despliega al menos 5 tokens personalizados usando la pestaña 'Crear Token' en la sección de ERC-20.",
+      "Consigue transferencias de tokens creados por tus compañeros de curso para acumular balance positivo (>0) en al menos 11 tokens diferentes que no te pertenezcan.",
+      "Añade liquidez en el DEX a 5 pools de par WETH cuyos tokens base hayan sido creados por otros estudiantes. Luego, presiona 'Ver mi Perfil y Transacciones' para verificar y reclamar tu recompensa."
     ]
   }
 ]
