@@ -19,6 +19,12 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
+import {
   Trophy,
   Award,
   Lock,
@@ -35,7 +41,13 @@ import {
   ChevronRight,
   Info,
   ExternalLink,
-  Compass
+  Compass,
+  FileText,
+  ListTodo,
+  History,
+  LockKeyhole,
+  Sparkle,
+  ArrowUpRight
 } from 'lucide-react';
 import { useBaseERC1155 } from '@/hooks/useBaseERC1155';
 import { useChallenges } from '@/hooks/useChallenges';
@@ -75,6 +87,9 @@ const DesafiosPage: NextPage = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoadingChallenges, setIsLoadingChallenges] = useState(true);
 
+  // ID del desafío seleccionado en el panel interactivo
+  const [selectedChallengeId, setSelectedChallengeId] = useState<number>(0);
+
   // ID de la reliquia que se está minteando
   const [mintingId, setMintingId] = useState<number | null>(null);
 
@@ -97,6 +112,13 @@ const DesafiosPage: NextPage = () => {
         setIsLoadingChallenges(false);
       });
   }, []);
+
+  // Inicializar o ajustar el desafío seleccionado al cargar el progreso
+  useEffect(() => {
+    if (activeChallengeIndex !== undefined && activeChallengeIndex !== null) {
+      setSelectedChallengeId(Math.min(activeChallengeIndex, 9));
+    }
+  }, [activeChallengeIndex]);
 
   // Las reliquias on-chain se consultan de manera centralizada en el hook useChallenges
 
@@ -133,7 +155,31 @@ const DesafiosPage: NextPage = () => {
     }
   }, [notification]);
 
-  // El índice del desafío activo actual se calcula de manera centralizada en el hook useChallenges
+  // Función para determinar el estado de un desafío específico
+  const getChallengeState = (id: number) => {
+    if (!isConnected) return 'locked';
+    const hasRelic = hasNft(id);
+    const isClaimable = isCompleted(id) && !hasRelic;
+    const isActive = id === activeChallengeIndex;
+    
+    if (hasRelic) return 'completed';
+    if (isClaimable) return 'claimable';
+    if (isActive) return 'active';
+    return 'locked';
+  };
+
+  // Desafío seleccionado actual a mostrar en pantalla
+  const selectedChallenge = useMemo(() => {
+    if (challenges.length === 0) return null;
+    if (selectedChallengeId >= challenges.length) return null;
+    return challenges[selectedChallengeId];
+  }, [challenges, selectedChallengeId]);
+
+  // Determinar si el desafío seleccionado es reclamable
+  const isSelectedChallengeClaimable = useMemo(() => {
+    if (selectedChallengeId >= challenges.length) return false;
+    return isCompleted(selectedChallengeId) && !hasNft(selectedChallengeId);
+  }, [selectedChallengeId, challenges, isCompleted, hasNft]);
 
   // Desafío activo actual a mostrar en pantalla
   const activeChallenge = useMemo(() => {
@@ -158,81 +204,232 @@ const DesafiosPage: NextPage = () => {
   // Formateador pedagógico de descripción de markdown básico
   const renderDescription = (text: string) => {
     if (!text) return null;
-    return text.split('\n\n').map((para, i) => {
-      if (para.startsWith('###')) {
-        return (
-          <h3 key={i} className="text-base font-bold text-foreground mt-4 mb-2 border-b border-border/10 pb-1 flex items-center gap-1.5">
-            <Info className="h-4 w-4 text-primary shrink-0" />
-            {para.replace('###', '').trim()}
-          </h3>
-        );
+
+    // 1. Procesador en línea para dar formato a negritas, itálicas, código y fórmulas matemáticas en línea.
+    const renderInline = (inlineText: string) => {
+      if (!inlineText) return '';
+      // Expresión regular para separar: **negrita**, *itálica*, `código`, $matemática en línea$
+      const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`|\$.*?\$)/g;
+      const parts = inlineText.split(regex);
+      return parts.map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={index} className="text-foreground font-semibold">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        if (part.startsWith('*') && part.endsWith('*')) {
+          return (
+            <em key={index} className="text-muted-foreground/90 italic">
+              {part.slice(1, -1)}
+            </em>
+          );
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+          return (
+            <code
+              key={index}
+              className="px-1.5 py-0.5 rounded bg-muted/50 font-mono text-[11px] border border-border/40 text-foreground/90 font-medium"
+            >
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+        if (part.startsWith('$') && part.endsWith('$')) {
+          return (
+            <span
+              key={index}
+              className="font-mono bg-primary/5 text-primary px-1.5 py-0.5 rounded text-xs font-semibold border border-primary/10"
+            >
+              {part.slice(1, -1)}
+            </span>
+          );
+        }
+        return part;
+      });
+    };
+
+    // 2. Parser a nivel de bloque
+    const lines = text.split('\n');
+    interface Block {
+      type: 'p' | 'h2' | 'h3' | 'ul' | 'ol' | 'math';
+      lines: string[];
+    }
+    const blocks: Block[] = [];
+    let currentBlock: Block | null = null;
+
+    const commitBlock = () => {
+      if (currentBlock) {
+        if (currentBlock.type === 'p' && currentBlock.lines.every(l => !l.trim())) {
+          // No añadir bloques vacíos
+        } else {
+          blocks.push(currentBlock);
+        }
+        currentBlock = null;
       }
-      if (para.startsWith('##')) {
-        return (
-          <h3 key={i} className="text-lg font-bold text-foreground mt-5 mb-2 flex items-center gap-2">
-            <Compass className="h-5 w-5 text-primary shrink-0" />
-            {para.replace('##', '').trim()}
-          </h3>
-        );
-      }
-      if (para.startsWith('-') || para.startsWith('*')) {
-        return (
-          <ul key={i} className="list-disc pl-5 space-y-2 my-3">
-            {para.split('\n').map((item, j) => {
-              const cleanedItem = item.replace(/^[-*]/, '').trim();
-              const boldParts = cleanedItem.split(/(\*\*.*?\*\*)/g);
-              return (
-                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                  {boldParts.map((part, k) => {
-                    if (part.startsWith('**') && part.endsWith('**')) {
-                      return <strong key={k} className="text-foreground">{part.slice(2, -2)}</strong>;
-                    }
-                    return part;
-                  })}
-                </li>
-              );
-            })}
-          </ul>
-        );
-      }
-      if (/^\d+\./.test(para.trim())) {
-        return (
-          <ol key={i} className="list-decimal pl-5 space-y-2 my-3">
-            {para.split('\n').map((item, j) => {
-              const cleanedItem = item.replace(/^\d+\./, '').trim();
-              const boldParts = cleanedItem.split(/(\*\*.*?\*\*)/g);
-              return (
-                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                  {boldParts.map((part, k) => {
-                    if (part.startsWith('**') && part.endsWith('**')) {
-                      return <strong key={k} className="text-foreground">{part.slice(2, -2)}</strong>;
-                    }
-                    return part;
-                  })}
-                </li>
-              );
-            })}
-          </ol>
-        );
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // Detectar fin o inicio de bloque matemático de bloque $$
+      if (trimmed.startsWith('$$')) {
+        commitBlock();
+        if (trimmed.endsWith('$$') && trimmed.length > 2) {
+          blocks.push({
+            type: 'math',
+            lines: [trimmed.slice(2, -2).trim()],
+          });
+        } else {
+          const mathLines: string[] = [];
+          i++; // avanzar a la siguiente línea
+          while (i < lines.length && !lines[i].trim().startsWith('$$')) {
+            mathLines.push(lines[i]);
+            i++;
+          }
+          blocks.push({
+            type: 'math',
+            lines: [mathLines.join('\n').trim()],
+          });
+        }
+        continue;
       }
 
-      // Procesamiento de negritas en párrafos comunes
-      const boldParts = para.split(/(\*\*.*?\*\*)/g);
-      return (
-        <p key={i} className="text-xs sm:text-sm text-muted-foreground leading-relaxed my-2.5">
-          {boldParts.map((part, k) => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-              return <strong key={k} className="text-foreground font-semibold">{part.slice(2, -2)}</strong>;
-            }
-            if (part.startsWith('*') && part.endsWith('*')) {
-              return <em key={k} className="text-muted-foreground/90 italic">{part.slice(1, -1)}</em>;
-            }
-            return part;
-          })}
-        </p>
-      );
+      // Título H3
+      if (trimmed.startsWith('###')) {
+        commitBlock();
+        blocks.push({
+          type: 'h3',
+          lines: [trimmed.slice(3).trim()],
+        });
+        continue;
+      }
+
+      // Título H2
+      if (trimmed.startsWith('##')) {
+        commitBlock();
+        blocks.push({
+          type: 'h2',
+          lines: [trimmed.slice(2).trim()],
+        });
+        continue;
+      }
+
+      // Listas No Ordenadas (comienzan con - o *)
+      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+        const itemContent = trimmed.slice(2).trim();
+        if (currentBlock && currentBlock.type === 'ul') {
+          currentBlock.lines.push(itemContent);
+        } else {
+          commitBlock();
+          currentBlock = {
+            type: 'ul',
+            lines: [itemContent],
+          };
+        }
+        continue;
+      }
+
+      // Listas Ordenadas (comienzan con número y punto, ej: 1. o 2.)
+      const matchOl = line.match(/^\s*(\d+)\.\s(.*)/);
+      if (matchOl) {
+        const itemContent = matchOl[2].trim();
+        if (currentBlock && currentBlock.type === 'ol') {
+          currentBlock.lines.push(itemContent);
+        } else {
+          commitBlock();
+          currentBlock = {
+            type: 'ol',
+            lines: [itemContent],
+          };
+        }
+        continue;
+      }
+
+      // Línea vacía
+      if (trimmed === '') {
+        commitBlock();
+        continue;
+      }
+
+      // De lo contrario, tratar como párrafo continuo
+      if (currentBlock && currentBlock.type === 'p') {
+        currentBlock.lines.push(line);
+      } else {
+        commitBlock();
+        currentBlock = {
+          type: 'p',
+          lines: [line],
+        };
+      }
+    }
+    commitBlock();
+
+    // 3. Renderizar los bloques agrupados a JSX
+    return blocks.map((block, i) => {
+      switch (block.type) {
+        case 'h3':
+          return (
+            <h3
+              key={i}
+              className="text-base font-bold text-foreground mt-5 mb-2 border-b border-border/10 pb-1 flex items-center gap-1.5"
+            >
+              <Info className="h-4 w-4 text-primary shrink-0" />
+              {renderInline(block.lines[0])}
+            </h3>
+          );
+        case 'h2':
+          return (
+            <h2
+              key={i}
+              className="text-lg font-bold text-foreground mt-6 mb-2 flex items-center gap-2"
+            >
+              <Compass className="h-5 w-5 text-primary shrink-0" />
+              {renderInline(block.lines[0])}
+            </h2>
+          );
+        case 'ul':
+          return (
+            <ul key={i} className="list-disc pl-5 space-y-1.5 my-3">
+              {block.lines.map((item, j) => (
+                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {renderInline(item)}
+                </li>
+              ))}
+            </ul>
+          );
+        case 'ol':
+          return (
+            <ol key={i} className="list-decimal pl-5 space-y-1.5 my-3">
+              {block.lines.map((item, j) => (
+                <li key={j} className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {renderInline(item)}
+                </li>
+              ))}
+            </ol>
+          );
+        case 'math':
+          return (
+            <div
+              key={i}
+              className="my-4 p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center font-mono text-sm font-semibold text-primary overflow-x-auto"
+            >
+              {block.lines.join('\n')}
+            </div>
+          );
+        case 'p':
+        default:
+          return (
+            <p key={i} className="text-xs sm:text-sm text-muted-foreground leading-relaxed my-2.5">
+              {renderInline(block.lines.join(' '))}
+            </p>
+          );
+      }
     });
   };
+
 
   // Determinar color de badge de dificultad
   const getDifficultyBadgeColor = (difficulty: string) => {
@@ -326,397 +523,546 @@ const DesafiosPage: NextPage = () => {
         {isCheckingProgress ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20">
             <Loader2 className="h-10 w-10 animate-spin text-primary mb-3" />
-            <p className="text-sm text-muted-foreground font-medium animate-pulse">Sincronizando progreso académico on-chain...</p>
+            <p className="text-sm text-muted-foreground font-medium">Sincronizando progreso académico on-chain...</p>
           </div>
         ) : activeChallengeIndex >= challenges.length && challenges.length > 0 ? (
           /* ================= PANTALLA: SENDAS COMPLETADAS TOTALMENTE ================= */
-          <div className="w-full space-y-8 animate-in fade-in-50 duration-500">
-            <div className="w-full p-8 rounded-3xl border border-primary/20 bg-card/45 backdrop-blur-md shadow-2xl relative overflow-hidden text-center max-w-4xl mx-auto space-y-6">
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500 via-primary to-cyan-500"></div>
+          <div className="w-full space-y-8 animate-in fade-in-50 duration-500 text-left flex-1 flex flex-col justify-center">
+            <div className="w-full p-6 sm:p-8 rounded-3xl border border-amber-500/20 bg-card/45 backdrop-blur-md shadow-2xl relative overflow-hidden space-y-6 flex flex-col justify-between">
+              {/* Barra de color dorada superior */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600"></div>
               
-              <div className="mx-auto bg-amber-500/10 border border-amber-500/30 p-5 rounded-full w-fit animate-bounce text-amber-500 shadow-md">
-                <Sparkles className="h-12 w-12" />
-              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                {/* Columna Izquierda: Mensaje y Logro */}
+                <div className="lg:col-span-7 space-y-5">
+                  <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl w-fit text-amber-500 shadow-md">
+                    <Sparkles className="h-10 w-10 animate-bounce" />
+                  </div>
 
-              <div className="space-y-2">
-                <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                  ¡Maestro Forjador de la USACH!
-                </h2>
-                <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                  Has superado exitosamente todos los desafíos de la senda criptográfica, demostrando destreza en
-                  identidad soberana, estándares ERC-20, provisión de liquidez en el AMM y auditoría Web3.
-                  ¡Tu reputación profesional reside inmutablemente en el ledger!
-                </p>
-              </div>
+                  <div className="space-y-2">
+                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground bg-gradient-to-r from-amber-500 to-yellow-400 bg-clip-text text-transparent">
+                      ¡Maestro Forjador de la USACH!
+                    </h2>
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                      Has superado con éxito la totalidad de la senda criptográfica académica. Demostraste destreza e ingenio
+                      resolviendo pruebas de identidad digital soberana, contratos ERC-20, interacciones AMM en el DEX y envolturas WETH.
+                      ¡Tu reputación criptográfica ha quedado forjada de forma inmutable en el ledger!
+                    </p>
+                  </div>
 
-              <div className="border border-border/20 bg-muted/10 p-5 rounded-2xl max-w-lg mx-auto text-left space-y-4">
-                <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                  <Award className="h-5 w-5 text-amber-500" />
-                  Resumen de Logros Académicos
-                </h3>
-                <ul className="space-y-2 text-xs text-muted-foreground">
-                  <li className="flex justify-between border-b border-border/10 pb-1.5">
-                    <span>Nivel de Desarrollador:</span>
-                    <span className="font-bold text-foreground">Nivel 10 (Maestro)</span>
-                  </li>
-                  <li className="flex justify-between border-b border-border/10 pb-1.5">
-                    <span>Reliquias Coleccionadas:</span>
-                    <span className="font-bold text-foreground">10 / 10 Reliquias</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Experiencia Criptográfica Acumulada:</span>
-                    <span className="font-bold text-primary">300 XP</span>
-                  </li>
-                </ul>
-              </div>
+                  {/* Tabla de Resumen de Logros */}
+                  <div className="border border-border/20 bg-muted/10 p-5 rounded-2xl space-y-4">
+                    <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                      <Award className="h-5 w-5 text-amber-500" />
+                      Certificación de Mérito Criptográfico
+                    </h3>
+                    <ul className="space-y-2.5 text-xs text-muted-foreground">
+                      <li className="flex justify-between border-b border-border/10 pb-1.5">
+                        <span>Rango Académico:</span>
+                        <span className="font-bold text-foreground">
+                          Nivel 10 (Maestro Forjador EAO)
+                        </span>
+                      </li>
+                      <li className="flex justify-between border-b border-border/10 pb-1.5">
+                        <span>Reliquias Criptográficas en Billetera:</span>
+                        <span className="font-bold text-foreground">10 / 10 Coleccionadas</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Experiencia Acumulada (XP):</span>
+                        <span className="font-bold text-primary">300 XP Totales</span>
+                      </li>
+                    </ul>
+                  </div>
 
-              <div className="flex justify-center gap-3 pt-2">
-                <Link href={`/estudiante/${address}`}>
-                  <Button variant="default" className="font-bold text-sm">
-                    Ver Mi Perfil Público
-                  </Button>
-                </Link>
-                <Link href="/relics">
-                  <Button variant="outline" className="font-bold text-sm border-border/60">
-                    Galería de Reliquias
-                  </Button>
-                </Link>
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <Link href={`/estudiante/${address}`}>
+                      <Button variant="default" className="font-bold text-sm bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-white border-none shadow-md">
+                        Ver Mi Perfil Público
+                      </Button>
+                    </Link>
+                    <Link href="/relics">
+                      <Button variant="outline" className="font-bold text-sm border-border/60">
+                        Galería de Reliquias
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Columna Derecha: Vitrina del Logro Completo */}
+                <div className="lg:col-span-5 flex justify-center">
+                  <div className="w-full border border-amber-500/20 bg-muted/20 p-6 rounded-2xl flex flex-col items-center gap-4 relative overflow-hidden group shadow-md text-center">
+                    <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 to-transparent"></div>
+                    
+                    <div className="h-40 w-40 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center relative shadow-inner group-hover:scale-105 transition-transform duration-300">
+                      <Trophy className="h-20 w-20 text-amber-500" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Badge className="bg-amber-500/20 text-amber-400 border-none font-bold text-[10px]">
+                        Senda de la EAO Forjada
+                      </Badge>
+                      <h4 className="font-extrabold text-sm text-foreground">
+                        Insignia del Alumno Distinguido
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Desbloquea el honor y reconocimiento perpetuo del Patio de Talleres.
+                      </p>
+                    </div>
+
+                    {/* Cuadrícula de Reliquias */}
+                    <div className="grid grid-cols-5 gap-1.5 pt-2">
+                      {challenges.map((c) => (
+                        <div key={c.id} className="h-7 w-7 rounded border border-border/50 overflow-hidden bg-background/80" title={c.relicName}>
+                          <img src={`/nft/usach/relics/${c.rewardRelicNft}.png`} alt={`Reliquia ${c.id}`} className="h-full w-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        ) : activeChallenge ? (
-          /* ================= LAYOUT DE DOS COLUMNAS PARA EL DESAFÍO ACTIVO ================= */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch w-full animate-in fade-in-50 duration-500 flex-1">
-            
-            {/* COLUMNA IZQUIERDA: SIDEBAR INFORMATIVO (5 de 12 columnas) */}
-            <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-border/80 bg-card/65 text-card-foreground shadow-lg backdrop-blur-sm relative overflow-hidden transition-all duration-300 hover:border-primary/20 text-left">
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary to-cyan-500"></div>
-
-              <div className="space-y-4">
-                {/* Categoría y Número */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-extrabold tracking-widest text-primary uppercase bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full w-fit block animate-pulse">
-                    Desafío #0{activeChallenge.id + 1}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-semibold">
-                    {activeChallenge.category}
+        ) : selectedChallenge ? (
+          /* ================= LAYOUT DE DASHBOARD INTERACTIVO ================= */
+          <div className="w-full flex-1 flex flex-col lg:flex-row gap-6 items-stretch animate-in fade-in-50 duration-500">
+            {/* Panel lateral izquierdo: Selector de Desafíos */}
+            <div className="w-full lg:w-80 xl:w-96 shrink-0 flex flex-col gap-4">
+              <div className="bg-card/45 backdrop-blur-md rounded-2xl border border-border/80 p-4 flex flex-col gap-3 h-full">
+                <div className="flex items-center justify-between border-b border-border/10 pb-2">
+                  <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                    <Trophy className="h-4 w-4 text-primary" />
+                    Senda Académica
+                  </h3>
+                  <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full font-bold">
+                    {isConnected ? `${challenges.filter((_, idx) => hasNft(idx)).length} / 10` : '0 / 10'} completados
                   </span>
                 </div>
+                
+                {/* Contenedor de scroll horizontal en móviles, lista vertical en lg */}
+                <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-thin select-none">
+                  {challenges.map((c, idx) => {
+                    const state = getChallengeState(idx);
+                    const isSel = idx === selectedChallengeId;
+                    
+                    let stateIcon = <Lock className="h-3.5 w-3.5 text-muted-foreground/30" />;
+                    let stateBadgeColor = "bg-muted text-muted-foreground border-border/30";
+                    let stateText = "Bloqueado";
+                    let itemBorder = "border-border/20";
+                    let itemBg = "bg-transparent";
+                    let titleColor = "text-muted-foreground/60";
 
-                {/* Título Grande */}
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-tight">
-                  {activeChallenge.title}
-                </h2>
+                    if (state === 'completed') {
+                      stateIcon = <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
+                      stateBadgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                      stateText = "Completado";
+                      titleColor = "text-emerald-500/90 font-medium";
+                    } else if (state === 'claimable') {
+                      stateIcon = <Award className="h-3.5 w-3.5 text-amber-500" />;
+                      stateBadgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                      stateText = "Reclamar";
+                      itemBorder = "border-amber-500/30";
+                      titleColor = "text-amber-500 font-semibold";
+                    } else if (state === 'active') {
+                      stateIcon = <Unlock className="h-3.5 w-3.5 text-primary" />;
+                      stateBadgeColor = "bg-primary/10 text-primary border-primary/20";
+                      stateText = "Activo";
+                      itemBorder = "border-primary/40";
+                      titleColor = "text-foreground font-bold";
+                    }
 
-                {/* Recompensa y Dificultad */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <Badge variant="secondary" className="font-bold text-[11px] bg-muted/80 px-2 py-0.5 flex items-center gap-1 text-foreground border border-border/30">
-                    <Zap className="h-3 w-3 text-yellow-500" />
-                    +{activeChallenge.xp} XP Recompensa
-                  </Badge>
-                  <Badge className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${getDifficultyBadgeColor(activeChallenge.difficulty)}`}>
-                    {activeChallenge.difficulty}
-                  </Badge>
-                  <Badge variant="outline" className="text-[11px] font-mono font-semibold text-muted-foreground border-border/40">
-                    ⏱️ {activeChallenge.estimatedTime}
-                  </Badge>
-                </div>
+                    if (isSel) {
+                      itemBg = "bg-primary/10 dark:bg-primary/5";
+                      itemBorder = state === 'completed' ? "border-emerald-500" : state === 'claimable' ? "border-amber-500" : state === 'active' ? "border-primary" : "border-muted-foreground";
+                    }
 
-                {/* Descripción Pedagógica Formateada */}
-                <div className="pt-2 max-h-[350px] lg:max-h-[500px] overflow-y-auto pr-1">
-                  {renderDescription(activeChallenge.description)}
-                </div>
-              </div>
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedChallengeId(c.id)}
+                        className={`flex items-center gap-3 p-3 rounded-xl border text-left cursor-pointer transition-all duration-200 min-w-[220px] lg:min-w-0 w-full shrink-0 group ${itemBg} ${itemBorder} hover:bg-muted/10`}
+                      >
+                        {/* Número grande */}
+                        <div className={`h-8 w-8 rounded-lg font-mono font-black text-xs flex items-center justify-center border shrink-0 ${
+                          isSel ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border/40"
+                        }`}>
+                          {c.id + 1}
+                        </div>
+                        
+                        {/* Título y Badge */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <p className={`text-xs truncate ${titleColor} group-hover:text-foreground transition-colors`}>
+                            {c.title}
+                          </p>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full border ${stateBadgeColor}`}>
+                              {stateText}
+                            </span>
+                            <span className="text-[8px] text-muted-foreground/80 font-mono">
+                              +{c.xp} XP
+                            </span>
+                          </div>
+                        </div>
 
-              {/* Lore Histórico al pie */}
-              <div className="pt-4 mt-6 border-t border-border/10 text-[11px] text-muted-foreground/80 leading-relaxed space-y-1.5">
-                <div className="flex items-start gap-2 bg-muted/20 p-2.5 rounded-xl border border-border/10">
-                  <BookOpen className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Tradición del Forjador:</strong> En la antigua Escuela de Artes y Oficios (EAO), los alumnos avanzaban un peldaño técnico a la vez, demostrando maestría en cada taller antes de revelar el secreto del siguiente oficio.
-                  </span>
+                        {/* Icono de estado */}
+                        <div className="flex shrink-0">
+                          {stateIcon}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* COLUMNA DERECHA: CONTENIDO INTERACTIVO (7 de 12 columnas) */}
-            <div className="lg:col-span-7 flex flex-col justify-center w-full">
-              {!isConnected ? (
-                /* ================= SUB-PANTALLA: BILLETERA NO CONECTADA ================= */
-                <Card className="border border-primary/20 shadow-md bg-card/45 backdrop-blur-md rounded-2xl h-full flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:border-primary/40 text-left">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-indigo-500"></div>
-                  
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2 text-foreground">
-                      <Unlock className="h-5 w-5 text-primary" />
-                      Acción Requerida
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Vincula tu cliente criptográfico para validar el estado de tus desafíos.
-                    </CardDescription>
-                  </CardHeader>
+            {/* Panel principal de detalles */}
+            <div className={`flex-1 flex flex-col bg-card/45 backdrop-blur-md rounded-2xl border transition-all duration-300 shadow-xl overflow-hidden text-left ${
+              getChallengeState(selectedChallenge.id) === 'completed' 
+                ? 'border-emerald-500/20 hover:border-emerald-500/30' 
+                : getChallengeState(selectedChallenge.id) === 'claimable' 
+                  ? 'border-amber-500/30 hover:border-amber-500/50' 
+                  : getChallengeState(selectedChallenge.id) === 'active' 
+                    ? 'border-primary/30 hover:border-primary/50' 
+                    : 'border-border/60'
+            }`}>
+              {/* Cabecera del Panel */}
+              <div className="p-5 sm:p-6 border-b border-border/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative overflow-hidden bg-muted/5">
+                {/* Luz LED decorativa de estado */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
+                  getChallengeState(selectedChallenge.id) === 'completed' 
+                    ? 'from-emerald-500 to-green-400' 
+                    : getChallengeState(selectedChallenge.id) === 'claimable' 
+                      ? 'from-amber-500 to-yellow-400' 
+                      : getChallengeState(selectedChallenge.id) === 'active' 
+                        ? 'from-primary to-indigo-500' 
+                        : 'from-muted-foreground/30 to-muted/20'
+                }`}></div>
 
-                  <CardContent className="space-y-6 flex-1 flex flex-col justify-center items-center py-8">
-                    {/* Caja de Recompensa Visual */}
-                    <div className="w-full max-w-md bg-muted/40 border border-border/30 p-4 rounded-2xl text-left space-y-2 shadow-inner">
-                      <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
-                        <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-                        Reliquia Vinculada
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center border border-border/60 shadow-sm shrink-0 overflow-hidden relative">
-                          <img src="/nft/usach/relics/0.png" alt="Reliquia 0" className="h-full w-full object-cover" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-xs sm:text-sm text-foreground line-clamp-1">
-                            {activeChallenge.relicName}
-                          </h4>
-                          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                            ✨ Pasivo: {activeChallenge.relicBuff}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground text-center max-w-sm leading-relaxed">
-                      Presiona el botón de conexión de abajo. Una vez que tu firma Web3 esté disponible, este paso se marcará como completado y se desbloqueará el siguiente hito secreto.
-                    </p>
-
-                    <div className="flex justify-center pt-2">
-                      <ConnectButton label="Vincular Billetera Web3" />
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="bg-muted/10 border-t border-border/20 p-4 justify-center text-center">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-                      Billetera protegida. No se solicitarán gas ni firmas de transferencia para este paso.
-                    </span>
-                  </CardFooter>
-                </Card>
-              ) : isActiveChallengeClaimable ? (
-                /* ================= SUB-PANTALLA: RECLAMAR RECOMPENSA (LOGRADO LOCALMENTE) ================= */
-                <Card className="border border-green-500/30 shadow-lg bg-card/45 backdrop-blur-md rounded-2xl h-full flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:border-green-500/50 text-left">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500 animate-pulse"></div>
-                  
-                  <div className="bg-green-500/10 border-b border-green-500/20 px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                      <div>
-                        <p className="text-xs font-bold text-green-400">¡Desafío Superado!</p>
-                        <p className="text-[10px] text-muted-foreground">Logro verificado en el cliente local.</p>
-                      </div>
-                    </div>
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge className="font-mono text-[9px] uppercase tracking-wider bg-primary/15 border-primary/25 text-primary">
+                      Desafío #0{selectedChallenge.id + 1}
+                    </Badge>
+                    <Badge className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getDifficultyBadgeColor(selectedChallenge.difficulty)}`}>
+                      {selectedChallenge.difficulty}
+                    </Badge>
+                    <Badge variant="outline" className="text-[9px] font-mono font-semibold text-muted-foreground border-border/40">
+                      {selectedChallenge.category}
+                    </Badge>
                   </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight truncate">
+                    {selectedChallenge.title}
+                  </h2>
+                </div>
 
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2 text-foreground">
-                      <Sparkles className="h-5 w-5 text-yellow-400 animate-pulse" />
-                      Reclamar Recompensa Académica
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Acuña tu Reliquia NFT inmutable en la blockchain como prueba de tu logro.
-                    </CardDescription>
-                  </CardHeader>
+                {/* Badge de Estado del Desafío */}
+                <div className="shrink-0 flex items-center">
+                  {(() => {
+                    const state = getChallengeState(selectedChallenge.id);
+                    if (state === 'completed') {
+                      return (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-xs shadow-[0_0_8px_rgba(16,185,129,0.1)]">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          RELIQUIA ADQUIRIDA
+                        </div>
+                      );
+                    }
+                    if (state === 'claimable') {
+                      return (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 font-bold text-xs shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                          <Award className="h-4 w-4 text-amber-500" />
+                          RECOMPENSA LISTA
+                        </div>
+                      );
+                    }
+                    if (state === 'active') {
+                      return (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs shadow-[0_0_8px_rgba(249,115,22,0.1)]">
+                          <Unlock className="h-4 w-4 text-primary" />
+                          MISIÓN ACTIVA
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 bg-muted/10 text-muted-foreground/60 font-bold text-xs">
+                        <Lock className="h-4 w-4 text-muted-foreground/40" />
+                        PRUEBA SELLADA
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
 
-                  <CardContent className="space-y-6 flex-1 flex flex-col justify-center items-center py-6">
-                    {/* Visual de la Reliquia NFT */}
-                    <div className="w-full max-w-sm border border-emerald-500/20 bg-muted/20 p-4 rounded-2xl flex flex-col items-center gap-4 relative overflow-hidden group shadow-md">
-                      <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 to-transparent"></div>
-                      
-                      {/* Imagen NFT real de public */}
-                      <div className="h-32 w-32 rounded-xl border border-border/80 overflow-hidden shadow-lg relative group-hover:scale-105 transition-transform duration-300">
+              {/* Cuerpo en Grid Interno */}
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 p-5 sm:p-6 flex-1 items-stretch">
+                {/* Subcolumna Pedagógica (Tabs) */}
+                <div className="xl:col-span-7 flex flex-col gap-4">
+                  <Tabs defaultValue="teoria" className="w-full flex-1 flex flex-col">
+                    <TabsList className="grid grid-cols-3 w-full bg-muted/30 border border-border/20 p-1 rounded-xl">
+                      <TabsTrigger value="teoria" className="text-xs py-1.5 flex items-center gap-1.5 rounded-lg data-[state=active]:bg-card cursor-pointer">
+                        <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                        Teoría
+                      </TabsTrigger>
+                      <TabsTrigger value="pistas" className="text-xs py-1.5 flex items-center gap-1.5 rounded-lg data-[state=active]:bg-card cursor-pointer">
+                        <ListTodo className="h-3.5 w-3.5 shrink-0" />
+                        Guía de Misión
+                      </TabsTrigger>
+                      <TabsTrigger value="lore" className="text-xs py-1.5 flex items-center gap-1.5 rounded-lg data-[state=active]:bg-card cursor-pointer">
+                        <History className="h-3.5 w-3.5 shrink-0" />
+                        Tradición EAO
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="mt-4 flex-1 flex flex-col justify-between">
+                      {/* Contenido de la pestaña Teoría */}
+                      <TabsContent value="teoria" className="focus-visible:outline-none flex-1">
+                        <div className="prose prose-sm dark:prose-invert max-h-[380px] overflow-y-auto pr-2 scrollbar-thin">
+                          {renderDescription(selectedChallenge.description)}
+                        </div>
+                      </TabsContent>
+
+                      {/* Contenido de la pestaña Guía de Misión */}
+                      <TabsContent value="pistas" className="focus-visible:outline-none flex-1">
+                        {getChallengeState(selectedChallenge.id) === 'locked' ? (
+                          <div className="flex flex-col items-center justify-center py-10 text-center bg-muted/15 border border-border/10 rounded-2xl p-6 h-full">
+                            <LockKeyhole className="h-8 w-8 text-muted-foreground/35 mb-2" />
+                            <h4 className="font-bold text-xs text-foreground uppercase tracking-wider">Detalles Encriptados</h4>
+                            <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
+                              Debes forjar los desafíos previos para descifrar las pistas de resolución de esta prueba.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2 scrollbar-thin">
+                            <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 flex items-start gap-2">
+                              <Zap className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-xs font-bold text-foreground">Instrucciones de Escritura:</p>
+                                <p className="text-xs text-muted-foreground leading-normal mt-0.5">
+                                  Realiza la acción descrita para validar el cumplimiento del desafío en tu perfil.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              {selectedChallenge.hints.map((hint, idx) => (
+                                <div key={idx} className="flex items-start gap-3 bg-muted/20 p-3 rounded-xl border border-border/10 transition-all hover:bg-muted/30">
+                                  <span className="h-5 w-5 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono font-extrabold flex items-center justify-center text-[10px] shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground leading-relaxed font-medium">
+                                    {hint}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
+
+                      {/* Contenido de la pestaña Tradición EAO */}
+                      <TabsContent value="lore" className="focus-visible:outline-none flex-1">
+                        <div className="bg-muted/10 border border-border/10 p-5 rounded-2xl relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-4 opacity-5">
+                            <BookOpen className="h-24 w-24" />
+                          </div>
+                          <div className="space-y-3 relative z-10">
+                            <h4 className="font-bold text-xs uppercase tracking-widest text-primary flex items-center gap-1.5">
+                              <History className="h-4 w-4 shrink-0" />
+                              El Legado Industrial
+                            </h4>
+                            <p className="text-xs text-muted-foreground/95 italic leading-relaxed">
+                              "En la antigua Escuela de Artes y Oficios (EAO) de la USACH, los artesanos y técnicos no revelaban las técnicas de fundición avanzada o forja de calderas hasta que el aprendiz demostraba maestría impecable en la manipulación básica del metal y el control térmico. Cada paso en el taller era evaluado rigurosamente por los maestros antes de avanzar al siguiente oficio."
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/75 font-medium border-t border-border/10 pt-2 flex items-center gap-1">
+                              <span>📍 Campus Histórico USACH - Patio de Talleres</span>
+                            </p>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                </div>
+
+                {/* Subcolumna de Vitrina y Acción (Card Derecha) */}
+                <div className="xl:col-span-5 flex flex-col justify-between gap-6 bg-muted/15 border border-border/20 p-5 rounded-2xl relative overflow-hidden">
+                  {/* Fondo decorativo con gradiente */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/5 to-transparent pointer-events-none"></div>
+
+                  {/* 1. Vitrina de la Reliquia */}
+                  <div className="flex flex-col items-center text-center gap-4 py-4 relative z-10">
+                    <span className="text-[9px] font-bold uppercase text-muted-foreground/80 tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      Recompensa Académica
+                    </span>
+
+                    {/* Visual del NFT */}
+                    {getChallengeState(selectedChallenge.id) === 'locked' ? (
+                      /* NFT Bloqueado */
+                      <div className="h-32 w-32 rounded-2xl border-2 border-dashed border-border/60 bg-muted/30 flex flex-col items-center justify-center text-muted-foreground/35 relative shadow-inner">
+                        <LockKeyhole className="h-10 w-10 shrink-0 mb-1" />
+                        <span className="text-[9px] font-mono">RELIQUIA OCULTA</span>
+                      </div>
+                    ) : (
+                      /* NFT Desbloqueado/Completado */
+                      <div className="h-36 w-36 rounded-2xl border border-border/80 overflow-hidden shadow-2xl relative group transition-transform duration-300 hover:scale-105">
+                        {/* Resplandor decorativo */}
+                        <div className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-tr ${
+                          getChallengeState(selectedChallenge.id) === 'completed'
+                            ? 'from-emerald-500 to-green-500'
+                            : 'from-amber-500 to-yellow-500'
+                        }`}></div>
+                        
                         <img 
-                          src={`/nft/usach/relics/${activeChallenge.rewardRelicNft}.png`} 
-                          alt={activeChallenge.relicName} 
+                          src={`/nft/usach/relics/${selectedChallenge.rewardRelicNft}.png`} 
+                          alt={selectedChallenge.relicName} 
                           className="h-full w-full object-cover" 
                         />
                       </div>
+                    )}
 
-                      <div className="text-center space-y-1">
-                        <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-bold text-[10px]">
-                          Reliquia #{activeChallenge.rewardRelicNft}
+                    {/* Lore y Buff de la Reliquia */}
+                    {getChallengeState(selectedChallenge.id) !== 'locked' ? (
+                      <div className="space-y-1.5 w-full">
+                        <Badge variant="outline" className={`font-mono text-[9px] px-2 py-0.5 border ${
+                          getChallengeState(selectedChallenge.id) === 'completed' 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          Reliquia #{selectedChallenge.rewardRelicNft}
                         </Badge>
-                        <h4 className="font-extrabold text-sm text-foreground line-clamp-1">
-                          {activeChallenge.relicName}
+                        <h4 className="font-extrabold text-xs text-foreground px-2 line-clamp-1" title={selectedChallenge.relicName}>
+                          {selectedChallenge.relicName}
                         </h4>
-                        <p className="text-xs text-emerald-400 font-medium">
-                          ✨ {activeChallenge.relicBuff}
+                        <p className="text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/15 py-1.5 px-3 rounded-lg mx-auto w-fit flex items-center gap-1 shadow-sm">
+                          <Sparkle className="h-3 w-3 text-emerald-400" />
+                          Buff: {selectedChallenge.relicBuff}
                         </p>
                       </div>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground text-center max-w-sm leading-relaxed">
-                      Haz clic en el botón de abajo para interactuar con el contrato `BaseERC1155.sol` y acuñar tu insignia. Esto requiere aprobar una transacción rápida en tu billetera.
-                    </p>
-
-                    <div className="flex justify-center w-full max-w-sm">
-                      <Button 
-                        onClick={() => handleClaimReward(activeChallenge.id)}
-                        disabled={mintingId !== null}
-                        className="w-full font-bold text-sm bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                      >
-                        {mintingId !== null ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-1.5 shrink-0" />
-                            Acuñando en la red...
-                          </>
-                        ) : (
-                          <>
-                            <Award className="h-4.5 w-4.5 mr-1.5 shrink-0" />
-                            Acuñar Reliquia NFT
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="bg-muted/10 border-t border-border/20 p-4 justify-center text-center">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                      Requiere una fracción mínima de gas en Sepolia para el almacenamiento on-chain.
-                    </span>
-                  </CardFooter>
-                </Card>
-              ) : (
-                /* ================= SUB-PANTALLA: DESAFÍO EN PENDIENTE / BLOQUEADO LOCALMENTE ================= */
-                <Card className="border border-border/80 shadow-md bg-card/45 backdrop-blur-md rounded-2xl h-full flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:border-primary/20 text-left">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-primary"></div>
-                  
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2 text-foreground">
-                      <Lock className="h-5 w-5 text-amber-500" />
-                      Instrucciones del Desafío
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Completa la siguiente tarea académica para certificar tu progreso.
-                    </CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-5 flex-1 flex flex-col justify-center py-6">
-                    {/* Caja Informativa de Acción */}
-                    <div className="bg-muted/30 border border-border/30 p-4 rounded-xl space-y-2">
-                      <div className="flex items-center gap-2 text-amber-500 text-xs font-bold uppercase tracking-wider">
-                        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                        Pendiente de Completación
+                    ) : (
+                      <div className="space-y-1.5">
+                        <h4 className="font-extrabold text-xs text-muted-foreground/75 italic">
+                          Insignia Encriptada
+                        </h4>
+                        <p className="text-[10px] text-muted-foreground/60 max-w-[200px] leading-normal mx-auto">
+                          El efecto pasivo y la representación de la insignia se revelarán al forjar este nivel.
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-normal">
-                        Para superar este desafío, realiza la siguiente acción en el aplicativo:
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 bg-background/50 p-2.5 rounded-lg border border-border/10">
-                        <ChevronRight className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-xs font-bold text-foreground">
-                          {activeChallenge.actionLabel}
-                        </span>
-                      </div>
-                    </div>
+                    )}
+                  </div>
 
-                    {/* Lista de Pistas / Checklist */}
-                    <div className="space-y-2.5">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pistas y Recomendaciones:</h4>
-                      <div className="space-y-2">
-                        {activeChallenge.hints.map((hint, idx) => (
-                          <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
-                            <span className="h-4.5 w-4.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
-                              {idx + 1}
-                            </span>
-                            <span>{hint}</span>
+                  {/* 2. Control Interactivo / Panel de Acciones */}
+                  <div className="relative z-10 w-full pt-4 border-t border-border/10">
+                    {(() => {
+                      const state = getChallengeState(selectedChallenge.id);
+
+                      // CASO: NO CONECTADO
+                      if (!isConnected) {
+                        return (
+                          <div className="space-y-3 text-center">
+                            <p className="text-[11px] text-muted-foreground leading-normal max-w-[260px] mx-auto">
+                              Conecta tu cliente Web3 para auditar tu progreso y reclamar los logros del curso.
+                            </p>
+                            <div className="flex justify-center">
+                              <ConnectButton label="Vincular Billetera Web3" />
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        );
+                      }
 
-                    <div className="flex justify-center pt-2">
-                      <Link href={activeChallenge.actionUrl} className="w-full">
-                        <Button className="w-full font-bold text-sm gap-1.5 bg-primary hover:bg-primary/95 text-primary-foreground">
-                          {activeChallenge.actionLabel}
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
+                      // CASO: COMPLETADO (YA POSEE EL NFT)
+                      if (state === 'completed') {
+                        return (
+                          <div className="space-y-3 text-center">
+                            <p className="text-[11px] text-emerald-400 font-medium leading-normal bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-xl">
+                              ✓ Logro certificado inmutablemente on-chain. Esta reliquia pertenece a tu billetera.
+                            </p>
+                            <a
+                              href={`${explorerUrl}/address/${BASE_ERC1155_CONTRACT.address}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full block"
+                            >
+                              <Button variant="outline" size="sm" className="w-full text-xs font-bold gap-1.5 border-border/60 hover:bg-muted/80 cursor-pointer">
+                                Explorar Contrato NFT
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Button>
+                            </a>
+                          </div>
+                        );
+                      }
 
-                  <CardFooter className="bg-muted/10 border-t border-border/20 p-4 justify-center text-center">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                      Una vez completada la acción en la página indicada, regresa aquí para reclamar tu reliquia.
-                    </span>
-                  </CardFooter>
-                </Card>
-              )}
+                      // CASO: LISTO PARA RECLAMAR (ACUÑAR NFT)
+                      if (state === 'claimable') {
+                        return (
+                          <div className="space-y-3">
+                            <p className="text-[10px] text-muted-foreground leading-normal text-center">
+                              Firma la transacción de acuñación en la blockchain para registrar el NFT en tu inventario.
+                            </p>
+                            <Button 
+                              onClick={() => handleClaimReward(selectedChallenge.id)}
+                              disabled={mintingId !== null}
+                              className="w-full text-xs font-black bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white shadow-lg hover:shadow-xl transition-all duration-200 py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              {mintingId !== null ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                  Acuñando en la red...
+                                </>
+                              ) : (
+                                <>
+                                  <Award className="h-4 w-4 shrink-0" />
+                                  Acuñar Reliquia NFT
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        );
+                      }
+
+                      // CASO: ACTIVO (PENDIENTE DE ACCIÓN)
+                      if (state === 'active') {
+                        return (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-1.5 bg-background/60 p-2.5 rounded-xl border border-border/10 text-left">
+                              <ChevronRight className="h-4 w-4 text-primary shrink-0" />
+                              <span className="text-[10px] font-bold text-foreground line-clamp-2">
+                                Misión: {selectedChallenge.actionLabel}
+                              </span>
+                            </div>
+                            <Link href={selectedChallenge.actionUrl} className="w-full block">
+                              <Button className="w-full text-xs font-bold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 rounded-xl cursor-pointer">
+                                Ejecutar Acción Académica
+                                <ArrowRight className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                          </div>
+                        );
+                      }
+
+                      // CASO: BLOQUEADO (DESAFÍOS FUTUROS)
+                      return (
+                        <div className="space-y-2 text-center py-2">
+                          <p className="text-[11px] text-muted-foreground/60 max-w-[240px] mx-auto leading-normal font-medium">
+                            Los mecanismos de acción de esta fase están bloqueados hasta que completes las misiones anteriores.
+                          </p>
+                          <div className="flex justify-center w-full">
+                            <Button 
+                              disabled 
+                              variant="ghost" 
+                              size="sm" 
+                              className="w-full text-xs gap-1.5 text-muted-foreground/40 border border-dashed border-border/40 bg-muted/5"
+                            >
+                              <Lock className="h-3.5 w-3.5" />
+                              Fase no disponible
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
             </div>
-
           </div>
         ) : null}
-
-        {/* ================= SECCIÓN: RESUMEN DE PROGRESO DE LA RUTA COMPLETA ================= */}
-        {challenges.length > 0 && (
-          <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden group transition-all duration-300 w-full mt-4 text-left">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary to-cyan-500"></div>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
-                <Trophy className="h-5 w-5 text-primary" />
-                Mapa de la Senda Criptográfica ({activeChallengeIndex} / {challenges.length} Completado)
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Visualiza el camino completo de tu aprendizaje. Los desafíos ya resueltos otorgan reliquias en verde, mientras que los futuros permanecen bloqueados.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Grid de Desafíos */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-3">
-                {challenges.map((c, idx) => {
-                  const hasRelic = hasNft(idx);
-                  const isActive = isConnected && idx === activeChallengeIndex;
-                  const isClaimable = isConnected && idx === activeChallengeIndex && isCompleted(idx);
-                  
-                  let borderClass = 'border-border/30 bg-muted/5';
-                  let textClass = 'text-muted-foreground/60';
-                  let icon = <Lock className="h-4 w-4 text-muted-foreground/40" />;
-
-                  if (hasRelic) {
-                    borderClass = 'border-emerald-500/40 bg-emerald-500/5 shadow-[0_0_8px_rgba(16,185,129,0.1)]';
-                    textClass = 'text-emerald-400 font-bold';
-                    icon = <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-                  } else if (isClaimable) {
-                    borderClass = 'border-green-500 bg-green-500/10 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.2)]';
-                    textClass = 'text-green-400 font-bold';
-                    icon = <Award className="h-4 w-4 text-green-400" />;
-                  } else if (isActive) {
-                    borderClass = 'border-primary bg-primary/10 shadow-[0_0_12px_rgba(249,115,22,0.15)]';
-                    textClass = 'text-primary font-bold';
-                    icon = <Unlock className="h-4 w-4 text-primary animate-pulse" />;
-                  }
-
-                  return (
-                    <div 
-                      key={c.id} 
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-between text-center gap-2 transition-all duration-200 ${borderClass}`}
-                      title={c.title}
-                    >
-                      <span className={`text-[10px] font-mono ${textClass}`}>
-                        Paso {c.id + 1}
-                      </span>
-                      
-                      {/* Imagen miniatura del NFT o Candado */}
-                      <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center bg-background/50 border border-border/10 relative">
-                        {hasRelic || isClaimable ? (
-                          <img src={`/nft/usach/relics/${c.rewardRelicNft}.png`} alt={`Insignia ${c.id}`} className="h-full w-full object-cover" />
-                        ) : (
-                          icon
-                        )}
-                      </div>
-
-                      <span className="text-[9px] font-medium text-muted-foreground truncate w-full" title={c.title}>
-                        {c.title}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </main>
 
       <Footer />
