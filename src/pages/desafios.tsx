@@ -993,7 +993,7 @@ const DesafiosPage: NextPage = () => {
                   </Tabs>
                 </div>
 
-                <div className="lg:col-span-5 flex flex-col justify-between gap-6 bg-muted/15 border border-border/20 pt-4 pb-5 px-5 rounded-2xl relative overflow-hidden">
+                <div className="lg:col-span-5 flex flex-col gap-6 bg-muted/15 border border-border/20 pt-4 pb-5 px-5 rounded-2xl relative overflow-hidden">
                   {/* Fondo decorativo con gradiente */}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/5 to-transparent pointer-events-none"></div>
 
