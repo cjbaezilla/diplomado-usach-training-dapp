@@ -214,9 +214,14 @@ export function Navbar() {
                 <span className="font-extrabold tracking-wider text-xs leading-none text-white uppercase">
                   Universidad de Santiago de Chile
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold tracking-wider uppercase mt-1">
-                  Laboratorio de Aprendizaje DeFi y Web3
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[9px] text-slate-400 font-semibold tracking-wider uppercase">
+                    Laboratorio de Aprendizaje DeFi y Web3
+                  </span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[8px] font-extrabold tracking-normal uppercase border border-primary/30 shadow-[0_0_8px_rgba(var(--primary),0.1)]">
+                    v1.01
+                  </span>
+                </div>
               </div>
             </Link>
           </div>

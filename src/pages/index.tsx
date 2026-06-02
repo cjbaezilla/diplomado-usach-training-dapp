@@ -13,6 +13,7 @@ import { StudentSearch } from '@/components/StudentSearch';
 import { CreatedTokens } from '@/components/CreatedTokens';
 import { RecentIdentities } from '@/components/RecentIdentities';
 import { RecentPools } from '@/components/RecentPools';
+import { RecentRelics } from '@/components/RecentRelics';
 import { Footer } from '@/components/Footer';
 
 const Home: NextPage = () => {
@@ -158,9 +159,10 @@ const Home: NextPage = () => {
           <RecentPools />
         </div>
 
-        {/* Buscador de Estudiantes de ancho completo */}
-        <div className="w-full pt-8 border-t border-border/30">
+        {/* Buscador de Estudiantes y Últimas Reliquias en cuadrícula */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full pt-8 border-t border-border/30 items-stretch">
           <StudentSearch />
+          <RecentRelics />
         </div>
 
         {/* Secciones informativas lado a lado */}
