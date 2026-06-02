@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -379,6 +380,13 @@ const StudentProfilePage: NextPage<StudentPageProps> = ({ studentAddress, relics
   const isOwnerOfProfile = useMemo(() => {
     return isConnected && !!connectedAddress && connectedAddress.toLowerCase() === studentAddress.toLowerCase();
   }, [isConnected, connectedAddress, studentAddress]);
+
+  // Registrar el logro del desafío 8 en localStorage
+  useEffect(() => {
+    if (isHydrated) {
+      trackChallengeCompletion(8);
+    }
+  }, [isHydrated]);
 
   // Registro de qué tokens del listado general realmente poseen balance > 0
   const [tokensWithBalance, setTokensWithBalance] = useState<Record<string, boolean>>({});

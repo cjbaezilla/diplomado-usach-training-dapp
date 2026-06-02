@@ -1,3 +1,4 @@
+import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
@@ -282,6 +283,8 @@ const IdentityPage: NextPage = () => {
         message: '¡Perfil actualizado en la blockchain exitosamente!',
         txHash: actionTxHash,
       });
+      // Registrar el logro del desafío 1 en localStorage
+      trackChallengeCompletion(1);
       refetchMyProfile();
       refetchDirectory();
     }

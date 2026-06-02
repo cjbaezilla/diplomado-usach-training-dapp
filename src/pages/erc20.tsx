@@ -1,3 +1,4 @@
+import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
@@ -289,6 +290,9 @@ const ERC20Page: NextPage = () => {
         txHash: deployHash,
       });
 
+      // Registrar el logro del desafío 2 en localStorage
+      trackChallengeCompletion(2);
+
       setTransactions((prev) => [
         {
           id: `tx-${Date.now()}`,
@@ -328,11 +332,17 @@ const ERC20Page: NextPage = () => {
         actionAmountStr = transferAmount;
         setTransferAmount('');
         setTransferRecipient('');
+
+        // Registrar el logro del desafío 3 en localStorage
+        trackChallengeCompletion(3);
       } else if (activeTab === 'mint') {
         actionLabel = `Acuñación de ${selectedMetadata.symbol}`;
         actionAmountStr = mintAmount;
         setMintAmount('');
         setMintRecipient('');
+
+        // Registrar el logro del desafío 3 en localStorage
+        trackChallengeCompletion(3);
       } else if (activeTab === 'burn') {
         actionLabel = `Quema de ${selectedMetadata.symbol}`;
         actionAmountStr = burnAmount;

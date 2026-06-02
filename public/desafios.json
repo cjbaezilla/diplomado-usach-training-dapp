@@ -1,0 +1,202 @@
+[
+  {
+    "id": 0,
+    "title": "Instalación y Configuración de Billetera Web3",
+    "category": "Fundamentos",
+    "difficulty": "Principiante",
+    "xp": 10,
+    "estimatedTime": "5 min",
+    "rewardRelicNft": 0,
+    "relicName": "Insignia #0: El Alambique y Recipiente (Taller de la EAO)",
+    "relicBuff": "Destilación de Conocimiento (+5 de Transmutación)",
+    "accomplishmentFactor": "CONEXION_BILLETERA",
+    "actionLabel": "Conectar Billetera",
+    "actionUrl": "/desafios",
+    "description": "El punto de partida de tu aventura on-chain en la USACH.\n\n### ¿Qué es una Billetera Digital (Wallet)?\nUna billetera Web3 es una herramienta de software o hardware que interactúa con la blockchain para gestionar tus claves criptográficas y permitirte firmar transacciones. A diferencia de las billeteras físicas tradicionales, una billetera criptográfica **no almacena tus criptomonedas o tokens** en tu dispositivo. En su lugar, el saldo de tus activos reside de forma inmutable en el registro distribuido (ledger) de la blockchain, y la billetera resguarda tus **claves privadas**, que son las 'firmas digitales' necesarias para autorizar movimientos.\n\n### ¿Para qué se utilizan las Billeteras?\n1. **Gestión de Activos**: Permiten recibir, custodiar y transferir Ether (ETH), tokens estándar (como ERC-20) y tokens coleccionables no fungibles o semi-fungibles (como ERC-721 y ERC-1155).\n2. **Conexión a dApps**: Sirven como tu pasaporte digital de autenticación para interactuar con Aplicaciones Descentralizadas sin requerir contraseñas centralizadas.\n3. **Firma Criptográfica**: Te permiten firmar mensajes para validar que posees una dirección específica, lo que habilita la interacción con contratos inteligentes.\n\n### Billeteras más Populares y Comunes en el Ecosistema EVM\n- **MetaMask**: La billetera web y móvil más extendida a nivel global, con soporte nativo de extensiones para navegadores Chrome, Firefox y Brave.\n- **Rainbow**: Destaca por su interfaz gráfica atractiva y una experiencia de usuario sumamente optimizada para dispositivos móviles.\n- **Coinbase Wallet**: Una opción robusta sin custodia (non-custodial) respaldada por el ecosistema Coinbase.\n- **Rabby Wallet**: Diseñada especialmente para desarrolladores y usuarios avanzados de DeFi, con simulador de transacciones antes de firmarlas.\n\n### Tipos de Billeteras en el Entorno Ethereum / EVM\n1. **Cuentas de Propiedad Externa o EOAs (Externally Owned Accounts)**: Son cuentas tradicionales protegidas por una llave privada directa, la cual se deriva de una frase semilla de recuperación (generalmente de 12 o 24 palabras). Ejemplos: MetaMask y Rainbow tradicionales. *Si pierdes tu frase semilla, pierdes el acceso definitivo a tus fondos.*\n2. **Billeteras de Contrato Inteligente o Abstracción de Cuentas (ERC-4337)**: Son cuentas controladas por un contrato inteligente desplegado en la blockchain. Permiten características avanzadas como recuperación social de claves (sin depender de una frase semilla física), firmas multifirma (multisig), límites de transferencia diaria, y pago de gas con tokens alternativos (gasless transactions). Ejemplos: Argent y Safe.",
+    "hints": [
+      "Instala la extensión de MetaMask o Rainbow en tu navegador preferido.",
+      "Crea una nueva billetera y resguarda tu frase de recuperación de 12 palabras en un lugar físico seguro. ¡Nunca la compartas con nadie!",
+      "Presiona el botón de conexión en esta página o arriba a la derecha para vincular tu cliente y completar este desafío."
+    ]
+  },
+  {
+    "id": 1,
+    "title": "Creación de Perfil Estudiantil",
+    "category": "Identidad",
+    "difficulty": "Principiante",
+    "xp": 20,
+    "estimatedTime": "5 min",
+    "rewardRelicNft": 1,
+    "relicName": "Insignia #1: La Turbina del Patio de Talleres (Legado Industrial)",
+    "relicBuff": "Impulso Industrial (+5 de Resistencia)",
+    "accomplishmentFactor": "REGISTRO_IDENTIDAD",
+    "actionLabel": "Ir a Registrar Identidad",
+    "actionUrl": "/identity",
+    "description": "Explora el concepto de Identidad Digital Soberana (SSI) y el registro de datos en blockchain. En este desafío, interactuarás con el contrato inteligente `StudentIdentity.sol` de la Universidad de Santiago de Chile para guardar tu nombre, correo institucional y redes sociales.\n\nAl registrarte, tu dirección pública en la red de pruebas quedará inmutablemente asociada a tu identidad académica dentro de la dApp. Esto no solo te otorga un avatar visual dinámico, sino que te autoriza formalmente a participar en las actividades y certámenes del curso DeFi, registrando tu reputación de forma transparente y permanente en el ledger.",
+    "hints": [
+      "Navega a la sección de 'Identidad' a través del menú superior de la aplicación.",
+      "Rellena los campos obligatorios: tu Nombre Completo y tu Correo Electrónico Institucional (@usach.cl).",
+      "Haz clic en el botón 'Registrar Perfil' y aprueba la transacción en tu billetera. Espera a que la red procese la escritura."
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Creación de Token ERC-20 Personalizado",
+    "category": "Tokens",
+    "difficulty": "Intermedio",
+    "xp": 30,
+    "estimatedTime": "10 min",
+    "rewardRelicNft": 2,
+    "relicName": "Insignia #2: El Tablero de Control (Central Eléctrica EAO)",
+    "relicBuff": "Sobrecarga Controlada (+5 de Energía)",
+    "accomplishmentFactor": "CREACION_TOKEN_ERC20",
+    "actionLabel": "Ir a Fábrica ERC-20",
+    "actionUrl": "/erc20",
+    "description": "El estándar ERC-20 es la especificación técnica fundamental de Ethereum para la creación de tokens fungibles (idénticos entre sí). En este desafío, utilizarás la 'Fábrica de Tokens' de la dApp (`TokenFactory.sol`) para desplegar en la red tu propio contrato de token inteligente.\n\nAl ingresar un nombre, símbolo y suministro de tokens, la fábrica compilará e instanciará un contrato ERC-20 individual del cual tú serás el propietario original (owner). Esta es la base sobre la que los protocolos DeFi (como Uniswap o Aave) interactúan con monedas estables, activos de gobernanza y activos de utilidad.",
+    "hints": [
+      "Navega a la página de 'Tokens ERC20'.",
+      "Haz clic en la pestaña 'Crear Token' y rellena el formulario: Nombre (ej. CachorroCoin), Símbolo (ej. CCH) y Suministro Inicial (ej. 1,000,000).",
+      "Haz clic en 'Crear Token' y aprueba el despliegue en tu billetera. Al completarse, verás tu token listado en 'Mis Tokens Creados'."
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Acuñación y Transferencia de Tokens",
+    "category": "Tokens",
+    "difficulty": "Intermedio",
+    "xp": 40,
+    "estimatedTime": "8 min",
+    "rewardRelicNft": 3,
+    "relicName": "Insignia #3: La Sala de Exhibición (Maestría Industrial de la EAO)",
+    "relicBuff": "Maestría de Exposición (+5 de Destreza)",
+    "accomplishmentFactor": "MINTEO_TRANSFERENCIA_ERC20",
+    "actionLabel": "Gestionar mi Token",
+    "actionUrl": "/erc20",
+    "description": "Una vez desplegado tu token ERC-20, aprenderás a gestionar su suministro circulante. Las dos funciones clave para la manipulación de balances son:\n\n1. **Acuñar (Mint)**: Crea nuevos tokens de la nada incrementando el suministro total (`totalSupply`) y asignándolos a tu dirección. Requiere permisos de administrador.\n2. **Transferir (Transfer)**: Envía una fracción de tus tokens a otra cuenta en la red, actualizando el registro de saldos de forma segura sin intermediarios.\n\nDemuestra el control sobre tu propio activo digital realizando ambas operaciones desde el panel de control de tu token.",
+    "hints": [
+      "En la pestaña 'Mis Tokens Creados' de la página ERC-20, selecciona la tarjeta de tu token.",
+      "Usa la acción de 'Acuñar' para agregar, por ejemplo, 50,000 tokens adicionales a tu balance.",
+      "Usa la acción de 'Transferir' para enviar una cantidad a cualquier otra dirección del curso (puedes buscar direcciones de tus compañeros en la sección 'Identidad' o usar una dirección secundaria)."
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Intercambio en el Mercado Descentralizado (Swap)",
+    "category": "DeFi",
+    "difficulty": "Intermedio",
+    "xp": 50,
+    "estimatedTime": "10 min",
+    "rewardRelicNft": 4,
+    "relicName": "Insignia #4: La Fragua y el Yunque (Taller de Forja de la EAO)",
+    "relicBuff": "Resiliencia de Acero (+5 de Voluntad)",
+    "accomplishmentFactor": "SWAP_DEX",
+    "actionLabel": "Ir al DEX",
+    "actionUrl": "/dex",
+    "description": "Los Creadores de Mercado Automatizados (AMMs) revolucionaron las finanzas al eliminar los libros de órdenes centralizados. En el DEX integrado de esta plataforma, intercambiarás un activo por otro mediante una piscina de liquidez utilizando la fórmula de producto constante:\n\n$$x \\cdot y = k$$\n\nDonde $x$ e $y$ son las reservas de los dos tokens de la piscina, y $k$ es una constante invariable. En este desafío, realizarás tu primer intercambio (swap) libre de intermediarios, experimentando cómo cambia el precio de los activos en función del tamaño de tu orden y el volumen de reservas de la piscina.",
+    "hints": [
+      "Navega a la sección 'DEX' en la barra superior.",
+      "En el panel 'Conversión de WETH / Operaciones', selecciona WETH en la parte superior y selecciona tu token personalizado o el de un compañero en la inferior.",
+      "Escribe un monto a intercambiar, haz clic en 'Intercambiar' (Swap) y aprueba las transacciones requeridas en tu billetera."
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Provisión de Liquidez en el DEX",
+    "category": "DeFi",
+    "difficulty": "Avanzado",
+    "xp": 60,
+    "estimatedTime": "12 min",
+    "rewardRelicNft": 5,
+    "relicName": "Insignia #5: La Caldera Babcock & Wilcox (Corazón de Vapor de la EAO)",
+    "relicBuff": "Eficiencia Térmica (+5 de Foco)",
+    "accomplishmentFactor": "PROVISION_LIQUIDEZ",
+    "actionLabel": "Agregar Liquidez",
+    "actionUrl": "/dex",
+    "description": "Para que un DEX funcione, requiere liquidez. Los Proveedores de Liquidez (LPs) depositan pares de tokens en las piscinas para que otros usuarios puedan operar. A cambio, los LPs reciben tokens de liquidez (LP tokens) que representan su porcentaje de propiedad del pool y les otorgan el derecho a reclamar una parte proporcional de las tarifas cobradas por cada intercambio.\n\nAprende a proveer liquidez depositando un valor equivalente de WETH y tu token en una de las piscinas activas del DEX. Esto requiere aprobar la transferencia de tus tokens mediante la función `approve` antes de ejecutar el depósito.",
+    "hints": [
+      "En la pestaña 'Añadir Liquidez' del DEX, selecciona el par de tokens que deseas aportar (por ejemplo, WETH y tu Token ERC-20).",
+      "Digita la cantidad de tokens. La interfaz calculará automáticamente la cantidad equivalente del segundo token basándose en la tasa actual.",
+      "Presiona 'Aprobar' para cada token si es necesario, y luego haz clic en 'Añadir Liquidez'. Confirma las transacciones."
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Creación de una Piscina de Liquidez",
+    "category": "DeFi",
+    "difficulty": "Avanzado",
+    "xp": 70,
+    "estimatedTime": "15 min",
+    "rewardRelicNft": 6,
+    "relicName": "Insignia #6: La Bodega del Laboratorio de Química (El Templo de la Alquimia EAO)",
+    "relicBuff": "Alquimia Mental (+5 de Claridad Analítica)",
+    "accomplishmentFactor": "CREACION_POOL_DEX",
+    "actionLabel": "Crear Piscina de Liquidez",
+    "actionUrl": "/dex",
+    "description": "Cuando creas un nuevo token ERC-20, este no tiene un mercado de intercambio inicial. En este desafío avanzado, actuarás como un arquitecto financiero desplegando un mercado de intercambio completamente nuevo utilizando la fábrica del DEX (`DEXFactory.sol`).\n\nAl asociar tu token con WETH (u otro token) en la fábrica, desplegarás un nuevo contrato de piscina de liquidez (`DEXPool.sol`). La primera persona que añade liquidez a este pool establece el precio inicial de intercambio de los tokens.",
+    "hints": [
+      "En la página del DEX, localiza la sección 'Crear Piscina de Liquidez'.",
+      "Selecciona tu token ERC-20 personalizado y el token WETH (u otro activo de la lista).",
+      "Haz clic en 'Crear Piscina' y confirma la transacción de despliegue. ¡Ahora tu token tiene una piscina oficial registrada!"
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Envoltura de Ether (WETH)",
+    "category": "Tokens",
+    "difficulty": "Principiante",
+    "xp": 80,
+    "estimatedTime": "5 min",
+    "rewardRelicNft": 7,
+    "relicName": "Insignia #7: La Máquina de Vapor Cavé à Paris (El Motor Fundacional EAO)",
+    "relicBuff": "Fuerza de Torque (+5 de Inercia de Estudio)",
+    "accomplishmentFactor": "INTERACCION_WETH",
+    "actionLabel": "Envolver / Desenvolver ETH",
+    "actionUrl": "/dex",
+    "description": "Ether (ETH) es el activo nativo de la blockchain Ethereum y se utiliza para pagar tarifas de gas. Sin embargo, dado que fue creado antes del desarrollo del estándar ERC-20, ETH no implementa la interfaz estándar de tokens (carece de funciones como `approve` o `transferFrom`).\n\nPara solucionar esto y permitir intercambios automáticos de Ether en protocolos DeFi, se utiliza Wrapped Ether (WETH). Al enviar ETH al contrato inteligente de WETH, este queda bloqueado y se acuña una cantidad equivalente (1:1) de WETH en tu dirección. El proceso es totalmente reversible en cualquier momento (desenvolver o unwrap).",
+    "hints": [
+      "Ve a la sección 'Conversión de WETH' en la página del DEX.",
+      "Ingresa una cantidad de ETH a envolver (por ejemplo, 0.05 ETH).",
+      "Haz clic en 'Envolver (Wrap)' y confirma la transacción. Verás cómo tu balance de WETH incrementa en paridad 1:1."
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Exploración de la Actividad Criptográfica",
+    "category": "Explorador",
+    "difficulty": "Principiante",
+    "xp": 90,
+    "estimatedTime": "5 min",
+    "rewardRelicNft": 8,
+    "relicName": "Insignia #8: La Urna Funeraria del General Las Heras (Maestría en Broncería y Fundición)",
+    "relicBuff": "Temple de Bronce (+5 de Voluntad Inquebrantable)",
+    "accomplishmentFactor": "VER_HISTORIAL_TRANSACCIONES",
+    "actionLabel": "Ver mi Perfil y Transacciones",
+    "actionUrl": "/estudiante/me",
+    "description": "La transparencia y la auditabilidad pública son pilares de la Web3. Todas las acciones de creación, acuñación, transferencias y swaps que has realizado quedan registradas con un Hash de Transacción único en el libro de contabilidad de la blockchain.\n\nEn este desafío, visitarás la sección de tu perfil público de estudiante. Aquí, la dApp recopila e integra tus datos cargándolos directamente desde los contratos inteligentes y nodos de la red, mostrándote cómo la identidad digital soberana unifica tus logros en una sola página pública.",
+    "hints": [
+      "Haz clic en tu ícono de perfil de usuario en la barra de navegación superior (o usa el botón de acción de abajo).",
+      "Revisa la vista de tus balances y tus reliquias en tu página de perfil estudiantil.",
+      "Esta acción de consulta directa de la blockchain completará tu desafío."
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Uso del Grifo de Tokens Académicos (Faucet)",
+    "category": "Explorador",
+    "difficulty": "Principiante",
+    "xp": 100,
+    "estimatedTime": "5 min",
+    "rewardRelicNft": 9,
+    "relicName": "Insignia #9: Los Taladros Mecánicos en Serie (Taller de Mecánica y Ajuste)",
+    "relicBuff": "Sincronización en Cadena (+5 de Eficiencia Operativa)",
+    "accomplishmentFactor": "INTERACCION_FAUCET",
+    "actionLabel": "Ir a Inicio / Solicitar Faucet",
+    "actionUrl": "/",
+    "description": "En las blockchains de prueba (testnets), los desarrolladores utilizan grifos (Faucets) para obtener Ether o tokens gratuitos para simular escenarios reales de producción. En esta dApp, el Faucet te provee de tokens de prueba autorizados para interactuar con los pools del DEX y realizar swaps.\n\nCompleta tu ciclo de aprendizaje solicitando tokens en el grifo de la página de inicio. Esta acción finaliza tu set de habilidades de explorador Web3, preparándote para construir sistemas de contratos inteligentes de grado industrial.",
+    "hints": [
+      "Ve a la página de 'Inicio' (Home) de la dApp.",
+      "Desplázate hasta encontrar la sección del Faucet de la Plataforma.",
+      "Haz clic en el botón para solicitar/reclamar tokens de prueba y autoriza la transacción en tu billetera."
+    ]
+  }
+]

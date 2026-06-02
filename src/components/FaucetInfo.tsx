@@ -1,4 +1,5 @@
 import React from 'react';
+import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Droplet, ExternalLink, Info, HelpCircle } from 'lucide-react';
 
@@ -56,6 +57,10 @@ const SEPOLIA_FAUCETS: FaucetLink[] = [
 ];
 
 export function FaucetInfo() {
+  const handleFaucetClick = () => {
+    trackChallengeCompletion(9);
+  };
+
   return (
     <div className="w-full space-y-6 text-left animate-in fade-in-50 duration-500">
       <div className="flex items-center gap-3 border-b border-border/40 pb-4">
@@ -85,6 +90,7 @@ export function FaucetInfo() {
                 href={faucet.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={handleFaucetClick}
                 className="flex flex-col justify-between p-4 rounded-xl border border-border bg-card/60 hover:bg-muted/30 hover:border-primary/50 transition-all duration-300 group/item shadow-sm hover:shadow-md"
               >
                 <div className="space-y-2">

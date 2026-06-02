@@ -1,3 +1,4 @@
+import { trackChallengeCompletion } from '@/hooks/useChallenges';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
@@ -1068,6 +1069,10 @@ const DEXPage: NextPage = () => {
         message: '¡Piscina de liquidez creada con éxito!',
         txHash: factoryTxHash
       });
+
+      // Registrar el logro del desafío 6 en localStorage
+      trackChallengeCompletion(6);
+
       setTransactions((prev) => [
         {
           id: `tx-${Date.now()}`,
@@ -1095,11 +1100,17 @@ const DEXPage: NextPage = () => {
         desc = 'Intercambio de tokens';
         type = 'swap';
         setSwapAmountIn('');
+
+        // Registrar el logro del desafío 4 en localStorage
+        trackChallengeCompletion(4);
       } else if (activeActionType === 'add_liquidity') {
         desc = `Añadir liquidez ${metadataA.symbol}/${metadataB.symbol}`;
         type = 'add_liquidity';
         setAddAmountA('');
         setAddAmountB('');
+
+        // Registrar el logro del desafío 5 en localStorage
+        trackChallengeCompletion(5);
       } else if (activeActionType === 'remove_liquidity') {
         desc = `Retirar liquidez ${metadataA.symbol}/${metadataB.symbol}`;
         type = 'remove_liquidity';
@@ -1178,6 +1189,10 @@ const DEXPage: NextPage = () => {
         message: `¡Transacción de ${desc.toLowerCase()} completada con éxito!`,
         txHash: wethTxHash
       });
+
+      // Registrar el logro del desafío 7 en localStorage
+      trackChallengeCompletion(7);
+
       setTransactions((prev) => [
         {
           id: `tx-${Date.now()}`,
