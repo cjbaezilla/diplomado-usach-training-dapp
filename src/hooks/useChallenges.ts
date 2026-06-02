@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount, useReadContract, useBalance, usePublicClient } from 'wagmi';
-import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
+import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, WETH_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
 
@@ -344,6 +344,43 @@ export function useChallenges() {
   useEffect(() => {
     checkCreatePool();
   }, [checkCreatePool]);
+
+  // Estado y callback para validar el Desafío #09 (ID: 8 - Envoltura de Ether (WETH))
+  const [isWethCompleted, setIsWethCompleted] = useState(false);
+
+  const checkWeth = useCallback(async () => {
+    if (!publicClient || !address) {
+      setIsWethCompleted(false);
+      return;
+    }
+    try {
+      // Buscar eventos de Deposit (Wrap) asociados al usuario en el contrato WETH
+      const depositLogs = await publicClient.getLogs({
+        address: WETH_CONTRACT.address,
+        event: {
+          type: 'event',
+          name: 'Deposit',
+          inputs: [
+            { type: 'address', name: 'dst', indexed: true },
+            { type: 'uint256', name: 'wad' }
+          ]
+        },
+        args: {
+          dst: address
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      setIsWethCompleted(depositLogs.length > 0);
+    } catch (err) {
+      console.error('Error al verificar desafío de WETH:', err);
+      setIsWethCompleted(false);
+    }
+  }, [publicClient, address]);
+
+  useEffect(() => {
+    checkWeth();
+  }, [checkWeth]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -488,9 +525,14 @@ export function useChallenges() {
     if (challenge.id === 7) {
       return isCreatePoolCompleted || !!localCompleted[challenge.id];
     }
+
+    // Desafío 9 (index 8, id 8: Envoltura de Ether (WETH)) se completa si el usuario envolvió ETH (Deposit), o si lo completó localmente
+    if (challenge.id === 8) {
+      return isWethCompleted || !!localCompleted[challenge.id];
+    }
     
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted, isCreatePoolCompleted]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken, isMintAndTransferCompleted, isSwapCompleted, isLiquidityCompleted, isCreatePoolCompleted, isWethCompleted]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -513,9 +555,10 @@ export function useChallenges() {
       checkMintAndTransfer(),
       checkSwap(),
       checkLiquidity(),
-      checkCreatePool()
+      checkCreatePool(),
+      checkWeth()
     ]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity, checkCreatePool]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens, checkMintAndTransfer, checkSwap, checkLiquidity, checkCreatePool, checkWeth]);
 
   return {
     localCompleted,

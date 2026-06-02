@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { privateKeyToAccount } from 'viem/accounts';
 import { keccak256, encodePacked, createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
-import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
+import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, WETH_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -310,6 +310,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
     }
   }
+
+  // Validación estricta on-chain para el Desafío 9 (ID: 8 - Envoltura de Ether (WETH))
+  if (Number(id) === 8) {
+    try {
+      // Buscar eventos de Deposit (Wrap) asociados al usuario en el contrato WETH
+      const depositLogs = await publicClient.getLogs({
+        address: WETH_CONTRACT.address,
+        event: {
+          type: 'event',
+          name: 'Deposit',
+          inputs: [
+            { type: 'address', name: 'dst', indexed: true },
+            { type: 'uint256', name: 'wad' }
+          ]
+        },
+        args: {
+          dst: userAddress as `0x${string}`
+        },
+        fromBlock: DEPLOYMENT_BLOCK
+      });
+
+      if (depositLogs.length === 0) {
+        return res.status(400).json({ error: 'No se encontró ningún evento de depósito/envoltura (Deposit) en el contrato WETH para esta dirección.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar la envoltura de WETH on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar la blockchain.'}` });
+    }
+  }
+
 
 
   try {
