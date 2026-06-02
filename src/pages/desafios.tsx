@@ -61,6 +61,7 @@ import {
 import { useChallenges } from '@/hooks/useChallenges';
 import { useChallengeMinter } from '@/hooks/useChallengeMinter';
 import { BASE_ERC1155_CONTRACT } from '@/contracts';
+import confetti from 'canvas-confetti';
 
 interface Challenge {
   id: number;
@@ -92,6 +93,51 @@ interface RelicMetadata {
   external_url: string;
   attributes: Attribute[];
 }
+
+/**
+ * Lanza una animación de confeti premium con múltiples ráfagas desde las esquinas inferiores
+ * para celebrar la obtención de la reliquia académica de manera inmersiva.
+ */
+const launchAcademicConfetti = () => {
+  // Cañón izquierdo
+  confetti({
+    particleCount: 120,
+    spread: 80,
+    angle: 60,
+    origin: { x: 0, y: 0.8 },
+    colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
+  });
+
+  // Cañón derecho
+  confetti({
+    particleCount: 120,
+    spread: 80,
+    angle: 120,
+    origin: { x: 1, y: 0.8 },
+    colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
+  });
+
+  // Ráfagas secundarias para un efecto sostenido y premium
+  setTimeout(() => {
+    confetti({
+      particleCount: 60,
+      spread: 60,
+      angle: 45,
+      origin: { x: 0.05, y: 0.75 },
+      colors: ['#fbbf24', '#34d399', '#60a5fa']
+    });
+  }, 200);
+
+  setTimeout(() => {
+    confetti({
+      particleCount: 60,
+      spread: 60,
+      angle: 135,
+      origin: { x: 0.95, y: 0.75 },
+      colors: ['#fbbf24', '#34d399', '#60a5fa']
+    });
+  }, 200);
+};
 
 const DesafiosPage: NextPage = () => {
   const isHydrated = useHydrated();
@@ -171,6 +217,9 @@ const DesafiosPage: NextPage = () => {
   // Manejar el éxito del minteo de reliquias
   useEffect(() => {
     if (isMintSuccess && mintingId !== null) {
+      // Disparar confeti con efectos especiales
+      launchAcademicConfetti();
+
       setNotification({
         type: 'success',
         message: `¡Reliquia #${mintingId} reclamada y acuñada con éxito en la blockchain!`,
