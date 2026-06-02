@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAccount, useReadContract, useBalance } from 'wagmi';
-import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT } from '@/contracts';
+import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
 
@@ -51,6 +51,21 @@ export function useChallenges() {
     if (!studentProfileData) return false;
     return (studentProfileData as any)[6] === true;
   }, [studentProfileData]);
+
+  // Consultar tokens creados por el usuario en TokenFactory para validar Desafío #04 (Creación Token ERC-20 Personalizado)
+  const { data: createdTokensData, refetch: refetchCreatedTokens } = useReadContract({
+    ...TOKEN_FACTORY_CONTRACT,
+    functionName: 'getTokensByOwner',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isHydrated && !!address,
+    },
+  });
+
+  const hasCreatedToken = useMemo(() => {
+    if (!createdTokensData) return false;
+    return (createdTokensData as any).length > 0;
+  }, [createdTokensData]);
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -170,9 +185,14 @@ export function useChallenges() {
     if (challenge.id === 2) {
       return isStudentRegistered;
     }
+
+    // Desafío 4 (index 3, id 3: Creación de Token ERC-20 Personalizado) se completa únicamente si existe algún token creado por la dirección del usuario en la fábrica
+    if (challenge.id === 3) {
+      return hasCreatedToken;
+    }
     
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData, isStudentRegistered, hasCreatedToken]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -187,8 +207,13 @@ export function useChallenges() {
 
   // Función unificada para refrescar tanto balances de tokens como balance de ETH e identidad
   const refetchAll = useCallback(async () => {
-    await Promise.all([refetchBalances(), refetchEthBalance(), refetchStudentProfile()]);
-  }, [refetchBalances, refetchEthBalance, refetchStudentProfile]);
+    await Promise.all([
+      refetchBalances(),
+      refetchEthBalance(),
+      refetchStudentProfile(),
+      refetchCreatedTokens()
+    ]);
+  }, [refetchBalances, refetchEthBalance, refetchStudentProfile, refetchCreatedTokens]);
 
   return {
     localCompleted,

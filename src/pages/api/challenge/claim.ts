@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { privateKeyToAccount } from 'viem/accounts';
 import { keccak256, encodePacked, createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
-import { STUDENT_IDENTITY_CONTRACT } from '@/contracts';
+import { STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT } from '@/contracts';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -35,6 +35,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     } catch (contractError: any) {
       console.error('Error al verificar el registro de identidad on-chain:', contractError);
+      return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar el contrato inteligente.'}` });
+    }
+  }
+
+  // Validación estricta on-chain para el Desafío 4 (ID: 3 - Creación de Token ERC-20 Personalizado)
+  if (Number(id) === 3) {
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
+      });
+
+      const createdTokens = await publicClient.readContract({
+        ...TOKEN_FACTORY_CONTRACT,
+        functionName: 'getTokensByOwner',
+        args: [userAddress as `0x${string}`],
+      });
+
+      if (!createdTokens || (createdTokens as any).length === 0) {
+        return res.status(400).json({ error: 'La dirección del usuario no ha creado ningún token ERC-20 en la fábrica.' });
+      }
+    } catch (contractError: any) {
+      console.error('Error al verificar la creación del token ERC-20 on-chain:', contractError);
       return res.status(500).json({ error: `Error de verificación on-chain: ${contractError.message || 'No se pudo consultar el contrato inteligente.'}` });
     }
   }
