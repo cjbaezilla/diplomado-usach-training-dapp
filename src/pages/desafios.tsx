@@ -25,6 +25,13 @@ import {
   TabsContent,
 } from '@/components/ui/tabs';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Trophy,
   Award,
   Lock,
@@ -195,6 +202,9 @@ const DesafiosPage: NextPage = () => {
 
   // Estado para copiar la dirección del contrato NFT
   const [copiedContract, setCopiedContract] = useState(false);
+
+  // Estado para controlar la apertura de la modal de detalles de la reliquia
+  const [isRelicModalOpen, setIsRelicModalOpen] = useState(false);
 
   // Cargar metadatos del NFT al seleccionar un desafío
   useEffect(() => {
@@ -1045,7 +1055,11 @@ const DesafiosPage: NextPage = () => {
                         </div>
                       ) : (
                         /* NFT Desbloqueado/Completado */
-                        <div className="h-72 w-72 sm:h-80 sm:w-80 rounded-2xl border border-border/85 overflow-hidden shadow-2xl relative">
+                        <div 
+                          onClick={() => relicMetadata && setIsRelicModalOpen(true)}
+                          className="h-72 w-72 sm:h-80 sm:w-80 rounded-2xl border border-border/85 overflow-hidden shadow-2xl relative cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 group/nft"
+                          title="Click para ver detalles de la reliquia"
+                        >
                           {/* Resplandor decorativo */}
                           <div className={`absolute inset-0 opacity-15 bg-gradient-to-tr ${
                             getChallengeState(selectedChallenge.id) === 'completed'
@@ -1056,7 +1070,7 @@ const DesafiosPage: NextPage = () => {
                           <img 
                             src={`/nft/usach/relics/${selectedChallenge.rewardRelicNft}.png`} 
                             alt={selectedChallenge.relicName} 
-                            className="h-full w-full object-cover" 
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover/nft:scale-105" 
                           />
 
                           {/* Etiquetas superpuestas (Overlay Labels) - Esquina inferior derecha alineadas verticalmente */}
@@ -1188,6 +1202,19 @@ const DesafiosPage: NextPage = () => {
                                 {selectedChallenge.estimatedTime}
                               </span>
                             </div>
+
+                            {relicMetadata && (
+                              <div className="flex justify-between items-center text-[10px] text-muted-foreground pt-1.5 border-t border-border/10">
+                                <span>Detalle Completo:</span>
+                                <button
+                                  onClick={() => setIsRelicModalOpen(true)}
+                                  className="font-semibold text-primary hover:underline hover:text-primary/80 flex items-center gap-0.5 cursor-pointer"
+                                >
+                                  Ver Ficha
+                                  <ExternalLink className="h-3 w-3" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
@@ -1394,6 +1421,112 @@ const DesafiosPage: NextPage = () => {
             </div>
           </div>
         ) : null}
+        {/* Modal / Dialog de Detalles de la Reliquia */}
+        <Dialog open={isRelicModalOpen} onOpenChange={(open) => !open && setIsRelicModalOpen(false)}>
+          {selectedChallenge && relicMetadata && (
+            <DialogContent className="max-w-md md:max-w-4xl bg-card border border-border/80 shadow-2xl p-0 overflow-hidden text-left rounded-2xl w-[94%] transition-all duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-12 w-full h-full items-stretch">
+
+                {/* Lateral izquierdo: Imagen de la Reliquia */}
+                <div className="md:col-span-5 relative w-full min-h-[220px] md:min-h-[460px] overflow-hidden bg-muted/40 flex">
+                  <img
+                    src={`/nft/usach/relics/${selectedChallenge.rewardRelicNft}.png`}
+                    alt={relicMetadata.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Gradiente sutil para acoplar la imagen en móvil vs desktop */}
+                  <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
+
+                  {/* Rarity & XP overlay sobre la imagen */}
+                  <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                    <Badge className={`text-xs px-2 py-1 font-bold uppercase rounded-md border-none ${getRarityColor(String(getTraitValue(relicMetadata, 'Clase de Item') || 'Común')).bg}`}>
+                      {String(getTraitValue(relicMetadata, 'Clase de Item') || 'Común')}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs bg-background/95 font-bold border-border/40 px-2 py-1">
+                      +{selectedChallenge.xp} XP
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Lateral derecho: Información detallada */}
+                <div className="md:col-span-7 p-6 flex flex-col justify-between space-y-4">
+                  <div className="space-y-4">
+                    <DialogHeader className="gap-1">
+                      <DialogTitle className="text-xl sm:text-2xl font-black text-foreground leading-tight">
+                        {relicMetadata.name}
+                      </DialogTitle>
+                      <DialogDescription className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
+                        ID de Token: {selectedChallenge.rewardRelicNft}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {/* Lore / Historia */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-foreground uppercase tracking-wider text-[10px] text-muted-foreground">
+                        Historia y Lore Universitario
+                      </h5>
+                      <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-muted/20 border border-border/20 p-4 rounded-xl max-h-[170px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted">
+                        {relicMetadata.description.split('\n').map((para, i) => (
+                          <p key={i} className="mb-2 last:mb-0">
+                            {para}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Atributos / Grid de Atributos */}
+                    <div className="space-y-1.5">
+                      <h5 className="font-bold text-foreground uppercase tracking-wider text-[10px] text-muted-foreground">
+                        Atributos y Propiedades
+                      </h5>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
+                        {relicMetadata.attributes.map((attr, index) => {
+                          if (attr.trait_type === 'Clase de Item' || attr.trait_type === 'Experiencia') return null;
+                          const isBuff = attr.trait_type === 'Efecto Pasivo';
+                          return (
+                            <div
+                              key={index}
+                              className={`p-2 rounded-lg border border-border/30 bg-muted/10 flex flex-col gap-0.5 ${isBuff ? 'col-span-2 sm:col-span-3 border-emerald-500/20 bg-emerald-500/5' : ''
+                                }`}
+                            >
+                              <span className="text-[10px] text-muted-foreground font-semibold uppercase">{attr.trait_type}</span>
+                              <span className={`text-xs font-bold ${isBuff ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground/90'
+                                }`}>
+                                {isBuff ? `✨ ${attr.value}` : attr.value}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer del Modal */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-center border-t border-border/20 pt-4 mt-2">
+                    <a
+                      href={relicMetadata.external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline self-start sm:self-center"
+                    >
+                      <span>Ver en Archivo Patrimonial USACH</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto text-xs"
+                      onClick={() => setIsRelicModalOpen(false)}
+                    >
+                      Cerrar Detalle
+                    </Button>
+                  </div>
+                </div>
+
+              </div>
+            </DialogContent>
+          )}
+        </Dialog>
       </main>
 
       <Footer />
