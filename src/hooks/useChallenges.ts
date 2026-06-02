@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useReadContract, useBalance } from 'wagmi';
 import { BASE_ERC1155_CONTRACT } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
@@ -28,6 +28,14 @@ export function trackChallengeCompletion(id: number) {
 export function useChallenges() {
   const isHydrated = useHydrated();
   const { address, isConnected } = useAccount();
+  
+  // Consultar balance de ETH nativo para validar Desafío #02 (Faucet)
+  const { data: ethBalanceData, refetch: refetchEthBalance } = useBalance({
+    address,
+    query: {
+      enabled: isHydrated && !!address,
+    },
+  });
   
   // Estado local para los desafíos completados en el cliente
   const [localCompleted, setLocalCompleted] = useState<Record<number, boolean>>({});
@@ -137,8 +145,14 @@ export function useChallenges() {
     const challenge = challengesData[index];
     if (!challenge) return false;
     if (challenge.id === 0) return true; // El paso con id 0 (conectar billetera) está completo si está conectado
+    
+    // Desafío 2 (index 1, id 1: Faucet) se completa automáticamente si la cuenta posee un balance de ETH > 0 en Sepolia
+    if (challenge.id === 1) {
+      return !!(ethBalanceData && ethBalanceData.value > 0n) || !!localCompleted[challenge.id];
+    }
+    
     return !!localCompleted[challenge.id];
-  }, [isConnected, hasNft, localCompleted]);
+  }, [isConnected, hasNft, localCompleted, ethBalanceData]);
 
   // Determinar el índice del desafío activo actual (el primer desafío donde NO posee el NFT relic)
   const activeChallengeIndex = useMemo(() => {
@@ -151,6 +165,11 @@ export function useChallenges() {
     trackChallengeCompletion(id);
   }, []);
 
+  // Función unificada para refrescar tanto balances de tokens como balance de ETH
+  const refetchAll = useCallback(async () => {
+    await Promise.all([refetchBalances(), refetchEthBalance()]);
+  }, [refetchBalances, refetchEthBalance]);
+
   return {
     localCompleted,
     ownedBalances: nftBalances,
@@ -159,7 +178,7 @@ export function useChallenges() {
     activeChallengeIndex,
     // Solo bloquea si no tiene balances en caché y está cargando por primera vez desde la blockchain
     isLoading: isLoadingBalances && !hasCachedBalances,
-    refetch: refetchBalances,
+    refetch: refetchAll,
     completeChallenge
   };
 }
