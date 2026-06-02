@@ -891,43 +891,6 @@ const DesafiosPage: NextPage = () => {
                           {selectedChallenge.category}
                         </Badge>
                       </div>
-
-                      {/* Badge de Estado del Desafío */}
-                      <div className="shrink-0 flex items-center">
-                        {(() => {
-                          const state = getChallengeState(selectedChallenge.id);
-                          if (state === 'completed') {
-                            return (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-xs shadow-[0_0_8px_rgba(16,185,129,0.1)]">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                RELIQUIA ADQUIRIDA
-                              </div>
-                            );
-                          }
-                          if (state === 'claimable') {
-                            return (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 font-bold text-xs shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                                <Award className="h-4 w-4 text-amber-500" />
-                                RECOMPENSA LISTA
-                              </div>
-                            );
-                          }
-                          if (state === 'active') {
-                            return (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs shadow-[0_0_8px_rgba(249,115,22,0.1)]">
-                                <Unlock className="h-4 w-4 text-primary" />
-                                MISIÓN ACTIVA
-                              </div>
-                            );
-                          }
-                          return (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 bg-muted/10 text-muted-foreground/60 font-bold text-xs">
-                              <Lock className="h-4 w-4 text-muted-foreground/40" />
-                              PRUEBA SELLADA
-                            </div>
-                          );
-                        })()}
-                      </div>
                     </div>
 
                     <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight">
@@ -1032,6 +995,43 @@ const DesafiosPage: NextPage = () => {
                         <Sparkles className="h-4 w-4 text-primary" />
                         Recompensa Académica
                       </h3>
+
+                      {/* Badge de Estado del Desafío */}
+                      <div className="shrink-0 flex items-center">
+                        {(() => {
+                          const state = getChallengeState(selectedChallenge.id);
+                          if (state === 'completed') {
+                            return (
+                              <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-[10px] shadow-[0_0_6px_rgba(16,185,129,0.08)]">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                ADQUIRIDA
+                              </div>
+                            );
+                          }
+                          if (state === 'claimable') {
+                            return (
+                              <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 font-bold text-[10px] shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+                                <Award className="h-3 w-3 text-amber-500" />
+                                LISTA
+                              </div>
+                            );
+                          }
+                          if (state === 'active') {
+                            return (
+                              <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-primary/30 bg-primary/10 text-primary font-bold text-[10px] shadow-[0_0_6px_rgba(249,115,22,0.08)]">
+                                <Unlock className="h-3 w-3 text-primary" />
+                                ACTIVA
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-border/60 bg-muted/10 text-muted-foreground/60 font-bold text-[10px]">
+                              <Lock className="h-3 w-3 text-muted-foreground/40" />
+                              SELLADA
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
 
                     {/* 1. Vitrina de la Reliquia */}
