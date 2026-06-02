@@ -15,13 +15,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Faltan parámetros requeridos: userAddress, id.' });
   }
 
+  const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com';
+  const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http(rpcUrl),
+  });
+
   // Validación estricta on-chain para el Desafío 3 (ID: 2 - Registro de Identidad)
   if (Number(id) === 2) {
     try {
-      const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
-      });
 
       const profile = await publicClient.readContract({
         ...STUDENT_IDENTITY_CONTRACT,
@@ -42,10 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Validación estricta on-chain para el Desafío 4 (ID: 3 - Creación de Token ERC-20 Personalizado)
   if (Number(id) === 3) {
     try {
-      const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
-      });
 
       const createdTokens = await publicClient.readContract({
         ...TOKEN_FACTORY_CONTRACT,
@@ -65,10 +63,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Validación estricta on-chain para el Desafío 5 (ID: 4 - Acuñación y Transferencia de Tokens)
   if (Number(id) === 4) {
     try {
-      const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
-      });
 
       // 1. Obtener los tokens creados por el usuario en la fábrica
       const userTokens = await publicClient.readContract({
@@ -148,10 +142,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Validación estricta on-chain para el Desafío 6 (ID: 5 - Intercambio en el Mercado Descentralizado (Swap))
   if (Number(id) === 5) {
     try {
-      const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
-      });
 
       // 1. Obtener la cantidad de pools en la fábrica del DEX
       const count = await publicClient.readContract({
@@ -205,10 +195,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Validación estricta on-chain para el Desafío 7 (ID: 6 - Provisión de Liquidez en el DEX)
   if (Number(id) === 6) {
     try {
-      const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
-      });
 
       // 1. Obtener la cantidad de pools en la fábrica del DEX
       const count = await publicClient.readContract({
@@ -262,10 +248,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Validación estricta on-chain para el Desafío 8 (ID: 7 - Creación de una Piscina de Liquidez)
   if (Number(id) === 7) {
     try {
-      const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
-      });
 
       // 1. Obtener los tokens creados por el usuario en la fábrica
       const userTokens = await publicClient.readContract({
