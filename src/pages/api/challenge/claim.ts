@@ -70,19 +70,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         transport: http('https://ethereum-sepolia-rpc.publicnode.com'),
       });
 
-      // 1. Obtener todos los tokens creados por la fábrica
-      const allTokens = await publicClient.readContract({
+      // 1. Obtener los tokens creados por el usuario en la fábrica
+      const userTokens = await publicClient.readContract({
         ...TOKEN_FACTORY_CONTRACT,
-        functionName: 'getAllTokens',
+        functionName: 'getTokensByOwner',
+        args: [userAddress as `0x${string}`],
       });
 
-      if (!allTokens || (allTokens as any).length === 0) {
-        return res.status(400).json({ error: 'No se han creado tokens en la fábrica aún.' });
+      if (!userTokens || (userTokens as any).length === 0) {
+        return res.status(400).json({ error: 'La dirección del usuario no ha creado ningún token ERC-20 en la fábrica.' });
       }
 
       // 2. Buscar eventos de acuñación (Transfer de 0x0 al usuario)
       const mintLogs = await publicClient.getLogs({
-        address: allTokens as `0x${string}`[],
+        address: userTokens as `0x${string}`[],
         event: {
           type: 'event',
           name: 'Transfer',
@@ -105,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 3. Buscar eventos de transferencia (Transfer desde el usuario a cualquier otra cuenta)
       const transferLogs = await publicClient.getLogs({
-        address: allTokens as `0x${string}`[],
+        address: userTokens as `0x${string}`[],
         event: {
           type: 'event',
           name: 'Transfer',

@@ -77,19 +77,16 @@ export function useChallenges() {
       return;
     }
     try {
-      const allTokens = await publicClient.readContract({
-        ...TOKEN_FACTORY_CONTRACT,
-        functionName: 'getAllTokens',
-      });
+      const userTokens = createdTokensData as `0x${string}`[];
 
-      if (!allTokens || allTokens.length === 0) {
+      if (!userTokens || userTokens.length === 0) {
         setIsMintAndTransferCompleted(false);
         return;
       }
 
       // Buscar eventos de acuñación (Transfer de 0x0 al usuario)
       const mintLogs = await publicClient.getLogs({
-        address: allTokens as `0x${string}`[],
+        address: userTokens,
         event: {
           type: 'event',
           name: 'Transfer',
@@ -113,7 +110,7 @@ export function useChallenges() {
 
       // Buscar eventos de transferencia (Transfer desde el usuario a cualquier otra cuenta)
       const transferLogs = await publicClient.getLogs({
-        address: allTokens as `0x${string}`[],
+        address: userTokens,
         event: {
           type: 'event',
           name: 'Transfer',
@@ -147,7 +144,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de acuñación y transferencia:', err);
       setIsMintAndTransferCompleted(false);
     }
-  }, [publicClient, address]);
+  }, [publicClient, address, createdTokensData]);
 
   useEffect(() => {
     checkMintAndTransfer();
@@ -277,9 +274,9 @@ export function useChallenges() {
       return hasCreatedToken;
     }
     
-    // Desafío 5 (index 4, id 4: Acuñación y Transferencia de Tokens) se completa únicamente si el usuario acuñó y transfirió un token de la fábrica
+    // Desafío 5 (index 4, id 4: Acuñación y Transferencia de Tokens) se completa si el usuario acuñó y transfirió un token, o si lo completó localmente
     if (challenge.id === 4) {
-      return isMintAndTransferCompleted;
+      return isMintAndTransferCompleted || !!localCompleted[challenge.id];
     }
     
     return !!localCompleted[challenge.id];
