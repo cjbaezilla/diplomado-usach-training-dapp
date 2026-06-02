@@ -121,6 +121,11 @@ A continuación se muestra el mapa de directorios actual de la aplicación. Fami
 
 ## 4. Convenciones de Estilo de Código y Arquitectura
 
+### Z. Compromisos
+- Los mensajes de commit deben estar en español con UTF-8. Sé descriptivo. Usa el formato estándar con líneas de asunto y cuerpo.
+- Todos los mensajes de commit DEBEN usar la sintaxis de Git para que todos los caracteres UTF-8 se manejen correctamente. Nunca uses secuencias de escape. Las comillas dobles son obligatorias.
+- Ejemplo: `git commit -m "feat: implementar ..." -m "Descripción detallada..."`
+
 ### A. Patrón de Enrutamiento de Next.js
 - **Solo Pages Router**: Este proyecto utiliza el Pages Router ubicado en `src/pages`. **No** crees una carpeta `app/` ni intentes usar características del App Router (como Server Components) a menos que se te indique explícitamente.
 - Todo el enrutamiento a nivel de página se maneja en `src/pages/`. Los elementos de diseño (layouts) reutilizables y los subcomponentes deben colocarse dentro de `src/components/`.

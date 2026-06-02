@@ -1059,32 +1059,34 @@ const DesafiosPage: NextPage = () => {
                             className="h-full w-full object-cover" 
                           />
 
-                          {/* Etiquetas superpuestas (Overlay Labels) */}
-                          {/* 1. Reliquia # (Esquina superior izquierda) */}
-                          <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/10 text-white font-mono text-xs font-bold">
-                            Relic #{selectedChallenge.rewardRelicNft}
-                          </div>
-
-                          {/* 2. XP (Esquina superior derecha) */}
-                          <div className="absolute top-3 right-3 px-2 py-0.5 rounded bg-primary/95 backdrop-blur-md border border-primary/30 text-primary-foreground font-mono text-xs font-black">
-                            +{selectedChallenge.xp} XP
-                          </div>
-
-                          {/* 3. Clase de Item (Esquina inferior izquierda) */}
-                          {relicMetadata && (
-                            <div className={`absolute bottom-3 left-3 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-black uppercase tracking-wider ${
-                              getRarityColor(String(getTraitValue(relicMetadata, 'Clase de Item'))).text
-                            }`}>
-                              {String(getTraitValue(relicMetadata, 'Clase de Item'))}
+                          {/* Etiquetas superpuestas (Overlay Labels) - Esquina inferior derecha alineadas verticalmente */}
+                          <div className="absolute bottom-3 right-3 flex flex-col items-end gap-1.5 z-10">
+                            {/* 1. Reliquia # */}
+                            <div className="px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/10 text-white font-mono text-xs font-bold">
+                              Relic #{selectedChallenge.rewardRelicNft}
                             </div>
-                          )}
 
-                          {/* 4. Edición (Esquina inferior derecha) */}
-                          {relicMetadata && (
-                            <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold">
-                              {String(getTraitValue(relicMetadata, 'Edición'))}
+                            {/* 2. XP */}
+                            <div className="px-2 py-0.5 rounded bg-primary/95 backdrop-blur-md border border-primary/30 text-primary-foreground font-mono text-xs font-black">
+                              +{selectedChallenge.xp} XP
                             </div>
-                          )}
+
+                            {/* 3. Clase de Item */}
+                            {relicMetadata && (
+                              <div className={`px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-black uppercase tracking-wider ${
+                                getRarityColor(String(getTraitValue(relicMetadata, 'Clase de Item'))).text
+                              }`}>
+                                {String(getTraitValue(relicMetadata, 'Clase de Item'))}
+                              </div>
+                            )}
+
+                            {/* 4. Edición */}
+                            {relicMetadata && (
+                              <div className="px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold">
+                                {String(getTraitValue(relicMetadata, 'Edición'))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
