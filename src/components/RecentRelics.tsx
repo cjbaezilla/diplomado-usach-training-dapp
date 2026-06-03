@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { usePublicClient } from 'wagmi';
+import { usePublicClient, useBlockNumber } from 'wagmi';
 import { CHALLENGE_MINTER_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { useStudentProfile } from '@/hooks/useStudentIdentity';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -134,6 +134,20 @@ export function RecentRelics() {
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { data: blockNumber } = useBlockNumber({
+    watch: true,
+  });
+
+  const safeFromBlock = useMemo(() => {
+    if (!blockNumber) return DEPLOYMENT_BLOCK;
+    const limit = 9500n;
+    const diff = blockNumber - DEPLOYMENT_BLOCK;
+    if (diff > limit) {
+      return blockNumber - limit;
+    }
+    return DEPLOYMENT_BLOCK;
+  }, [blockNumber]);
+
   useEffect(() => {
     async function fetchLogs() {
       if (!isHydrated || !publicClient) return;
@@ -151,7 +165,7 @@ export function RecentRelics() {
               { type: 'bytes32', name: 'salt', indexed: false }
             ]
           },
-          fromBlock: DEPLOYMENT_BLOCK,
+          fromBlock: safeFromBlock,
         });
 
         // Ordenar de más reciente a más antiguo (getLogs devuelve cronológico ascendente)
@@ -165,7 +179,7 @@ export function RecentRelics() {
     }
 
     fetchLogs();
-  }, [publicClient, isHydrated]);
+  }, [publicClient, isHydrated, safeFromBlock]);
 
   // Tomar los últimos 4 reclamos para la visualización simplificada
   const recentClaims = useMemo(() => {

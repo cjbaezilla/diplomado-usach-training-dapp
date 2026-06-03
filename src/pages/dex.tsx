@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { SEO } from '@/components/SEO';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useMemo } from 'react';
-import { useAccount, useBalance, usePublicClient } from 'wagmi';
+import { useAccount, useBalance, usePublicClient, useBlockNumber } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { PageHeader } from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
@@ -113,12 +113,13 @@ const formatUsdPrice = (val: number): string => {
 // Componente para una fila de piscina de liquidez
 interface PoolRowProps {
   poolAddress: `0x${string}`;
+  safeFromBlock: bigint;
   userAddress?: `0x${string}`;
   refreshTrigger?: number;
   onSelectAction?: (token0: `0x${string}`, token1: `0x${string}`, tab: 'swap' | 'add' | 'remove') => void;
 }
 
-function PoolRow({ poolAddress, userAddress, refreshTrigger, onSelectAction }: PoolRowProps) {
+function PoolRow({ poolAddress, safeFromBlock, userAddress, refreshTrigger, onSelectAction }: PoolRowProps) {
   const { token0, token1, reserve0, reserve1, totalSupply, isLoading: isLoadingPool, refetch: refetchPool } = useDEXPool(poolAddress);
   const { metadata: metadata0, isLoadingMetadata: isLoadingMeta0 } = useBaseERC20(token0);
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
@@ -144,7 +145,7 @@ function PoolRow({ poolAddress, userAddress, refreshTrigger, onSelectAction }: P
               { type: 'uint256', name: 'cantidadPools', indexed: false }
             ]
           },
-          fromBlock: DEPLOYMENT_BLOCK,
+          fromBlock: safeFromBlock,
         });
 
         const matchingLog = logs.find(
@@ -669,6 +670,20 @@ const DEXPage: NextPage = () => {
   const isHydrated = useHydrated();
   const { isConnected, address, chain } = useAccount();
   const explorerUrl = chain?.blockExplorers?.default?.url || 'https://sepolia.etherscan.io';
+
+  const { data: blockNumber } = useBlockNumber({
+    watch: true,
+  });
+
+  const safeFromBlock = useMemo(() => {
+    if (!blockNumber) return DEPLOYMENT_BLOCK;
+    const limit = 9500n;
+    const diff = blockNumber - DEPLOYMENT_BLOCK;
+    if (diff > limit) {
+      return blockNumber - limit;
+    }
+    return DEPLOYMENT_BLOCK;
+  }, [blockNumber]);
 
   // Tokens creados de fábrica y tokens locales del DEX
   const { tokens: tokenFactoryAddresses, isLoading: isLoadingTokens } = useAllTokens();
@@ -2819,6 +2834,7 @@ const DEXPage: NextPage = () => {
                           <PoolRow
                             key={poolAddr}
                             poolAddress={poolAddr}
+                            safeFromBlock={safeFromBlock}
                             userAddress={address}
                             refreshTrigger={refreshTrigger}
                             onSelectAction={handleSelectPoolAction}

@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { SEO } from '@/components/SEO';
 import { useRouter } from 'next/router';
-import { useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, usePublicClient, useBlockNumber } from 'wagmi';
 import { formatUnits } from 'viem';
 import { Navbar } from '@/components/Navbar';
 import { PageHeader } from '@/components/PageHeader';
@@ -190,10 +190,11 @@ function StudentTokenRow({ tokenAddress, studentAddress, showIfZeroBalance = fal
 interface StudentPoolRowProps {
   poolAddress: `0x${string}`;
   studentAddress: `0x${string}`;
+  safeFromBlock: bigint;
   onPoolActive?: (address: `0x${string}`, isActive: boolean) => void;
 }
 
-function StudentPoolRow({ poolAddress, studentAddress, onPoolActive }: StudentPoolRowProps) {
+function StudentPoolRow({ poolAddress, studentAddress, safeFromBlock, onPoolActive }: StudentPoolRowProps) {
   const { token0, token1, reserve0, reserve1, totalSupply, isLoading: isLoadingPool } = useDEXPool(poolAddress);
   const { metadata: metadata0, isLoadingMetadata: isLoadingMeta0 } = useBaseERC20(token0);
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
@@ -222,7 +223,7 @@ function StudentPoolRow({ poolAddress, studentAddress, onPoolActive }: StudentPo
               { type: 'uint256', name: 'cantidadPools', indexed: false }
             ]
           },
-          fromBlock: DEPLOYMENT_BLOCK,
+          fromBlock: safeFromBlock,
         });
 
         const matchingLog = logs.find(
@@ -348,6 +349,20 @@ const StudentProfilePage: NextPage = () => {
   const [studentAddress, setStudentAddress] = useState<`0x${string}` | null>(null);
   const [relics, setRelics] = useState<RelicMetadata[]>([]);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
+
+  const { data: blockNumber } = useBlockNumber({
+    watch: true,
+  });
+
+  const safeFromBlock = useMemo(() => {
+    if (!blockNumber) return DEPLOYMENT_BLOCK;
+    const limit = 9500n;
+    const diff = blockNumber - DEPLOYMENT_BLOCK;
+    if (diff > limit) {
+      return blockNumber - limit;
+    }
+    return DEPLOYMENT_BLOCK;
+  }, [blockNumber]);
 
   // Cargar la dirección del estudiante desde los parámetros de consulta (?address=0x...)
   useEffect(() => {
@@ -958,6 +973,7 @@ const StudentProfilePage: NextPage = () => {
                           key={poolAddr}
                           poolAddress={poolAddr}
                           studentAddress={resolvedStudentAddress}
+                          safeFromBlock={safeFromBlock}
                           onPoolActive={handlePoolActive}
                         />
                       ))}

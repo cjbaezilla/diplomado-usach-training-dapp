@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { usePublicClient } from 'wagmi';
+import { usePublicClient, useBlockNumber } from 'wagmi';
 import { formatUnits } from 'viem';
 import { useAllDEXPools } from '@/hooks/useDEXFactory';
 import { useDEXPool } from '@/hooks/useDEXPool';
@@ -21,9 +21,10 @@ import Link from 'next/link';
 
 interface RecentPoolItemProps {
   poolAddress: `0x${string}`;
+  safeFromBlock: bigint;
 }
 
-function RecentPoolItem({ poolAddress }: RecentPoolItemProps) {
+function RecentPoolItem({ poolAddress, safeFromBlock }: RecentPoolItemProps) {
   const { token0, token1, reserve0, reserve1, isLoading: isLoadingPool } = useDEXPool(poolAddress);
   const { metadata: metadata0, isLoadingMetadata: isLoadingMeta0 } = useBaseERC20(token0);
   const { metadata: metadata1, isLoadingMetadata: isLoadingMeta1 } = useBaseERC20(token1);
@@ -49,7 +50,7 @@ function RecentPoolItem({ poolAddress }: RecentPoolItemProps) {
               { type: 'uint256', name: 'cantidadPools', indexed: false }
             ]
           },
-          fromBlock: DEPLOYMENT_BLOCK,
+          fromBlock: safeFromBlock,
         });
 
         const matchingLog = logs.find(
@@ -155,6 +156,20 @@ function RecentPoolItem({ poolAddress }: RecentPoolItemProps) {
 export function RecentPools() {
   const { pools, isLoading } = useAllDEXPools();
 
+  const { data: blockNumber } = useBlockNumber({
+    watch: true,
+  });
+
+  const safeFromBlock = useMemo(() => {
+    if (!blockNumber) return DEPLOYMENT_BLOCK;
+    const limit = 9500n;
+    const diff = blockNumber - DEPLOYMENT_BLOCK;
+    if (diff > limit) {
+      return blockNumber - limit;
+    }
+    return DEPLOYMENT_BLOCK;
+  }, [blockNumber]);
+
   // Tomar los últimos 3 pools creados (reversar para ver los más nuevos primero)
   const recentPools = useMemo(() => {
     if (!pools || pools.length === 0) return [];
@@ -195,7 +210,7 @@ export function RecentPools() {
           ) : (
             <div className="flex flex-col gap-2.5">
               {recentPools.map((addr) => (
-                <RecentPoolItem key={addr} poolAddress={addr} />
+                <RecentPoolItem key={addr} poolAddress={addr} safeFromBlock={safeFromBlock} />
               ))}
             </div>
           )}

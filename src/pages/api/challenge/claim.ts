@@ -15,7 +15,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Faltan parámetros requeridos: userAddress, id.' });
   }
 
-  const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com';
+  const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+  if (!rpcUrl) {
+    return res.status(500).json({ error: 'La variable de entorno NEXT_PUBLIC_SEPOLIA_RPC_URL no está configurada.' });
+  }
+
   const publicClient = createPublicClient({
     chain: sepolia,
     transport: http(rpcUrl),

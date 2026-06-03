@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAccount, useReadContract, useBalance, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, useBalance, usePublicClient, useBlockNumber } from 'wagmi';
 import { BASE_ERC1155_CONTRACT, STUDENT_IDENTITY_CONTRACT, TOKEN_FACTORY_CONTRACT, DEX_FACTORY_CONTRACT, WETH_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { useHydrated } from './useHydrated';
 import challengesData from '../../public/desafios.json';
@@ -29,6 +29,20 @@ export function useChallenges() {
   const isHydrated = useHydrated();
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
+  
+  const { data: blockNumber } = useBlockNumber({
+    watch: true,
+  });
+
+  const safeFromBlock = useMemo(() => {
+    if (!blockNumber) return DEPLOYMENT_BLOCK;
+    const limit = 9500n;
+    const diff = blockNumber - DEPLOYMENT_BLOCK;
+    if (diff > limit) {
+      return blockNumber - limit;
+    }
+    return DEPLOYMENT_BLOCK;
+  }, [blockNumber]);
   
   // Consultar balance de ETH nativo para validar Desafío #02 (Faucet)
   const { data: ethBalanceData, refetch: refetchEthBalance } = useBalance({
@@ -72,7 +86,7 @@ export function useChallenges() {
   const [isMintAndTransferCompleted, setIsMintAndTransferCompleted] = useState(false);
 
   const checkMintAndTransfer = useCallback(async () => {
-    if (!publicClient || !address) {
+    if (!publicClient || !address || !blockNumber) {
       setIsMintAndTransferCompleted(false);
       return;
     }
@@ -100,7 +114,7 @@ export function useChallenges() {
           from: '0x0000000000000000000000000000000000000000',
           to: address
         },
-        fromBlock: DEPLOYMENT_BLOCK
+        fromBlock: safeFromBlock
       });
 
       if (mintLogs.length === 0) {
@@ -123,7 +137,7 @@ export function useChallenges() {
         args: {
           from: address
         },
-        fromBlock: DEPLOYMENT_BLOCK
+        fromBlock: safeFromBlock
       });
 
       const mintedTokenAddresses = new Set(mintLogs.map(log => log.address.toLowerCase()));
@@ -144,7 +158,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de acuñación y transferencia:', err);
       setIsMintAndTransferCompleted(false);
     }
-  }, [publicClient, address, createdTokensData]);
+  }, [publicClient, address, createdTokensData, blockNumber, safeFromBlock]);
 
   useEffect(() => {
     checkMintAndTransfer();
@@ -154,7 +168,7 @@ export function useChallenges() {
   const [isSwapCompleted, setIsSwapCompleted] = useState(false);
 
   const checkSwap = useCallback(async () => {
-    if (!publicClient || !address) {
+    if (!publicClient || !address || !blockNumber) {
       setIsSwapCompleted(false);
       return;
     }
@@ -194,7 +208,7 @@ export function useChallenges() {
         args: {
           usuario: address
         },
-        fromBlock: DEPLOYMENT_BLOCK
+        fromBlock: safeFromBlock
       });
 
       setIsSwapCompleted(swapLogs.length > 0);
@@ -202,7 +216,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de swap:', err);
       setIsSwapCompleted(false);
     }
-  }, [publicClient, address]);
+  }, [publicClient, address, blockNumber, safeFromBlock]);
 
   useEffect(() => {
     checkSwap();
@@ -212,7 +226,7 @@ export function useChallenges() {
   const [isLiquidityCompleted, setIsLiquidityCompleted] = useState(false);
 
   const checkLiquidity = useCallback(async () => {
-    if (!publicClient || !address) {
+    if (!publicClient || !address || !blockNumber) {
       setIsLiquidityCompleted(false);
       return;
     }
@@ -252,7 +266,7 @@ export function useChallenges() {
         args: {
           proveedor: address
         },
-        fromBlock: DEPLOYMENT_BLOCK
+        fromBlock: safeFromBlock
       });
 
       setIsLiquidityCompleted(liquidezLogs.length > 0);
@@ -260,7 +274,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de liquidez:', err);
       setIsLiquidityCompleted(false);
     }
-  }, [publicClient, address]);
+  }, [publicClient, address, blockNumber, safeFromBlock]);
 
   useEffect(() => {
     checkLiquidity();
@@ -270,7 +284,7 @@ export function useChallenges() {
   const [isCreatePoolCompleted, setIsCreatePoolCompleted] = useState(false);
 
   const checkCreatePool = useCallback(async () => {
-    if (!publicClient || !address) {
+    if (!publicClient || !address || !blockNumber) {
       setIsCreatePoolCompleted(false);
       return;
     }
@@ -305,7 +319,7 @@ export function useChallenges() {
             { type: 'uint256', name: 'cantidadPools', indexed: false }
           ]
         },
-        fromBlock: DEPLOYMENT_BLOCK
+        fromBlock: safeFromBlock
       });
 
       const userTokensLower = userTokens.map(t => t.toLowerCase());
@@ -339,7 +353,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de creación de piscina:', err);
       setIsCreatePoolCompleted(false);
     }
-  }, [publicClient, address, createdTokensData]);
+  }, [publicClient, address, createdTokensData, blockNumber, safeFromBlock]);
 
   useEffect(() => {
     checkCreatePool();
@@ -349,7 +363,7 @@ export function useChallenges() {
   const [isWethCompleted, setIsWethCompleted] = useState(false);
 
   const checkWeth = useCallback(async () => {
-    if (!publicClient || !address) {
+    if (!publicClient || !address || !blockNumber) {
       setIsWethCompleted(false);
       return;
     }
@@ -368,7 +382,7 @@ export function useChallenges() {
         args: {
           dst: address
         },
-        fromBlock: DEPLOYMENT_BLOCK
+        fromBlock: safeFromBlock
       });
 
       setIsWethCompleted(depositLogs.length > 0);
@@ -376,7 +390,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de WETH:', err);
       setIsWethCompleted(false);
     }
-  }, [publicClient, address]);
+  }, [publicClient, address, blockNumber, safeFromBlock]);
 
   useEffect(() => {
     checkWeth();
@@ -389,7 +403,7 @@ export function useChallenges() {
   const [foreignLiquidityPoolsCount, setForeignLiquidityPoolsCount] = useState(0);
 
   const checkActivity = useCallback(async () => {
-    if (!publicClient || !address) {
+    if (!publicClient || !address || !blockNumber) {
       setIsActivityCompleted(false);
       setCreatedTokensCount(0);
       setForeignTokensWithBalanceCount(0);
@@ -534,7 +548,7 @@ export function useChallenges() {
             args: {
               proveedor: address
             },
-            fromBlock: DEPLOYMENT_BLOCK
+            fromBlock: safeFromBlock
           });
 
           const poolsWithLiquidity = new Set(liquidezLogs.map(log => log.address.toLowerCase()));
@@ -551,7 +565,7 @@ export function useChallenges() {
                 { type: 'uint256', name: 'cantidadPools', indexed: false }
               ]
             },
-            fromBlock: DEPLOYMENT_BLOCK
+            fromBlock: safeFromBlock
           });
 
           const poolCreators: Record<string, string> = {};
@@ -585,7 +599,7 @@ export function useChallenges() {
       console.error('Error al verificar desafío de actividad criptográfica:', err);
       setIsActivityCompleted(false);
     }
-  }, [publicClient, address]);
+  }, [publicClient, address, blockNumber, safeFromBlock]);
 
   useEffect(() => {
     checkActivity();
