@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePublicClient, useBlockNumber } from 'wagmi';
 import { CHALLENGE_MINTER_CONTRACT, DEPLOYMENT_BLOCK } from '@/contracts';
 import { useStudentProfile } from '@/hooks/useStudentIdentity';
@@ -133,6 +133,7 @@ export function RecentRelics() {
   const publicClient = usePublicClient();
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const isFirstLoad = useRef(true);
 
   const { data: blockNumber } = useBlockNumber({
     watch: true,
@@ -152,7 +153,9 @@ export function RecentRelics() {
     async function fetchLogs() {
       if (!isHydrated || !publicClient) return;
       try {
-        setIsLoading(true);
+        if (isFirstLoad.current) {
+          setIsLoading(true);
+        }
         const claimedLogs = await publicClient.getLogs({
           address: CHALLENGE_MINTER_CONTRACT.address,
           event: {
@@ -175,6 +178,7 @@ export function RecentRelics() {
         console.error('Error al obtener eventos de reclamo de reliquias:', err);
       } finally {
         setIsLoading(false);
+        isFirstLoad.current = false;
       }
     }
 
