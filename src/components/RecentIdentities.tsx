@@ -61,10 +61,10 @@ function RecentStudentItem({ address }: RecentStudentItemProps) {
 export function RecentIdentities() {
   const { addresses, isLoading } = useAllStudents();
 
-  // Tomar los últimos 3 estudiantes registrados (reversar el arreglo para ver los más nuevos primero)
+  // Tomar los últimos 4 estudiantes registrados (reversar el arreglo para ver los más nuevos primero)
   const recentAddresses = useMemo(() => {
     if (!addresses || addresses.length === 0) return [];
-    return [...addresses].reverse().slice(0, 3);
+    return [...addresses].reverse().slice(0, 4);
   }, [addresses]);
 
   return (
@@ -86,6 +86,7 @@ export function RecentIdentities() {
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="flex flex-col gap-2.5 py-1">
+              <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />

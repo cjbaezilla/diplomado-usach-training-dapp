@@ -185,9 +185,9 @@ export function RecentRelics() {
     fetchLogs();
   }, [publicClient, isHydrated, safeFromBlock]);
 
-  // Tomar los últimos 4 reclamos para la visualización simplificada
+  // Tomar los últimos 5 reclamos para la visualización simplificada
   const recentClaims = useMemo(() => {
-    return logs.slice(0, 4);
+    return logs.slice(0, 5);
   }, [logs]);
 
   return (
@@ -209,6 +209,7 @@ export function RecentRelics() {
         <CardContent className="space-y-3">
           {!isHydrated || isLoading ? (
             <div className="flex flex-col gap-2.5 py-1">
+              <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[58px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />

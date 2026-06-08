@@ -143,9 +143,9 @@ export function RecentChallenges() {
     fetchLogs();
   }, [publicClient, isHydrated, safeFromBlock]);
 
-  // Tomar los últimos 3 desafíos para la visualización simplificada
+  // Tomar los últimos 4 desafíos para la visualización simplificada
   const recentClaims = useMemo(() => {
-    return logs.slice(0, 3);
+    return logs.slice(0, 4);
   }, [logs]);
 
   return (
@@ -167,6 +167,7 @@ export function RecentChallenges() {
         <CardContent className="space-y-3">
           {!isHydrated || isLoading ? (
             <div className="flex flex-col gap-2.5 py-1">
+              <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
