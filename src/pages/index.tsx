@@ -45,6 +45,7 @@ import { RecentIdentities } from '@/components/RecentIdentities';
 import { RecentPools } from '@/components/RecentPools';
 import { RecentRelics } from '@/components/RecentRelics';
 import { RecentChallenges } from '@/components/RecentChallenges';
+import { TopChallengesStudents } from '@/components/TopChallengesStudents';
 import { Footer } from '@/components/Footer';
 import { useAllStudents, useStudentProfile } from '@/hooks/useStudentIdentity';
 import { useAllTokens } from '@/hooks/useTokenFactory';
@@ -313,6 +314,58 @@ const Home: NextPage = () => {
           <RecentRelics />
           <RecentChallenges />
         </div>
+        {/* Sección 7: Competencia de Liquidez, Ranking y Top Desafíos */}
+        <div className="w-full pt-12 border-t border-border/30">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+            {/* Columna Izquierda: Ranking de Desafíos */}
+            <div className="flex w-full">
+              <TopChallengesStudents />
+            </div>
+
+            {/* Columna Derecha: Competencia de Liquidez DEX */}
+            <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-b from-card/85 to-primary/5 p-6 md:p-8 text-center space-y-6 shadow-2xl backdrop-blur-md h-full flex flex-col justify-between">
+              {/* Luces decorativas en las esquinas */}
+              <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
+
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-xs font-bold text-amber-400 uppercase tracking-widest">
+                  <Trophy className="h-4 w-4" />
+                  <span>Competencia Activa de Estudiantes</span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-primary to-cyan-400 bg-clip-text text-transparent">
+                  Compite en el Ranking de Liquidez DEX
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  ¡Lleva tus destrezas DeFi al límite! Crea y gestiona tu propio pool de liquidez con el par de tokens que elijas frente a <strong>WETH</strong>. Compite directamente con otros estudiantes de la USACH para lograr posicionarse en la cima del podio acumulando la mayor cantidad de liquidez bloqueada (TVL) en tu pool. El mercado es dinámico, ¿tienes lo necesario para dominar el DEX?
+                </p>
+              </div>
+
+              {/* Imagen del Ranking Centrada y Premium */}
+              <div className="max-w-md mx-auto w-full relative overflow-hidden rounded-2xl border border-border/80 bg-muted/40 shadow-xl transition-all duration-300 hover:shadow-2xl hover:border-amber-500/40 group my-2">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-primary to-cyan-500"></div>
+                <img
+                  src="/images/ranking_competencia.png"
+                  alt="Ranking de Liquidez Web3"
+                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-102"
+                />
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-amber-500 via-primary to-cyan-500 hover:opacity-90 hover:scale-[1.03] text-white font-extrabold px-6 py-4 rounded-xl text-xs sm:text-sm tracking-wider uppercase transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mx-auto"
+                  onClick={() => router.push('/ranking')}
+                >
+                  <Trophy className="h-4 w-4 animate-bounce" />
+                  <span>Ver Tabla de Clasificación</span>
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Cabecera de Secciones Informativas */}
         <div className="space-y-3 pt-12 border-t border-border/30 text-center w-full">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl bg-gradient-to-r from-primary via-cyan-400 to-indigo-500 bg-clip-text text-transparent">
@@ -771,49 +824,7 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        {/* Sección 7: Competencia de Liquidez y Ranking (Gran CTA de Ancho Completo) */}
-        <div className="w-full pt-12 border-t border-border/30">
-          <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-b from-card/85 to-primary/5 p-8 md:p-12 text-center space-y-8 shadow-2xl backdrop-blur-md">
-            {/* Luces decorativas en las esquinas */}
-            <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
 
-            <div className="space-y-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-xs font-bold text-amber-400 uppercase tracking-widest">
-                <Trophy className="h-4 w-4" />
-                <span>Competencia Activa de Estudiantes</span>
-              </div>
-              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-primary to-cyan-400 bg-clip-text text-transparent">
-                Compite en el Ranking de Liquidez DEX
-              </h2>
-              <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">
-                ¡Lleva tus destrezas DeFi al límite! Crea y gestiona tu propio pool de liquidez con el par de tokens que elijas frente a <strong>WETH</strong>. Compite directamente con otros estudiantes de la USACH para lograr posicionarse en la cima del podio acumulando la mayor cantidad de liquidez bloqueada (TVL) en tu pool. El mercado es dinámico, ¿tienes lo necesario para dominar el DEX?
-              </p>
-            </div>
-
-            {/* Imagen del Ranking Centrada y Premium */}
-            <div className="max-w-xl mx-auto relative overflow-hidden rounded-2xl border border-border/80 bg-muted/40 shadow-xl transition-all duration-300 hover:shadow-2xl hover:border-amber-500/40 group">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-primary to-cyan-500"></div>
-              <img
-                src="/images/ranking_competencia.png"
-                alt="Ranking de Liquidez Web3"
-                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-102"
-              />
-            </div>
-
-            <div className="pt-4">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-amber-500 via-primary to-cyan-500 hover:opacity-90 hover:scale-[1.03] text-white font-extrabold px-8 py-6 rounded-xl text-base tracking-wider uppercase transition-all duration-200 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mx-auto"
-                onClick={() => router.push('/ranking')}
-              >
-                <Trophy className="h-5 w-5 animate-bounce" />
-                <span>Ver Tabla de Clasificación</span>
-                <ArrowRight className="h-5 w-5 ml-1" />
-              </Button>
-            </div>
-          </div>
-        </div>
 
         {/* Secciones informativas lado a lado */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start pt-12 border-t border-border/30">
