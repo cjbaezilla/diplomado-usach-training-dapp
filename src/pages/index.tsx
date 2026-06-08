@@ -38,6 +38,7 @@ import { Navbar } from '@/components/Navbar';
 import { FaucetInfo } from '@/components/FaucetInfo';
 import { WalletGuide } from '@/components/WalletGuide';
 import { useHydrated } from '@/hooks/useHydrated';
+import Link from 'next/link';
 import { StudentSearch } from '@/components/StudentSearch';
 import { CreatedTokens } from '@/components/CreatedTokens';
 import { RecentIdentities } from '@/components/RecentIdentities';
@@ -169,9 +170,15 @@ const Home: NextPage = () => {
                     <div className="flex items-center justify-between pb-3 border-b border-border/40">
                       <div className="flex items-center gap-3">
                         <UserAvatar address={address} className="h-10 w-10 border border-primary/20 shadow-inner shrink-0" />
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-sm text-foreground truncate max-w-[160px]">
-                            {profile?.isRegistered ? profile.name : 'Estudiante Web3'}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-sm text-foreground truncate max-w-[160px] flex items-center gap-1">
+                            <Link
+                              href={`/estudiante?address=${address}`}
+                              className="hover:underline flex items-center gap-0.5 text-foreground hover:text-primary transition-colors"
+                            >
+                              {profile?.isRegistered ? profile.name : 'Estudiante Web3'}
+                              <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground hover:text-primary" />
+                            </Link>
                           </h3>
                           <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[160px] mt-0.5">
                             {address}

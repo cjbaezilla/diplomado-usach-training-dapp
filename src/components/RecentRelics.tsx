@@ -13,7 +13,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { Trophy, Clock, Info, ArrowUpRight } from 'lucide-react';
+import { Trophy, Clock, Info, ArrowUpRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import challengesData from '../../public/desafios.json';
 
@@ -100,8 +100,14 @@ function RecentRelicItem({ userAddress, tokenId }: RecentRelicItemProps) {
       <div className="flex items-center gap-3 min-w-0">
         <UserAvatar address={userAddress} className="h-9 w-9 border border-border/60 shrink-0" />
         <div className="min-w-0">
-          <h4 className="font-bold text-xs text-foreground truncate">
-            {isLoadingProfile ? 'Cargando...' : profile?.isRegistered ? profile.name : `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`}
+          <h4 className="font-bold text-xs text-foreground truncate flex items-center gap-1">
+            <Link
+              href={`/estudiante?address=${userAddress}`}
+              className="hover:underline flex items-center gap-0.5 text-foreground hover:text-primary transition-colors"
+            >
+              {isLoadingProfile ? 'Cargando...' : profile?.isRegistered ? profile.name : `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`}
+              {!isLoadingProfile && <ExternalLink className="h-2.5 w-2.5 shrink-0 text-muted-foreground hover:text-primary" />}
+            </Link>
           </h4>
           <p className="text-[10px] text-muted-foreground truncate mt-0.5">
             Obtuvo: <span className="text-foreground font-semibold">{relicTitle}</span>

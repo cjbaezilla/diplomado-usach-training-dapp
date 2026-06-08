@@ -12,7 +12,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { Coins, Copy, Check, Info, ArrowUpRight } from 'lucide-react';
+import { Coins, Copy, Check, Info, ArrowUpRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 interface TokenItemProps {
@@ -88,9 +88,12 @@ function TokenItem({ tokenAddress }: TokenItemProps) {
       {metadata.owner && (
         <div className="flex items-center gap-1.5 pt-1.5 border-t border-border/10">
           <UserAvatar address={metadata.owner} className="h-4 w-4 shrink-0" />
-          <span className="text-[9px] text-muted-foreground truncate">
+          <span className="text-[9px] text-muted-foreground truncate flex items-center gap-1">
             Creado por:{' '}
-            <strong className="text-foreground font-medium">
+            <Link
+              href={`/estudiante?address=${metadata.owner}`}
+              className="text-emerald-500 hover:text-emerald-400 font-medium hover:underline flex items-center gap-0.5"
+            >
               {isLoadingProfile ? (
                 '...'
               ) : profile?.isRegistered ? (
@@ -98,7 +101,8 @@ function TokenItem({ tokenAddress }: TokenItemProps) {
               ) : (
                 `${metadata.owner.substring(0, 6)}...${metadata.owner.substring(metadata.owner.length - 4)}`
               )}
-            </strong>
+              <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+            </Link>
           </span>
         </div>
       )}

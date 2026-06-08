@@ -21,6 +21,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
+import Link from 'next/link';
 
 interface StudentCardProps {
   studentAddress: `0x${string}`;
@@ -49,17 +50,27 @@ function StudentCard({ studentAddress, onSelect, isSelected }: StudentCardProps)
     <div
       onClick={() => onSelect(studentAddress)}
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card/45 backdrop-blur-sm cursor-pointer hover:border-primary/50 hover:bg-muted/10 transition-all duration-300",
+        "flex items-center justify-between gap-3 p-3 rounded-lg border border-border/40 bg-card/45 backdrop-blur-sm cursor-pointer hover:border-primary/50 hover:bg-muted/10 transition-all duration-300",
         isSelected && "border-primary/80 ring-1 ring-primary/40 bg-primary/5"
       )}
     >
-      <UserAvatar address={studentAddress} className="h-10 w-10" />
-      <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-xs text-foreground truncate">{profile.name}</h4>
-        <p className="text-[10px] text-muted-foreground truncate font-mono">
-          {studentAddress.substring(0, 6)}...{studentAddress.substring(studentAddress.length - 4)}
-        </p>
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <UserAvatar address={studentAddress} className="h-10 w-10 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-xs text-foreground truncate">{profile.name}</h4>
+          <p className="text-[10px] text-muted-foreground truncate font-mono">
+            {studentAddress.substring(0, 6)}...{studentAddress.substring(studentAddress.length - 4)}
+          </p>
+        </div>
       </div>
+      <Link
+        href={`/estudiante?address=${studentAddress}`}
+        onClick={(e) => e.stopPropagation()}
+        className="text-muted-foreground hover:text-primary transition-colors shrink-0 p-1 rounded hover:bg-muted/30"
+        title="Ver perfil completo del estudiante"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+      </Link>
     </div>
   );
 }
@@ -170,7 +181,15 @@ export function StudentSearch({ className }: { className?: string } = {}) {
                   <div className="flex items-center gap-3">
                     <UserAvatar address={searchAddress} className="h-12 w-12 border shadow-sm" />
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-sm text-foreground truncate">{searchedProfile.name}</h4>
+                      <h4 className="font-bold text-sm text-foreground truncate flex items-center gap-1.5">
+                        <Link
+                          href={`/estudiante?address=${searchAddress}`}
+                          className="hover:underline flex items-center gap-0.5 text-foreground hover:text-primary transition-colors"
+                        >
+                          {searchedProfile.name}
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground hover:text-primary" />
+                        </Link>
+                      </h4>
                       <p className="text-[10px] text-muted-foreground truncate font-mono">{searchAddress}</p>
                     </div>
                   </div>
