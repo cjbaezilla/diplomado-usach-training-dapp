@@ -96,31 +96,73 @@ export function RecentChallenges() {
   const isHydrated = useHydrated();
   const publicClient = usePublicClient();
   const [logs, setLogs] = useState<any[]>([]);
+  const [lastQueriedBlock, setLastQueriedBlock] = useState<bigint | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const isFirstLoad = useRef(true);
 
   const { data: blockNumber } = useBlockNumber({
     watch: true,
   });
 
-  const safeFromBlock = useMemo(() => {
-    if (!blockNumber) return DEPLOYMENT_BLOCK;
-    const limit = 9500n;
-    const diff = blockNumber - DEPLOYMENT_BLOCK;
-    if (diff > limit) {
-      return blockNumber - limit;
-    }
-    return DEPLOYMENT_BLOCK;
-  }, [blockNumber]);
-
+  // Consulta inicial en chunks hacia atrás
   useEffect(() => {
-    async function fetchLogs() {
-      if (!isHydrated || !publicClient) return;
+    async function fetchInitialLogs() {
+      if (!isHydrated || !publicClient || !blockNumber || lastQueriedBlock !== null) return;
+
       try {
-        if (isFirstLoad.current) {
-          setIsLoading(true);
+        setIsLoading(true);
+        const targetCount = 4;
+        const chunkSize = 9500n;
+        let allLogs: any[] = [];
+        let toBlock = blockNumber;
+
+        while (allLogs.length < targetCount && toBlock > DEPLOYMENT_BLOCK) {
+          let fromBlock = toBlock - chunkSize;
+          if (fromBlock < DEPLOYMENT_BLOCK) {
+            fromBlock = DEPLOYMENT_BLOCK;
+          }
+
+          const chunkLogs = await publicClient.getLogs({
+            address: CHALLENGE_MINTER_CONTRACT.address,
+            event: {
+              type: 'event',
+              name: 'ChallengeClaimed',
+              inputs: [
+                { type: 'address', name: 'user', indexed: true },
+                { type: 'uint256', name: 'id', indexed: true },
+                { type: 'uint256', name: 'amount', indexed: false },
+                { type: 'bytes32', name: 'salt', indexed: false }
+              ]
+            },
+            fromBlock,
+            toBlock,
+          });
+
+          const sortedChunk = [...chunkLogs].reverse();
+          allLogs = [...allLogs, ...sortedChunk];
+          toBlock = fromBlock - 1n;
         }
-        const claimedLogs = await publicClient.getLogs({
+
+        setLogs(allLogs.slice(0, targetCount));
+        setLastQueriedBlock(blockNumber);
+      } catch (err) {
+        console.error('Error al realizar búsqueda inicial de desafíos:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchInitialLogs();
+  }, [publicClient, isHydrated, blockNumber, lastQueriedBlock]);
+
+  // Consulta de deltas para nuevos bloques
+  useEffect(() => {
+    async function fetchDeltaLogs() {
+      if (!isHydrated || !publicClient || !blockNumber || lastQueriedBlock === null) return;
+      if (blockNumber <= lastQueriedBlock) return;
+
+      try {
+        const fromBlock = lastQueriedBlock + 1n;
+        const newLogs = await publicClient.getLogs({
           address: CHALLENGE_MINTER_CONTRACT.address,
           event: {
             type: 'event',
@@ -132,27 +174,27 @@ export function RecentChallenges() {
               { type: 'bytes32', name: 'salt', indexed: false }
             ]
           },
-          fromBlock: safeFromBlock,
+          fromBlock,
+          toBlock: blockNumber,
         });
 
-        // Ordenar de más reciente a más antiguo (getLogs devuelve cronológico ascendente)
-        const sorted = [...claimedLogs].reverse();
-        setLogs(sorted);
+        if (newLogs.length > 0) {
+          const sortedNew = [...newLogs].reverse();
+          setLogs((prev) => {
+            const combined = [...sortedNew, ...prev];
+            return combined.slice(0, 4);
+          });
+        }
+        setLastQueriedBlock(blockNumber);
       } catch (err) {
-        console.error('Error al obtener eventos de desafíos completados:', err);
-      } finally {
-        setIsLoading(false);
-        isFirstLoad.current = false;
+        console.error('Error al obtener delta de eventos de desafíos:', err);
       }
     }
 
-    fetchLogs();
-  }, [publicClient, isHydrated, safeFromBlock]);
+    fetchDeltaLogs();
+  }, [publicClient, isHydrated, blockNumber, lastQueriedBlock]);
 
-  // Tomar los últimos 4 desafíos para la visualización simplificada
-  const recentClaims = useMemo(() => {
-    return logs.slice(0, 4);
-  }, [logs]);
+  const recentClaims = logs;
 
   return (
     <Card className="border border-border/80 shadow-lg bg-card/45 backdrop-blur-md relative overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all duration-300 h-full">

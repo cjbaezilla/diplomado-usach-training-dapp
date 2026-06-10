@@ -174,10 +174,10 @@ export function RecentPools() {
     return DEPLOYMENT_BLOCK;
   }, [blockNumber]);
 
-  // Tomar los últimos 3 pools creados (reversar para ver los más nuevos primero)
+  // Tomar los últimos 4 pools creados (reversar para ver los más nuevos primero)
   const recentPools = useMemo(() => {
     if (!pools || pools.length === 0) return [];
-    return [...pools].reverse().slice(0, 3);
+    return [...pools].reverse().slice(0, 4);
   }, [pools]);
 
   return (
@@ -199,6 +199,7 @@ export function RecentPools() {
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="flex flex-col gap-2.5 py-1">
+              <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
               <div className="h-[78px] rounded-xl bg-muted/20 border border-border/20 animate-pulse" />
