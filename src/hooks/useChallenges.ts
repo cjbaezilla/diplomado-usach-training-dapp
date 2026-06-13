@@ -533,61 +533,32 @@ export function useChallenges() {
 
         if (nonOwnerWethPools.length > 0) {
           const poolAddressesToSearch = nonOwnerWethPools.map(p => p.poolAddress);
-          const liquidezLogs = await publicClient.getLogs({
-            address: poolAddressesToSearch,
-            event: {
-              type: 'event',
-              name: 'LiquidezAgregada',
-              inputs: [
-                { type: 'address', name: 'proveedor', indexed: true },
-                { type: 'uint256', name: 'cantidad0' },
-                { type: 'uint256', name: 'cantidad1' },
-                { type: 'uint256', name: 'tokensLP' }
-              ]
-            },
-            args: {
-              proveedor: address
-            },
-            fromBlock: safeFromBlock
+          
+          // Consultar el balance del usuario en cada uno de los pools ajenos de par con WETH
+          const balancePromises = poolAddressesToSearch.map(async (poolAddress) => {
+            try {
+              const balance = await publicClient.readContract({
+                address: poolAddress,
+                abi: [
+                  {
+                    "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
+                    "name": "balanceOf",
+                    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                    "stateMutability": "view",
+                    "type": "function"
+                  }
+                ] as const,
+                functionName: 'balanceOf',
+                args: [address],
+              });
+              return balance > 0n;
+            } catch (e) {
+              return false;
+            }
           });
 
-          const poolsWithLiquidity = new Set(liquidezLogs.map(log => log.address.toLowerCase()));
-
-          const poolCreatedLogs = await publicClient.getLogs({
-            address: DEX_FACTORY_CONTRACT.address,
-            event: {
-              type: 'event',
-              name: 'PoolCreado',
-              inputs: [
-                { type: 'address', name: 'token0', indexed: true },
-                { type: 'address', name: 'token1', indexed: true },
-                { type: 'address', name: 'pool', indexed: false },
-                { type: 'uint256', name: 'cantidadPools', indexed: false }
-              ]
-            },
-            fromBlock: safeFromBlock
-          });
-
-          const poolCreators: Record<string, string> = {};
-          for (const log of poolCreatedLogs) {
-            const pAddr = log.args.pool?.toLowerCase();
-            if (pAddr && poolsWithLiquidity.has(pAddr) && log.transactionHash) {
-              try {
-                const tx = await publicClient.getTransaction({
-                  hash: log.transactionHash,
-                });
-                poolCreators[pAddr] = tx.from.toLowerCase();
-              } catch (txErr) {
-                // Ignorar errores al buscar transacciones
-              }
-            }
-          }
-
-          for (const pAddr of poolsWithLiquidity) {
-            if (poolCreators[pAddr] !== address.toLowerCase()) {
-              foreignLiquidityPoolCount++;
-            }
-          }
+          const balancesResults = await Promise.all(balancePromises);
+          foreignLiquidityPoolCount = balancesResults.filter(Boolean).length;
         }
       }
       setForeignLiquidityPoolsCount(foreignLiquidityPoolCount);
